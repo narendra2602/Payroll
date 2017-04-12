@@ -370,6 +370,7 @@ public void createHeader1(WritableSheet sheet)
 			    int dash=0;
 			    int k=5;
 			    tot=0.00;
+			    totatten=0;
 				addNumber(sheet, 0, r, emp.getSerialno(),dash);
 				addLabel(sheet, 1, r, emp.getEmp_name(),dash);
 				addLabel(sheet, 2, r, "",dash);

@@ -1775,55 +1775,69 @@ public class PayrollDAO
 			String query1="insert into bonus "+
 			"select depo_code,cmp_code,emp_code,"+bonus_per+" bper,"+bonus_limit+" blimit,sum(attnapr),sum(attnmay),sum(attnjun),sum(attnjul),sum(attnaug),sum(attnsep),sum(attnoct), "+
 			"sum(attnnov),sum(attndec),sum(attnjan),sum(attnfeb),sum(attnmar), "+
-			"sum(apr),sum(may),sum(jun),sum(jul),sum(aug),sum(sep),sum(octm),sum(nov),sum(decm),sum(jan),sum(feb),sum(mar)," +
+			"sum(apr)-sum(aapr),sum(may-amay),sum(jun)-sum(ajun),sum(jul)-sum(ajul),sum(aug)-sum(aaug),sum(sep)-sum(asep),sum(octm)-sum(aoct),sum(nov)-sum(anov),sum(decm)-sum(adec),sum(jan)-sum(ajan),sum(feb)-sum(afeb),sum(mar)-sum(amar)," +
 			"(sum(apr)+sum(may)+sum(jun)+sum(jul)+sum(aug)+sum(sep)+sum(octm)+sum(nov)+sum(decm)+sum(jan)+sum(feb)+sum(mar)) bonusapp," +
-			"0.00,fin_year,"+mcode+" mnthcd,0 bonuspaid,0 bonuscheck from "+ 
+			"0.00,fin_year,"+mcode+" mnthcd,0 bonuspaid,0 bonuscheck,  "+ 
+			"sum(aapr),sum(amay),sum(ajun),sum(ajul),sum(aaug),sum(asep),sum(aoct),sum(anov),sum(adec),sum(ajan),sum(afeb),sum(amar) from " +
 			"(select (basic_value+da_value) apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"atten_days attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+ 
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"atten_days attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar," +
+			"round(((basic+da)/30)*arrear_days) aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,(basic_value+da_value) may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,atten_days attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,atten_days attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,"+   
+			"0 aapr,round(((basic+da)/30)*arrear_days) amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,(basic_value+da_value) jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,atten_days attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,atten_days attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,round(((basic+da)/30)*arrear_days) ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all  "+
 			"select 0 apr,0 may,0 jun,(basic_value+da_value) jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,atten_days attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,atten_days attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,"+   
+			"0 aapr,0 amay,0 ajun,round(((basic+da)/30)*arrear_days) ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all  "+
 			"select 0 apr,0 may,0 jun,0 jul, (basic_value+da_value) aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,atten_days attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,atten_days attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,round(((basic+da)/30)*arrear_days) aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all  "+
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,(basic_value+da_value) sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,atten_days attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,atten_days attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,round(((basic+da)/30)*arrear_days) asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,(basic_value+da_value) octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,atten_days attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,atten_days attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,round(((basic+da)/30)*arrear_days) aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,(basic_value+da_value) nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,atten_days attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,atten_days attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,round(((basic+da)/30)*arrear_days) anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,(basic_value+da_value) decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,atten_days attndec,0 attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,atten_days attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,round(((basic+da)/30)*arrear_days) adec,0 ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,(basic_value+da_value) jan,0 feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,atten_days attnjan,0 attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,atten_days attnjan,0 attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,round(((basic+da)/30)*arrear_days) ajan,0 afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,(basic_value+da_value) feb,0 mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,atten_days attnfeb,0 attnmar,depo_code,cmp_code,fin_year "+   
-			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,atten_days attnfeb,0 attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,round(((basic+da)/30)*arrear_days) afeb,0 amar," +
+			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,(basic_value+da_value) mar,mnth_code,emp_code, "+
-			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,atten_days attnmar,depo_code,cmp_code,fin_year "+   
+			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,atten_days attnmar, "+   
+			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,round(((basic+da)/30)*arrear_days) amar," +
+			"depo_code,cmp_code,fin_year  "+
 			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=?) a  "+
 			" group by a.emp_code ";
 			 
@@ -1844,7 +1858,19 @@ public class PayrollDAO
 			"bonus_jan=if(bonus_jan>bonus_check,if(bonus_check=0,bonus_jan,bonus_check),bonus_jan),"+
 			"bonus_feb=if(bonus_feb>bonus_check,if(bonus_check=0,bonus_feb,bonus_check),bonus_feb),"+
 			"bonus_mar=if(bonus_mar>bonus_check,if(bonus_check=0,bonus_mar,bonus_check),bonus_mar),"+
-			"bonus_applicable=(bonus_apr+bonus_may+bonus_jun+bonus_jul+bonus_aug+bonus_sep+bonus_oct+bonus_nov+bonus_dec+bonus_jan+bonus_feb+bonus_mar),"+
+			"arrear_apr=if(arrear_apr>bonus_check,if(bonus_check=0,arrear_apr,bonus_check),arrear_apr),"+
+			"arrear_may=if(arrear_may>bonus_check,if(bonus_check=0,arrear_may,bonus_check),arrear_may),"+
+			"arrear_jun=if(arrear_jun>bonus_check,if(bonus_check=0,arrear_jun,bonus_check),arrear_jun),"+
+			"arrear_jul=if(arrear_jul>bonus_check,if(bonus_check=0,arrear_jul,bonus_check),arrear_jul),"+
+			"arrear_aug=if(arrear_aug>bonus_check,if(bonus_check=0,arrear_aug,bonus_check),arrear_aug),"+
+			"arrear_sep=if(arrear_sep>bonus_check,if(bonus_check=0,arrear_sep,bonus_check),arrear_sep),"+
+			"arrear_oct=if(arrear_oct>bonus_check,if(bonus_check=0,arrear_oct,bonus_check),arrear_oct),"+
+			"arrear_nov=if(arrear_nov>bonus_check,if(bonus_check=0,arrear_nov,bonus_check),arrear_nov),"+
+			"arrear_dec=if(arrear_dec>bonus_check,if(bonus_check=0,arrear_dec,bonus_check),arrear_dec),"+
+			"arrear_jan=if(arrear_jan>bonus_check,if(bonus_check=0,arrear_jan,bonus_check),arrear_jan),"+
+			"arrear_feb=if(arrear_feb>bonus_check,if(bonus_check=0,arrear_feb,bonus_check),arrear_feb),"+
+			"arrear_mar=if(arrear_mar>bonus_check,if(bonus_check=0,arrear_mar,bonus_check),arrear_mar),"+
+			"bonus_applicable=(bonus_apr+bonus_may+bonus_jun+bonus_jul+bonus_aug+bonus_sep+bonus_oct+bonus_nov+bonus_dec+bonus_jan+bonus_feb+bonus_mar+arrear_apr+arrear_may+arrear_jun+arrear_jul+arrear_aug+arrear_sep+arrear_oct+arrear_nov+arrear_dec+arrear_jan+arrear_feb+arrear_mar),"+
 			"bonus_value=round((bonus_applicable*bonus_per)/100),"+
 			"bonus_paid=if(bonus_value>bonus_limit,if(bonus_limit=0,bonus_value,bonus_limit),bonus_value) "+
 			"where fin_year=? and depo_code=? and cmp_code=? ";
@@ -2167,7 +2193,7 @@ public class PayrollDAO
 
 	  			String query=" select b.emp_code,e.emp_name, b.bonus_per, b.bonus_limit," +
 	  			" b.atten_apr, b.atten_may, b.atten_jun, b.atten_jul, b.atten_aug, b.atten_sep, b.atten_oct,b.atten_nov, b.atten_dec, b.atten_jan, b.atten_feb, b.atten_mar," +
-	  			" b.bonus_apr, b.bonus_may, b.bonus_jun, b.bonus_jul, b.bonus_aug, b.bonus_sep, b.bonus_oct,b.bonus_nov, b.bonus_dec, b.bonus_jan, b.bonus_feb, b.bonus_mar," +
+	  			" b.bonus_apr+b.arrear_apr, b.bonus_may+b.arrear_may, b.bonus_jun+b.arrear_jun, b.bonus_jul+b.arrear_jul, b.bonus_aug+b.arrear_aug, b.bonus_sep+b.arrear_sep, b.bonus_oct+b.arrear_oct,b.bonus_nov+b.arrear_nov, b.bonus_dec+b.arrear_dec, b.bonus_jan+b.arrear_jan, b.bonus_feb+b.arrear_feb, b.bonus_mar+b.arrear_mar," +
 	  			" b.bonus_applicable, b.bonus_value "+ 
 				" from  bonus b,employeemast e where b.fin_year=? and b.depo_code=? and b.cmp_code=? and e.emp_code=b.emp_code "; 
 
@@ -2192,7 +2218,7 @@ public class PayrollDAO
 	  				bonusval= new double[12];
 	  				for(int j=0;j<12;j++)
 	  				{
-	  					mont[j]=rs.getInt(j+5);
+	  					mont[j]=rs.getDouble(j+5);
 	  					bonusval[j]=rs.getDouble(j+17);
 	  				}
 	  				
