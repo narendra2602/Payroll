@@ -256,7 +256,7 @@ public void createHeader1(WritableSheet sheet)
 	{
 	
 		boolean first=true;
-	
+		boolean print=false;
 		// detail header
 		int size=esicList.size();
 	
@@ -279,12 +279,23 @@ public void createHeader1(WritableSheet sheet)
 				first=false;
 			}
 	
+			tot=0.00;
+			print=false;
+			for (int i=0;i<12;i++)
+			{
+				tot+=emp.getAtten()[i];
+			}
+
+			if(tot>=31)
+				print=true;
 		    sheet.setRowView(r, heightInPoints);
-		    if(repno==5)
-		    	createReport1(sheet, emp);
-		    else 
-		    	createReport2(sheet, emp);
-		    
+		    if(print)
+		    {
+		    	if(repno==5)
+		    		createReport1(sheet, emp);
+		    	else 
+		    		createReport2(sheet, emp);
+		    }
 			pgbrk++;
 		}
 

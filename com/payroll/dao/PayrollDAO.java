@@ -1754,19 +1754,21 @@ public class PayrollDAO
     	PreparedStatement ps = null;
     	ResultSet rs = null;
     	int[] mon = new int[12];
+    	int[] mondays = new int[12];
 		int i=0;
 		try 
 		{
 			con=ConnectionFactory.getConnection();
 			con.setAutoCommit(false);
 
-			String monquery="select mnth_code from perdmast where fin_year=? order by fin_ord ";
+			String monquery="select mnth_code,day(todate) from perdmast where fin_year=? order by fin_ord ";
 			ps = con.prepareStatement(monquery);
 			ps.setInt(1,fyear);
 			rs=ps.executeQuery();
 			while (rs.next())
 			{
 				mon[i]=rs.getInt(1);
+				mondays[i]=rs.getInt(2);
 				i++;
 			}
 			
@@ -1778,65 +1780,78 @@ public class PayrollDAO
 			"sum(apr)-sum(aapr),sum(may-amay),sum(jun)-sum(ajun),sum(jul)-sum(ajul),sum(aug)-sum(aaug),sum(sep)-sum(asep),sum(octm)-sum(aoct),sum(nov)-sum(anov),sum(decm)-sum(adec),sum(jan)-sum(ajan),sum(feb)-sum(afeb),sum(mar)-sum(amar)," +
 			"(sum(apr)+sum(may)+sum(jun)+sum(jul)+sum(aug)+sum(sep)+sum(octm)+sum(nov)+sum(decm)+sum(jan)+sum(feb)+sum(mar)) bonusapp," +
 			"0.00,fin_year,"+mcode+" mnthcd,0 bonuspaid,0 bonuscheck,  "+ 
-			"sum(aapr),sum(amay),sum(ajun),sum(ajul),sum(aaug),sum(asep),sum(aoct),sum(anov),sum(adec),sum(ajan),sum(afeb),sum(amar) from " +
+			"sum(aapr),sum(amay),sum(ajun),sum(ajul),sum(aaug),sum(asep),sum(aoct),sum(anov),sum(adec),sum(ajan),sum(afeb),sum(amar), " +
+			"sum(adays_apr),sum(adays_may),sum(adays_jun),sum(adays_jul),sum(adays_aug),sum(adays_sep),sum(adays_oct),sum(adays_nov),sum(adays_dec),sum(adays_jan),sum(adays_feb),sum(adays_mar) from " +
 			"(select (basic_value+da_value) apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"atten_days attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar," +
 			"round(((basic+da)/30)*arrear_days) aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"arrear_days adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,(basic_value+da_value) may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,atten_days attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,"+   
 			"0 aapr,round(((basic+da)/30)*arrear_days) amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,arrear_days adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,(basic_value+da_value) jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,atten_days attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,round(((basic+da)/30)*arrear_days) ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,arrear_days adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all  "+
 			"select 0 apr,0 may,0 jun,(basic_value+da_value) jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,atten_days attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar,"+   
 			"0 aapr,0 amay,0 ajun,round(((basic+da)/30)*arrear_days) ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,arrear_days adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all  "+
 			"select 0 apr,0 may,0 jun,0 jul, (basic_value+da_value) aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,atten_days attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,round(((basic+da)/30)*arrear_days) aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,arrear_days adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all  "+
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,(basic_value+da_value) sep,0 octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,atten_days attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,round(((basic+da)/30)*arrear_days) asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,arrear_days adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,(basic_value+da_value) octm,0 nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,atten_days attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,round(((basic+da)/30)*arrear_days) aoct,0 anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,arrear_days adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,(basic_value+da_value) nov,0 decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,atten_days attnnov,0 attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,round(((basic+da)/30)*arrear_days) anov,0 adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,arrear_days adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,(basic_value+da_value) decm,0 jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,atten_days attndec,0 attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,round(((basic+da)/30)*arrear_days) adec,0 ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,arrear_days adays_dec,0 adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,(basic_value+da_value) jan,0 feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,atten_days attnjan,0 attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,round(((basic+da)/30)*arrear_days) ajan,0 afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,arrear_days adays_jan,0 adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,(basic_value+da_value) feb,0 mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,atten_days attnfeb,0 attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,round(((basic+da)/30)*arrear_days) afeb,0 amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,arrear_days adays_feb,0 adays_mar," +
 			"depo_code,cmp_code,fin_year from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? "+
 			"union all "+ 
 			"select 0 apr,0 may,0 jun,0 jul, 0 aug,0 sep,0 octm,0 nov,0 decm,0 jan,0 feb,(basic_value+da_value) mar,mnth_code,emp_code, "+
 			"0 attnapr,0 attnmay,0 attnjun,0 attnjul,0 attnaug,0 attnsep,0 attnoct,0 attnnov,0 attndec,0 attnjan,0 attnfeb,atten_days attnmar, "+   
 			"0 aapr,0 amay,0 ajun,0 ajul,0 aaug,0 asep,0 aoct,0 anov,0 adec,0 ajan,0 afeb,round(((basic+da)/30)*arrear_days) amar," +
+			"0 adays_apr ,0 adays_may,0 adays_jun,0 adays_jul,0 adays_aug,0 adays_sep,0 adays_oct,0 adays_nov,0 adays_dec,0 adays_jan,0 adays_feb,arrear_days adays_mar," +
 			"depo_code,cmp_code,fin_year  "+
 			"from emptran where fin_year=? and depo_code=? and cmp_code=? and mnth_code=?) a  "+
 			" group by a.emp_code ";
@@ -1846,30 +1861,34 @@ public class PayrollDAO
 			" where b.fin_year=? and b.depo_code=? and  b.cmp_code=? "+
 			" and e.depo_code=? and  e.cmp_code=? and b.emp_Code=e.emp_code ";
 			
-			String query4="update bonus set bonus_apr=if(bonus_apr>bonus_check,if(bonus_check=0,bonus_apr,bonus_check),bonus_apr),"+
-			"bonus_may=if(bonus_may>bonus_check,if(bonus_check=0,bonus_may,bonus_check),bonus_may),"+
-			"bonus_jun=if(bonus_jun>bonus_check,if(bonus_check=0,bonus_jun,bonus_check),bonus_jun),"+
-			"bonus_jul=if(bonus_jul>bonus_check,if(bonus_check=0,bonus_jul,bonus_check),bonus_jul),"+
-			"bonus_aug=if(bonus_aug>bonus_check,if(bonus_check=0,bonus_aug,bonus_check),bonus_aug),"+
-			"bonus_sep=if(bonus_sep>bonus_check,if(bonus_check=0,bonus_sep,bonus_check),bonus_sep),"+
-			"bonus_oct=if(bonus_oct>bonus_check,if(bonus_check=0,bonus_oct,bonus_check),bonus_oct),"+
-			"bonus_nov=if(bonus_nov>bonus_check,if(bonus_check=0,bonus_nov,bonus_check),bonus_nov),"+
-			"bonus_dec=if(bonus_dec>bonus_check,if(bonus_check=0,bonus_dec,bonus_check),bonus_dec),"+
-			"bonus_jan=if(bonus_jan>bonus_check,if(bonus_check=0,bonus_jan,bonus_check),bonus_jan),"+
-			"bonus_feb=if(bonus_feb>bonus_check,if(bonus_check=0,bonus_feb,bonus_check),bonus_feb),"+
-			"bonus_mar=if(bonus_mar>bonus_check,if(bonus_check=0,bonus_mar,bonus_check),bonus_mar),"+
-			"arrear_apr=if(arrear_apr>bonus_check,if(bonus_check=0,arrear_apr,bonus_check),arrear_apr),"+
-			"arrear_may=if(arrear_may>bonus_check,if(bonus_check=0,arrear_may,bonus_check),arrear_may),"+
-			"arrear_jun=if(arrear_jun>bonus_check,if(bonus_check=0,arrear_jun,bonus_check),arrear_jun),"+
-			"arrear_jul=if(arrear_jul>bonus_check,if(bonus_check=0,arrear_jul,bonus_check),arrear_jul),"+
-			"arrear_aug=if(arrear_aug>bonus_check,if(bonus_check=0,arrear_aug,bonus_check),arrear_aug),"+
-			"arrear_sep=if(arrear_sep>bonus_check,if(bonus_check=0,arrear_sep,bonus_check),arrear_sep),"+
-			"arrear_oct=if(arrear_oct>bonus_check,if(bonus_check=0,arrear_oct,bonus_check),arrear_oct),"+
-			"arrear_nov=if(arrear_nov>bonus_check,if(bonus_check=0,arrear_nov,bonus_check),arrear_nov),"+
-			"arrear_dec=if(arrear_dec>bonus_check,if(bonus_check=0,arrear_dec,bonus_check),arrear_dec),"+
-			"arrear_jan=if(arrear_jan>bonus_check,if(bonus_check=0,arrear_jan,bonus_check),arrear_jan),"+
-			"arrear_feb=if(arrear_feb>bonus_check,if(bonus_check=0,arrear_feb,bonus_check),arrear_feb),"+
-			"arrear_mar=if(arrear_mar>bonus_check,if(bonus_check=0,arrear_mar,bonus_check),arrear_mar),"+
+//			select if(bonus_apr>round(bonus_check+(bonus_check/30)*(atten_apr-30)),if(bonus_check=0,bonus_apr,round(bonus_check+(bonus_check/30)*(atten_apr-30))),bonus_apr) bonus,
+//			select if(arrear_apr>round((bonus_check/30)*adays_apr),if(bonus_check=0,arrear_apr,round((bonus_check/30)*adays_apr)),arrear_apr) bonus,
+			
+			String query4="update bonus set bonus_apr=if(bonus_apr>round(bonus_check+(bonus_check/30)*(atten_apr-if(atten_apr=0,0,"+mondays[0]+"))),if(bonus_check=0,bonus_apr,round(bonus_check+(bonus_check/30)*(atten_apr-if(atten_apr=0,0,"+mondays[0]+")))),bonus_apr),"+
+			"bonus_may=if(bonus_may>round(bonus_check+(bonus_check/30)*(atten_may-if(atten_may=0,0,"+mondays[1]+"))),if(bonus_check=0,bonus_may,round(bonus_check+(bonus_check/30)*(atten_may-if(atten_may=0,0,"+mondays[1]+")))),bonus_may),"+			
+			"bonus_jun=if(bonus_jun>round(bonus_check+(bonus_check/30)*(atten_jun-if(atten_jun=0,0,"+mondays[2]+"))),if(bonus_check=0,bonus_jun,round(bonus_check+(bonus_check/30)*(atten_jun-if(atten_jun=0,0,"+mondays[2]+")))),bonus_jun),"+			
+			"bonus_jul=if(bonus_jul>round(bonus_check+(bonus_check/30)*(atten_jul-if(atten_jul=0,0,"+mondays[3]+"))),if(bonus_check=0,bonus_jul,round(bonus_check+(bonus_check/30)*(atten_jul-if(atten_jul=0,0,"+mondays[3]+")))),bonus_jul),"+			
+			"bonus_aug=if(bonus_aug>round(bonus_check+(bonus_check/30)*(atten_aug-if(atten_aug=0,0,"+mondays[4]+"))),if(bonus_check=0,bonus_aug,round(bonus_check+(bonus_check/30)*(atten_aug-if(atten_aug=0,0,"+mondays[4]+")))),bonus_aug),"+			
+			"bonus_sep=if(bonus_sep>round(bonus_check+(bonus_check/30)*(atten_sep-if(atten_sep=0,0,"+mondays[5]+"))),if(bonus_check=0,bonus_sep,round(bonus_check+(bonus_check/30)*(atten_sep-if(atten_sep=0,0,"+mondays[5]+")))),bonus_sep),"+			
+			"bonus_oct=if(bonus_oct>round(bonus_check+(bonus_check/30)*(atten_oct-if(atten_oct=0,0,"+mondays[6]+"))),if(bonus_check=0,bonus_oct,round(bonus_check+(bonus_check/30)*(atten_oct-if(atten_oct=0,0,"+mondays[6]+")))),bonus_oct),"+			
+			"bonus_nov=if(bonus_nov>round(bonus_check+(bonus_check/30)*(atten_nov-if(atten_nov=0,0,"+mondays[7]+"))),if(bonus_check=0,bonus_nov,round(bonus_check+(bonus_check/30)*(atten_nov-if(atten_nov=0,0,"+mondays[7]+")))),bonus_nov),"+			
+			"bonus_dec=if(bonus_dec>round(bonus_check+(bonus_check/30)*(atten_dec-if(atten_dec=0,0,"+mondays[8]+"))),if(bonus_check=0,bonus_dec,round(bonus_check+(bonus_check/30)*(atten_dec-if(atten_dec=0,0,"+mondays[8]+")))),bonus_dec),"+			
+			"bonus_jan=if(bonus_jan>round(bonus_check+(bonus_check/30)*(atten_jan-if(atten_jan=0,0,"+mondays[9]+"))),if(bonus_check=0,bonus_jan,round(bonus_check+(bonus_check/30)*(atten_jan-if(atten_jan=0,0,"+mondays[9]+")))),bonus_jan),"+			
+			"bonus_feb=if(bonus_feb>round(bonus_check+(bonus_check/30)*(atten_feb-if(atten_feb=0,0,"+mondays[10]+"))),if(bonus_check=0,bonus_feb,round(bonus_check+(bonus_check/30)*(atten_feb-if(atten_feb=0,0,"+mondays[10]+")))),bonus_feb),"+			
+			"bonus_mar=if(bonus_mar>round(bonus_check+(bonus_check/30)*(atten_mar-if(atten_mar=0,0,"+mondays[11]+"))),if(bonus_check=0,bonus_mar,round(bonus_check+(bonus_check/30)*(atten_mar-if(atten_mar=0,0,"+mondays[11]+")))),bonus_mar),"+			
+
+			"arrear_apr=if(arrear_apr>round((bonus_check/30)*adays_apr),if(bonus_check=0,arrear_apr,round((bonus_check/30)*adays_apr)),arrear_apr),"+
+			"arrear_may=if(arrear_may>round((bonus_check/30)*adays_may),if(bonus_check=0,arrear_may,round((bonus_check/30)*adays_may)),arrear_may),"+
+			"arrear_jun=if(arrear_jun>round((bonus_check/30)*adays_jun),if(bonus_check=0,arrear_jun,round((bonus_check/30)*adays_jun)),arrear_jun),"+
+			"arrear_jul=if(arrear_jul>round((bonus_check/30)*adays_jul),if(bonus_check=0,arrear_jul,round((bonus_check/30)*adays_jul)),arrear_jul),"+
+			"arrear_aug=if(arrear_aug>round((bonus_check/30)*adays_aug),if(bonus_check=0,arrear_aug,round((bonus_check/30)*adays_aug)),arrear_aug),"+
+			"arrear_sep=if(arrear_sep>round((bonus_check/30)*adays_sep),if(bonus_check=0,arrear_sep,round((bonus_check/30)*adays_sep)),arrear_sep),"+
+			"arrear_oct=if(arrear_oct>round((bonus_check/30)*adays_oct),if(bonus_check=0,arrear_oct,round((bonus_check/30)*adays_oct)),arrear_oct),"+
+			"arrear_nov=if(arrear_nov>round((bonus_check/30)*adays_nov),if(bonus_check=0,arrear_nov,round((bonus_check/30)*adays_nov)),arrear_nov),"+
+			"arrear_dec=if(arrear_dec>round((bonus_check/30)*adays_dec),if(bonus_check=0,arrear_dec,round((bonus_check/30)*adays_dec)),arrear_dec),"+
+			"arrear_jan=if(arrear_jan>round((bonus_check/30)*adays_jan),if(bonus_check=0,arrear_jan,round((bonus_check/30)*adays_jan)),arrear_jan),"+
+			"arrear_feb=if(arrear_feb>round((bonus_check/30)*adays_feb),if(bonus_check=0,arrear_feb,round((bonus_check/30)*adays_feb)),arrear_feb),"+
+			"arrear_mar=if(arrear_mar>round((bonus_check/30)*adays_mar),if(bonus_check=0,arrear_mar,round((bonus_check/30)*adays_mar)),arrear_mar),"+
 			"bonus_applicable=(bonus_apr+bonus_may+bonus_jun+bonus_jul+bonus_aug+bonus_sep+bonus_oct+bonus_nov+bonus_dec+bonus_jan+bonus_feb+bonus_mar+arrear_apr+arrear_may+arrear_jun+arrear_jul+arrear_aug+arrear_sep+arrear_oct+arrear_nov+arrear_dec+arrear_jan+arrear_feb+arrear_mar),"+
 			"bonus_value=round((bonus_applicable*bonus_per)/100),"+
 			"bonus_paid=if(bonus_value>bonus_limit,if(bonus_limit=0,bonus_value,bonus_limit),bonus_value) "+
