@@ -28,9 +28,9 @@ public class BonusRegister  extends WriteExcel
    String inputFile;
     
    private String  drvnm,flname,cmp_name,monthname; 
-   private int depo_code, cmp_code, fyear, mnth_code,btnno,repno;
+   private int depo_code, cmp_code, fyear, mnth_code,btnno,repno,sno;
    private double tot,totbonus,totatten;
-   private double[] gtot,gtot1;
+   private double[] gtot,gtot1,gtot2;
    ArrayList<?> esicList;
    SheetSettings settings; 
    
@@ -268,6 +268,7 @@ public void createHeader1(WritableSheet sheet)
 		int heightInPoints = 18*20;
 		gtot= new double[12];
 		gtot1= new double[12];
+		gtot2= new double[12];
 		
 		for (i=0;i<size;i++)
 		{
@@ -289,13 +290,17 @@ public void createHeader1(WritableSheet sheet)
 			if(tot>=31)
 				print=true;
 		    sheet.setRowView(r, heightInPoints);
-		    if(print)
-		    {
 		    	if(repno==5)
-		    		createReport1(sheet, emp);
-		    	else 
-		    		createReport2(sheet, emp);
-		    }
+		    	{
+				    	createReport1(sheet, emp);
+		    	}
+		    	else
+		    	{
+				    if(print)
+				    {
+				    	createReport2(sheet, emp);
+				    }
+		    	}
 			pgbrk++;
 		}
 
@@ -324,6 +329,20 @@ public void createHeader1(WritableSheet sheet)
 			{
 				addDouble(sheet, k++, r,  gtot1[i],1);
 				tot+=gtot1[i];
+			}
+			addDouble(sheet, k++, r,  tot,1);
+			addLabel(sheet, k++, r, "",1);
+			r++;
+			
+			k=3;
+			tot=0.00;
+			addLabel(sheet, 0, r, "",1);
+			addLabel(sheet, 1, r, "",1);
+			addLabel(sheet, 2, r, "",1);
+			for (int i=0;i<12;i++)
+			{
+				addDouble(sheet, k++, r,  gtot2[i],1);
+				tot+=gtot2[i];
 			}
 			addDouble(sheet, k++, r,  tot,1);
 			addLabel(sheet, k++, r, "",1);
@@ -362,15 +381,27 @@ public void createHeader1(WritableSheet sheet)
 				tot=0.00;
 				for (int i=0;i<12;i++)
 				{
-					 
+
 					addDouble(sheet, k++, r, emp.getAtten()[i],dash);
 					tot+=emp.getAtten()[i];
 					gtot1[i]+=emp.getAtten()[i];;
 				}
-					addDouble(sheet, k++, r,  tot,dash);
-					addLabel(sheet, k++, r, "",dash);
-					r++;
-	
+				addDouble(sheet, k++, r,  tot,dash);
+				addLabel(sheet, k++, r, "",dash);
+				r++;
+
+				k=3;
+				tot=0.00;
+				for (int i=0;i<12;i++)
+				{
+
+					addDouble(sheet, k++, r, emp.getArrdays()[i],dash);
+					tot+=emp.getArrdays()[i];
+					gtot2[i]+=emp.getArrdays()[i];;
+				}
+				addDouble(sheet, k++, r,  tot,dash);
+				addLabel(sheet, k++, r, "",dash);
+				r++;
 		 
 	}
 
@@ -382,7 +413,8 @@ public void createHeader1(WritableSheet sheet)
 			    int k=5;
 			    tot=0.00;
 			    totatten=0;
-				addNumber(sheet, 0, r, emp.getSerialno(),dash);
+//				addNumber(sheet, 0, r, emp.getSerialno(),dash);
+				addNumber(sheet, 0, r, ++sno,dash);
 				addLabel(sheet, 1, r, emp.getEmp_name(),dash);
 				addLabel(sheet, 2, r, "",dash);
 				addLabel(sheet, 3, r, "",dash);

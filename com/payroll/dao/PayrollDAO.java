@@ -2199,6 +2199,7 @@ public class PayrollDAO
 	  		 
 	  		 
 	  		double mont[] ;
+	  		double amont[] ;
 	  		double bonusval[];
 	  		EmptranDto emp=null;
 	  		 
@@ -2213,6 +2214,7 @@ public class PayrollDAO
 	  			String query=" select b.emp_code,e.emp_name, b.bonus_per, b.bonus_limit," +
 	  			" b.atten_apr, b.atten_may, b.atten_jun, b.atten_jul, b.atten_aug, b.atten_sep, b.atten_oct,b.atten_nov, b.atten_dec, b.atten_jan, b.atten_feb, b.atten_mar," +
 	  			" b.bonus_apr+b.arrear_apr, b.bonus_may+b.arrear_may, b.bonus_jun+b.arrear_jun, b.bonus_jul+b.arrear_jul, b.bonus_aug+b.arrear_aug, b.bonus_sep+b.arrear_sep, b.bonus_oct+b.arrear_oct,b.bonus_nov+b.arrear_nov, b.bonus_dec+b.arrear_dec, b.bonus_jan+b.arrear_jan, b.bonus_feb+b.arrear_feb, b.bonus_mar+b.arrear_mar," +
+	  			" b.adays_apr, b.adays_may, b.adays_jun, b.adays_jul, b.adays_aug, b.adays_sep, b.adays_oct,b.adays_nov, b.adays_dec, b.adays_jan, b.adays_feb, b.adays_mar," +
 	  			" b.bonus_applicable, b.bonus_value "+ 
 				" from  bonus b,employeemast e where b.fin_year=? and b.depo_code=? and b.cmp_code=? and e.emp_code=b.emp_code "; 
 
@@ -2234,16 +2236,19 @@ public class PayrollDAO
 	  				emp.setEmp_name(rs.getString(2)); // ip name
 	  				
 	  				mont= new double[12];
+	  				amont= new double[12];
 	  				bonusval= new double[12];
 	  				for(int j=0;j<12;j++)
 	  				{
 	  					mont[j]=rs.getDouble(j+5);
 	  					bonusval[j]=rs.getDouble(j+17);
+	  					amont[j]=rs.getDouble(j+29);
 	  				}
 	  				
 	  				emp.setAtten(mont);
+	  				emp.setArrdays(amont);
 	  				emp.setBonusval(bonusval);
-	  				emp.setBonus_value(rs.getDouble(30));
+	  				emp.setBonus_value(rs.getDouble(42));
 	  				
 	  				v.add(emp);
 	  			}

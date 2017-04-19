@@ -72,6 +72,7 @@ public class EmptranDto
 	private String remark ;
 	
 	private double[] atten;
+	private double[] arrdays;
 	private double[] bonusval;
 	private double arrear_amt;
 	private double arrear_sanc;
@@ -94,6 +95,12 @@ public class EmptranDto
 	
 	
 	
+	public double[] getArrdays() {
+		return arrdays;
+	}
+	public void setArrdays(double[] arrdays) {
+		this.arrdays = arrdays;
+	}
 	public double getOldwages() {
 		return oldwages;
 	}
