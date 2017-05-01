@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Vector;
 
 import com.payroll.dto.EmployeeMastDto;
@@ -543,6 +544,119 @@ public class EmployeeDAO
   	}
       
 
+    public HashMap getEmployeeMap(int depo_code,int cmp_code)
+  	{
+  		PreparedStatement ps = null;
+  		ResultSet rs=null;
+  		Connection con=null;
+  		EmployeeMastDto emp=null;
+  		HashMap empMap=null;
+  		 
+  		try 
+  		{
+  			con=ConnectionFactory.getConnection();
+  			con.setAutoCommit(false);
+
+  			String query="select EMP_CODE, EMP_NAME, DESIGNATION, father_name, surname, department, MADD1, madd2, madd3, MCITY, MSTATE, MPIN, MPHONE, MOBILE, "+ 
+			"MEMAIL, esic_no, pf_no, pan_no, DOBirth, DOjoin, DOresign, gross, basic, da, hra, add_hra, incentive, spl_incentive, lta, medical, bonus, ot_rate, "+ 
+			"stair_alw, label_print, emp_status, paymentmode, ifnull(bank,'Direct Cheque'), bank_add1, ifsc_code,bank_accno,bank_code,uan_no,bonus_per,bonus_check  "+
+			"from employeemast where depo_code=? and cmp_code=?  ";
+
+
+  			 
+  			ps = con.prepareStatement(query);
+  			ps.setInt(1, depo_code);
+  			ps.setInt(2, cmp_code);
+  			rs =ps.executeQuery();
+  			
+  		 
+  			empMap = new HashMap();
+  			while (rs.next())
+  			{
+  				emp = new EmployeeMastDto();
+  				emp.setEmp_code(rs.getInt(1));
+  				emp.setEmp_name(rs.getString(2)); 
+  				emp.setDesignation(rs.getString(3));
+  				emp.setFather_name(rs.getString(4)); 
+  				emp.setSurname(rs.getString(5));
+  				emp.setDepartment(rs.getString(6));
+  				emp.setMadd1(rs.getString(7));
+  				emp.setMadd2(rs.getString(8));
+  				emp.setMadd3(rs.getString(9));
+  				emp.setMcity(rs.getString(10));
+  				emp.setMstate(rs.getString(11));
+  				emp.setMpin(rs.getString(12));
+  				emp.setMphone(rs.getString(13));
+  				emp.setMobile(rs.getString(14));
+  				emp.setMemail(rs.getString(15));
+  				emp.setEsic_no(rs.getLong(16));
+  				emp.setPf_no(rs.getInt(17));
+  				emp.setPan_no(rs.getString(18));
+  				emp.setDobirth(rs.getDate(19));
+  				emp.setDojoin(rs.getDate(20));
+  				emp.setDoresign(rs.getDate(21));
+  				emp.setGross(rs.getDouble(22));
+  				emp.setBasic(rs.getDouble(23));
+  				emp.setDa(rs.getDouble(24));
+  				emp.setHra(rs.getDouble(25));
+  				emp.setAdd_hra(rs.getDouble(26));
+  				emp.setIncentive(rs.getDouble(27));
+  				emp.setSpl_incentive(rs.getDouble(28));
+  				emp.setLta(rs.getDouble(29));
+  				emp.setMedical(rs.getDouble(30));
+  				emp.setBonus(0.00); // used in bonus_limit
+  				emp.setOt_rate(rs.getDouble(32));
+  				emp.setStair_alw(rs.getDouble(33));
+  				emp.setLabel_print(rs.getString(34));
+  				emp.setEmp_status(rs.getString(35));
+  				
+  				// setting bank details
+  				emp.setBank(rs.getString(37).length()>1?rs.getString(37):"Direct Cheque");
+  				emp.setBank_add1(rs.getString(38));
+  				emp.setIfsc_code(rs.getString(39));
+  				emp.setBank_accno(rs.getString(40));
+  				emp.setBank_code(rs.getInt(41));
+  				emp.setUan_no(rs.getLong(42));
+  				emp.setBonus_per(rs.getDouble(43));
+  				emp.setBonus_limit(rs.getDouble(31)); // same bonus varaible will be used
+  				emp.setBonus_check(rs.getDouble(44));
+
+  				empMap.put(rs.getInt(1), emp); 
+				
+  				 
+  			}
+
+
+
+  			con.commit();
+  			con.setAutoCommit(true);
+  			rs.close();
+  			ps.close();
+
+  		} catch (Exception ex) {
+  			try {
+  				con.rollback();
+  			} catch (SQLException e) {
+  				e.printStackTrace();
+  			}
+  			System.out.println("-------------Exception in EmployeeDAO.getEmployeeMap " + ex);
+
+  		}
+  		finally {
+  			try {
+  				System.out.println("No. of Records Update/Insert : " );
+
+  				if(rs != null){rs.close();}
+  				if(ps != null){ps.close();}
+  				if(con != null){con.close();}
+  			} catch (SQLException e) {
+  				System.out.println("-------------Exception in EmployeeDAO.Connection.close --- getEmployeeList "+e);
+  			}
+  		}
+  		return empMap;
+  	}    
+  	
+  	
     
     public java.sql.Date setSqlDate(Date javadate)
 	{

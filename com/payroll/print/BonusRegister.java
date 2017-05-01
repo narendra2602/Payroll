@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 
 import jxl.SheetSettings;
@@ -16,8 +17,10 @@ import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
 import com.payroll.dao.PayrollDAO;
+import com.payroll.dto.EmployeeMastDto;
 import com.payroll.dto.EmptranDto;
 import com.payroll.excel.WriteExcel;
+import com.payroll.view.BaseClass;
 
 
 public class BonusRegister  extends WriteExcel
@@ -33,6 +36,7 @@ public class BonusRegister  extends WriteExcel
    private double[] gtot,gtot1,gtot2;
    ArrayList<?> esicList;
    SheetSettings settings; 
+   private HashMap empMap;
    
   public BonusRegister(Integer depo_code,Integer cmp_code,Integer fyear,String cmp_name,String drvnm,Integer repno) 
   
@@ -48,7 +52,7 @@ public class BonusRegister  extends WriteExcel
     	this.fyear=fyear;
     	this.repno=repno;
     	sdf = new SimpleDateFormat("dd/MM/yyyy");
-    	
+    	empMap=BaseClass.loginDt.getEmpmap();
     	flname="Bonus-"+cmp_name.substring(0, 6);
         jbInit();
   
@@ -413,17 +417,18 @@ public void createHeader1(WritableSheet sheet)
 			    int k=5;
 			    tot=0.00;
 			    totatten=0;
+			    EmployeeMastDto empdto=(EmployeeMastDto) empMap.get(emp.getEmp_code());
 //				addNumber(sheet, 0, r, emp.getSerialno(),dash);
 				addNumber(sheet, 0, r, ++sno,dash);
 				addLabel(sheet, 1, r, emp.getEmp_name(),dash);
-				addLabel(sheet, 2, r, "",dash);
+				addLabel(sheet, 2, r, empdto.getFather_name(),dash);
 				addLabel(sheet, 3, r, "",dash);
-				addLabel(sheet, 4, r, "",dash);
+				addLabel(sheet, 4, r, empdto.getDesignation(),dash);
 				
 				for (int i=0;i<12;i++)
 				{
 					tot+=emp.getBonusval()[i];
-					totatten+=emp.getAtten()[i];
+					totatten+=emp.getAtten()[i]+emp.getArrear_days();
 					gtot[i]+=emp.getBonusval()[i];;
 				}
 					addDouble(sheet, k++, r,  totatten,dash);

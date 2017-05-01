@@ -211,6 +211,7 @@ public class LoginDAO
 			}
 					
 			ldo.setEmpList(emplist);
+			ldo.setEmpmap(emp.getEmployeeMap(division,depo_code)) ;
 			ldo.setBranchList(udao.getBranch(ldo.getLogin_id()));
 			ldo=getSalesPackage(division, depo_code, con, ldo);
 					 

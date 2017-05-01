@@ -38,14 +38,8 @@ public class LoginDto {
 
 	
 	private HashMap<?,?> prtmap;
-	public Vector<?> getBankList() {
-		return bankList;
-	}
+	
 
-
-	public void setBankList(Vector<?> bankList) {
-		this.bankList = bankList;
-	}
 	private HashMap<?,?> prtmap1;
 	private String divnm;
 	private String brnnm;
@@ -78,7 +72,7 @@ public class LoginDto {
 	private List<Integer> divisionList;
 	private List<UserDto> reportList;
 	private Vector<EmployeeMastDto> empList;
-
+	private HashMap<?,?> empmap;
 	
 	
 	/// most important /////
@@ -89,7 +83,29 @@ public class LoginDto {
 	private Vector<?> cmpList;
 	
 	
+	
+	
+	 
 
+
+	public HashMap<?, ?> getEmpmap() {
+		return empmap;
+	}
+
+
+	public void setEmpmap(HashMap<?, ?> empmap) {
+		this.empmap = empmap;
+	}
+
+
+	public Vector<?> getBankList() {
+		return bankList;
+	}
+
+
+	public void setBankList(Vector<?> bankList) {
+		this.bankList = bankList;
+	}
 
 	public Vector<EmployeeMastDto> getEmpList() {
 		return empList;
