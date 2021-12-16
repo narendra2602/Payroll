@@ -78,7 +78,7 @@ public class BonusGeneration extends BaseClass implements ActionListener
 		lblMonth.setBounds(72, 136, 110, 20);
 		getContentPane().add(lblMonth);
 
-		smonth = new JComboBox(loginDt.getFmonth());
+		smonth = new JComboBox(new Vector(loginDt.getFmonth()));
 		smonth.setBounds(176, 134, 159, 23);
 		getContentPane().add(smonth);
 		smonth.setActionCommand("month");
@@ -262,6 +262,26 @@ public class BonusGeneration extends BaseClass implements ActionListener
 	    	checkPassword();
 		}
 
+	    if(e.getActionCommand().equalsIgnoreCase("fyear"))
+	    {
+		    yd = (YearDto) fyear.getSelectedItem();
+			System.out.println(yd.getYearcode());
+			
+			Vector v = (Vector) loginDt.getFmon().get(yd.getYearcode());
+			System.out.println(v.size());
+			
+			smonth.removeAllItems();
+			MonthDto mn=null;
+			for (int i=0; i<v.size();i++)
+			{
+				 mn = (MonthDto) v.get(i);
+				 smonth.addItem(mn);
+				 
+			}
+			 
+
+	    }
+		    
 		
 	}
  

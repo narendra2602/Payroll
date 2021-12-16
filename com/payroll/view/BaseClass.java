@@ -34,6 +34,8 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.MaskFormatter;
@@ -78,7 +80,7 @@ public class BaseClass extends JFrame {
 		  simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");  // Date Format
 		  ipaddress =getIpAdress();
 		  packageName="Labour Contractor PayRoll";
-		  version="Version : 22.04.2017-V1";
+		  version="Version : 06.12.2021-V1";
 		  
        myFocusListener = new FocusListener() {
        public void focusGained(FocusEvent focusEvent) {
@@ -521,11 +523,23 @@ public class BaseClass extends JFrame {
 	
 
 	
-	public int confirmationDialongHO()
+	public String confirmationDialongPassword()
 	{
-		Object[] options = {"Single", "Multiple"};
-		return JOptionPane.showOptionDialog(this, "Are you sure?","Confirmation", JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE,null, options, options[0]);		
-	}
+			String passwordValue=null;
+		    JLabel jPassword = new JLabel("Password");
+	        JTextField password = new JPasswordField();
+	        password.requestFocus();
+	        Object[] ob = {jPassword, password};
+	        int result = JOptionPane.showConfirmDialog(null, ob, "Please enter password ", JOptionPane.OK_CANCEL_OPTION);
+
+	        if (result == JOptionPane.OK_OPTION) {
+	            passwordValue = password.getText();
+	            //Here is some validation code
+	        }
+	        
+	        
+	        return passwordValue;
+	 }
 
 	
 	public int confirmationDialong()
@@ -732,6 +746,34 @@ public class BaseClass extends JFrame {
 	        }
 	    }
 	    
-	}	    	
+	}	    
+	
+	public void setFocusListener(JFrame container)
+	{
+
+		Component component[] = container.getContentPane().getComponents();
+		for(int i=0; i<component.length; i++)
+		{
+			if (component[i] instanceof JTextField)
+			{
+				JTextField textfield = (JTextField)component[i];
+				   textfield.addFocusListener(myFocusListener);
+			}
+			else  if (component[i] instanceof JComboBox)
+			{
+				JComboBox combox = (JComboBox)component[i];
+				combox.addFocusListener(myFocusListener);
+			}
+			else  if (component[i] instanceof JTextArea)
+			{
+				JTextArea textarea = (JTextArea) component[i];
+				textarea.addFocusListener(myFocusListener);
+				
+			}
+		}
+
+	}
+
+	
 	
 }

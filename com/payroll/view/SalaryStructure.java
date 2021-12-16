@@ -35,8 +35,8 @@ public class SalaryStructure extends BaseClass implements ActionListener
 	PreparedStatement curr=null;
 	ResultSet rcurr=null;
 	YearDto yd;
-	private JLabel lblGross,lblBasic,lblDa,lblHra,lblAdd_hra,lblIncentive,lblSpl_incentive,lblLta,lblMedical,lblBonus,lblOtRate,lblSt_allow;
-	private  JDoubleField gross,basic,da,hra,add_hra,incentive,spl_incentive,lta,medical,bonus,ot_rate,st_allow;
+	private JLabel lblGross,lblBasic,lblDa,lblHra,lblAdd_hra,lblIncentive,lblSpl_incentive,lblLta,lblMedical,lblBonus,lblOtRate,lblSt_allow,lblFood_allowance;
+	private  JDoubleField gross,basic,da,hra,add_hra,incentive,spl_incentive,lta,medical,bonus,ot_rate,st_allow,food_allownace;
 	private EmployeeDAO empDao; 
 	private JLabel lblPassword;	
 	private JPasswordField passwordF;
@@ -49,7 +49,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		
 		//setUndecorated(true);
 		setResizable(false);
-		setSize(586, 374);	
+		setSize(587, 403);	
 		setLocationRelativeTo(null);
 
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -172,6 +172,19 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		getContentPane().add(spl_incentive);
 		
 
+		lblFood_allowance = new JLabel("Food Allowance");
+		lblFood_allowance.setBounds(79, 279, 114, 20);
+		getContentPane().add(lblFood_allowance);
+
+		food_allownace = new JDoubleField();
+		food_allownace.setHorizontalAlignment(SwingConstants.RIGHT);
+		food_allownace.setMaxLength(10); //Set maximum length             
+		food_allownace.setPrecision(2); //Set precision (1 in your case)              
+		food_allownace.setAllowNegative(false); //Set false to disable negatives
+		food_allownace.setBounds(193, 280, 86, 22);
+		getContentPane().add(food_allownace);
+
+		
 		lblLta = new JLabel("LTA");
 		lblLta.setBounds(337, 111, 89, 20);
 		getContentPane().add(lblLta);
@@ -289,31 +302,36 @@ public class SalaryStructure extends BaseClass implements ActionListener
 						break;
 					case 24:
 						calfunction(spl_incentive);
+						food_allownace.requestFocus();
+						food_allownace.setSelectionStart(0);
+						break;
+					case 25:
+						calfunction(food_allownace);
 						lta.requestFocus();
 						lta.setSelectionStart(0);
 						break;
-					case 25:
+					case 26:
 						calfunction(lta);
 						medical.requestFocus();
 						medical.setSelectionStart(0);
 						break;
-					case 26:
+					case 27:
 						bonus.requestFocus();
 						bonus.setSelectionStart(0);
 						break;
-					case 27:
+					case 28:
 						gross.requestFocus();
 						gross.setSelectionStart(0);
 						break;
-					case 28:
+					case 29:
 						ot_rate.requestFocus();
 						ot_rate.setSelectionStart(0);
 						break;
-					case 29:
+					case 30:
 						st_allow.requestFocus();
 						st_allow.setSelectionStart(0);
 						break;
-					case 30:
+					case 31:
 						changetButton.requestFocus();
 						changetButton.setBackground(new Color(139, 153, 122));
 						break;
@@ -342,6 +360,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		add_hra.setName("22");
 		incentive.setName("23");
 		spl_incentive.setName("24");
+		food_allownace.setName("25");
 		lta.setName("25");
 		medical.setName("26");
 		bonus.setName("27");
@@ -357,6 +376,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		add_hra.addKeyListener(keyListener);
 		incentive.addKeyListener(keyListener);
 		spl_incentive.addKeyListener(keyListener);
+		food_allownace.addKeyListener(keyListener);
 		lta.addKeyListener(keyListener);
 		medical.addKeyListener(keyListener);
 		bonus.addKeyListener(keyListener);
@@ -371,6 +391,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		add_hra.addFocusListener(myFocusListener);
 		incentive.addFocusListener(myFocusListener);
 		spl_incentive.addFocusListener(myFocusListener);
+		food_allownace.addFocusListener(myFocusListener);
 		lta.addFocusListener(myFocusListener);
 		medical.addFocusListener(myFocusListener);
 		bonus.addFocusListener(myFocusListener);
@@ -378,12 +399,12 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		st_allow.addFocusListener(myFocusListener);
 		
 		exitButton = new JButton("Exit");
-		exitButton.setBounds(305, 285, 100, 30);
+		exitButton.setBounds(305, 319, 100, 30);
 		getContentPane().add(exitButton);
 
 
 		changetButton = new JButton("Change");
-		changetButton.setBounds(185, 285, 100, 30);
+		changetButton.setBounds(185, 319, 100, 30);
 		getContentPane().add(changetButton);
 		changetButton.addKeyListener(new KeyAdapter() 
 		{
@@ -404,7 +425,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new LineBorder(new Color(0, 0, 0)));
-		panel_1.setBounds(10, 22, 560, 312);
+		panel_1.setBounds(10, 22, 560, 341);
 		getContentPane().add(panel_1);
 
 		exitButton.addActionListener(this);
@@ -441,6 +462,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 			add_hra.setText("");
 			incentive.setText("");
 			spl_incentive.setText("");
+			food_allownace.setText("");
 			lta.setText("");
 			medical.setText("");
 			bonus.setText("");
@@ -483,6 +505,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 			empDto.setAdd_hra(setDoubleNumber(add_hra.getText().trim()));
 			empDto.setIncentive(setDoubleNumber(incentive.getText().trim()));
 			empDto.setSpl_incentive(setDoubleNumber(spl_incentive.getText().trim()));
+			empDto.setFood_allowance(setDoubleNumber(food_allownace.getText().trim()));
 			empDto.setLta(setDoubleNumber(lta.getText().trim()));
 			empDto.setMedical(setDoubleNumber(medical.getText().trim()));
 			empDto.setBonus(setDoubleNumber(bonus.getText().trim()));
@@ -511,6 +534,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		add_hra.setText(formatter.format(empDto.getAdd_hra()));
 		incentive.setText(formatter.format(empDto.getIncentive()));
 		spl_incentive.setText(formatter.format(empDto.getSpl_incentive()));
+		food_allownace.setText(formatter.format(empDto.getFood_allowance()));
 		lta.setText(formatter.format(empDto.getLta()));
 		medical.setText(formatter.format(empDto.getMedical()));
 		bonus.setText(formatter.format(empDto.getBonus()));
@@ -530,6 +554,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 		add_hra.setEnabled(b);
 		incentive.setEnabled(b);
 		spl_incentive.setEnabled(b);
+		food_allownace.setEnabled(b);
 		lta.setEnabled(b);
 		medical.setEnabled(b);
 		bonus.setEnabled(b);
@@ -541,7 +566,7 @@ public class SalaryStructure extends BaseClass implements ActionListener
 	public void calfunction(JDoubleField dval)
 	{
 		dval.setText(formatter.format(setDoubleNumber(dval.getText())));
-		double grossval=setDoubleNumber(basic.getText())+setDoubleNumber(da.getText())+setDoubleNumber(hra.getText())+setDoubleNumber(add_hra.getText())+setDoubleNumber(incentive.getText())+setDoubleNumber(spl_incentive.getText())+setDoubleNumber(lta.getText());
+		double grossval=setDoubleNumber(basic.getText())+setDoubleNumber(da.getText())+setDoubleNumber(hra.getText())+setDoubleNumber(add_hra.getText())+setDoubleNumber(incentive.getText())+setDoubleNumber(spl_incentive.getText())+setDoubleNumber(food_allownace.getText())+setDoubleNumber(lta.getText());
 		gross.setText(formatter.format(grossval));
 		
 	}	

@@ -309,7 +309,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 	try {
 //		rde=0;
  
-		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value();
+		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
 
 		//double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getIncentive_value()+vd.getOt_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getSpl_incen_value()+vd.getMisc_value()+vd.getLta_value()+vd.getMedical_value();
 		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt();
@@ -441,6 +441,26 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 		createContent3(cb,540,y,df.format(vd.getAtten_days()),PdfContentByte.ALIGN_RIGHT);
 		y=y-10;
 
+
+		createContent3(cb,30,y,"Opt1 Allow ",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,80,y,":",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,140,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
+		createContent3(cb,430,y,"Opt Days",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,480,y,":",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,540,y,df.format(vd.getMachine1_days()),PdfContentByte.ALIGN_RIGHT);
+		y=y-10;
+
+		createContent3(cb,30,y,"Opt2 Allow ",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,80,y,":",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,140,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
+		createContent3(cb,430,y,"Opt Days",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,480,y,":",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,540,y,df.format(vd.getMachine2_days()),PdfContentByte.ALIGN_RIGHT);
+		y=y-10;
+		
+		createContent3(cb,30,y,"Food Allow ",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,80,y,":",PdfContentByte.ALIGN_LEFT);
+		createContent3(cb,140,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT);
 		createContent3(cb,430,y,"Extra Hrs",PdfContentByte.ALIGN_LEFT);
 		createContent3(cb,480,y,":",PdfContentByte.ALIGN_LEFT);
 		createContent3(cb,540,y,df.format(vd.getExtra_hrs()),PdfContentByte.ALIGN_RIGHT);
@@ -467,7 +487,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 		createContent3(cb,180,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
 		createContent1(cb,280,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
 		createContent3(cb,400,y,"Signature",PdfContentByte.ALIGN_LEFT);
-		y=y-30;
+		y=y-10;
 		
 		
 		cb.moveTo(20,y);  // horizontal lines 
@@ -475,7 +495,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 		y=y-2;
 		cb.moveTo(20,y);  // horizontal lines 
 		cb.lineTo(575,y);
-		y=y-40;
+		y=y-30;
 		
 		cb.stroke();
 

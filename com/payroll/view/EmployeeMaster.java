@@ -1,11 +1,14 @@
 package com.payroll.view;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -14,17 +17,23 @@ import java.awt.event.MouseListener;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Vector;
 
+import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
@@ -45,26 +54,26 @@ import com.payroll.util.JDoubleField;
 import com.payroll.util.TableDataSorter;
 import com.payroll.util.TextField;
 
-public class EmployeeMaster extends BaseClass implements ActionListener 
-{
+public class EmployeeMaster extends BaseClass implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private JComboBox bankList;
-	private JScrollPane  bankdPane;
+	private JScrollPane bankdPane;
 
 	private JLabel label_12;
 	private JLabel branch;
 	private JLabel lblDispatchEntry;
 	private JPanel panel_2;
 	private JButton exitButton;
-	private JButton btnSave,btnAdd,btnExcel,btnResign,btnResignation,btnRefresh;
-	private JComboBox labelprint,emp_status;
+	private JButton btnSave, btnAdd, btnExcel, btnResign, btnResignation,
+			btnRefresh;
+	private JComboBox labelprint, emp_status;
 	private JLabel lblGroupCode;
-	private JLabel lblAcCode,lblEsiCode,lblUanNo;
-	private JTextField mac_code,esic_no,uan_no;
-	private JLabel lblName,lblFatherName;
+	private JLabel lblAcCode, lblEsiCode, lblUanNo, lblAdharNo;
+	private JTextField mac_code, esic_no, uan_no, adhar_no;
+	private JLabel lblName, lblFatherName;
 	private JLabel lblAddress;
-	private JTextField madd1,fname;
-	private JTextField emp_name,dsCombo;
+	private JTextField madd1, fname;
+	private JTextField emp_name, dsCombo;
 	private JTextField mobile;
 	private JLabel lblMobileNo;
 	private JTextField mphone;
@@ -75,22 +84,28 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 	private JTextField mcity;
 	private JLabel lblEmail;
 	private JTextField memail;
-	private JLabel lblGross,lblBasic,lblDa,lblHra,lblAdd_hra,lblIncentive,lblSpl_incentive,lblLta,lblMedical,lblBonus,lblOtRate,lblSt_allow,lblBonusper,lblBonuschk;
-	private  JDoubleField gross,basic,da,hra,add_hra,incentive,spl_incentive,lta,medical,bonus,ot_rate,st_allow,bonus_per,bonus_limit,bonus_check;
-	private JLabel lblPinCode,lblPanNo,lblAcNo,lblBankName,lblAddress_2,lblIfscCode;
-	private JTextField mpin,pan_no,bank_accno,bank_name,bank_add1,ifsc_code;
+	private JLabel lblGross, lblBasic, lblDa, lblHra, lblAdd_hra, lblIncentive,
+			lblSpl_incentive, lblLta, lblMedical, lblBonus, lblOtRate,
+			lblSt_allow, lblBonusper, lblBonuschk,lblFoodallowance;
+	private JDoubleField gross, basic, da, hra, add_hra, incentive,
+			spl_incentive, lta, medical, bonus, ot_rate, st_allow, bonus_per,
+			bonus_limit, bonus_check,food_allowance;
+	private JLabel lblPinCode, lblPanNo, lblAcNo, lblBankName, lblAddress_2,
+			lblIfscCode;
+	private JTextField mpin, pan_no, bank_accno, bank_name, bank_add1,
+			ifsc_code;
 	private JTextField madd2;
 	private JPanel panel_4;
 	private JPanel panel_5;
 	private JLabel lblName_1;
 	private JFormattedTextField party_name;
 	private JScrollPane scrollPane;
-	private JPanel panel_6,panel_7,panel_8;
-	private JLabel lblSearch,lblPdetail,lblSdetail;
-	private Font fontPlan,font;
+	private JPanel panel_6, panel_7, panel_8;
+	private JLabel lblSearch, lblPdetail, lblSdetail;
+	private Font fontPlan, font;
 	NumberFormat formatter;
 	SimpleDateFormat sdf;
-	String option=null;
+	String option = null;
 	private JTextField mstate;
 	private JTextField emp_code;
 	private JFormattedTextField dobirth;
@@ -100,42 +115,46 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 	private JTable emplyeeTable;
 	private EmployeeDAO empDao;
 	private TableModel myTableModel;
-	private TableRowSorter<TableModel> sorter; 
-	int stcd,arcd,rgcd,trcd,msrcd,lvlcd;
+	private TableRowSorter<TableModel> sorter;
+	int stcd, arcd, rgcd, trcd, msrcd, lvlcd;
 	private EmployeeMastDto empDto;
 	Vector data;
 	String repNm;;
 	int repno;
-	public EmployeeMaster(String nm,String repNm)
-	{
+	private JPanel topPanel;
+	private JTabbedPane tabbedPane;
+	private JPanel panel1;
+	private JPanel panel2;
+
+	public EmployeeMaster(String nm, String repNm) {
 		setResizable(false);
-		setSize(1024, 768);		
+		setSize(1024, 768);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		getContentPane().setLayout(null);
 
-		this.repNm=repNm;
-		option="";
-		formatter = new DecimalFormat("0.00");     // Decimal Value format
+		this.repNm = repNm;
+		option = "";
+		formatter = new DecimalFormat("0.00"); // Decimal Value format
 		sdf = new SimpleDateFormat("dd/MM/yyyy");
 		sdf.setLenient(true);
-		
+
 		empDao = new EmployeeDAO();
-		
+
 		lblFinancialAccountingYear = new JLabel(loginDt.getFooter());
 		lblFinancialAccountingYear.setForeground(Color.BLACK);
 		lblFinancialAccountingYear.setBounds(400, 672, 477, 15);
 		getContentPane().add(lblFinancialAccountingYear);
 
-		fontPlan =new Font("Tahoma", Font.PLAIN, 11);
+		fontPlan = new Font("Tahoma", Font.PLAIN, 11);
 		font = new Font("Tahoma", Font.BOLD, 11);
 
 		JLabel promleb = new JLabel(promLogo);
 		promleb.setBounds(10, 670, 35, 35);
 		getContentPane().add(promleb);
 
-//		JLabel arisleb = new JLabel(arisLogo);
-//		arisleb.setBounds(10, 11, 35, 37);
-//		getContentPane().add(arisleb);
+		// JLabel arisleb = new JLabel(arisLogo);
+		// arisleb.setBounds(10, 11, 35, 37);
+		// getContentPane().add(arisleb);
 
 		label_12 = new JLabel((Icon) null);
 		label_12.setBounds(10, 649, 35, 35);
@@ -154,18 +173,15 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		lblDispatchEntry.setBounds(517, 17, 251, 22);
 		getContentPane().add(lblDispatchEntry);
 
-
 		btnAdd = new JButton("Add");
 		btnAdd.setMnemonic(KeyEvent.VK_A);
 		btnAdd.setBounds(704, 616, 86, 30);
 		getContentPane().add(btnAdd);
-		
-		
+
 		btnExcel = new JButton("Excel");
 		btnExcel.setMnemonic(KeyEvent.VK_E);
 		btnExcel.setBounds(263, 616, 86, 30);
 		getContentPane().add(btnExcel);
-
 
 		btnResign = new JButton("Resign List");
 		btnResign.setMnemonic(KeyEvent.VK_R);
@@ -176,49 +192,40 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		btnResignation.setMnemonic(KeyEvent.VK_G);
 		btnResignation.setBounds(465, 616, 105, 30);
 		getContentPane().add(btnResignation);
-		
+
 		btnRefresh = new JButton("Refresh");
 		btnRefresh.setMnemonic(KeyEvent.VK_F);
 		btnRefresh.setBounds(465, 616, 105, 30);
 		getContentPane().add(btnRefresh);
 
-		btnSave= new JButton("Save");
+		btnSave = new JButton("Save");
 		btnSave.setBounds(799, 616, 86, 30);
 		getContentPane().add(btnSave);
-		btnSave.addKeyListener(new KeyAdapter() 
-		{
-			public void keyPressed(KeyEvent evt) 
-			{
-				if(evt.getKeyCode() == KeyEvent.VK_ENTER)
-				{
+		btnSave.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent evt) {
+				if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
 					saveData();
 				}
 			}
 		});
-		
-		
-		
+
 		exitButton = new JButton("Exit");
 		exitButton.setBounds(891, 616, 86, 30);
 		getContentPane().add(exitButton);
-		
-		
+
 		dsCombo = new JTextField();
 		dsCombo.setName("0");
 		dsCombo.setBounds(393, 60, 153, 22);
 		getContentPane().add(dsCombo);
-		dsCombo.addKeyListener(new KeyAdapter() 
-		{
-			public void keyPressed(KeyEvent evt) 
-			{
-				if(evt.getKeyCode() == KeyEvent.VK_ENTER)
-				{
+		dsCombo.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent evt) {
+				if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
 					emp_code.requestFocus();
 					emp_code.setSelectionStart(0);
 				}
 			}
 		});
-		
+
 		lblGroupCode = new JLabel("Designation :");
 		lblGroupCode.setBounds(279, 61, 171, 20);
 		getContentPane().add(lblGroupCode);
@@ -231,7 +238,6 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		mac_code.setBounds(687, 88, 95, 22);
 		getContentPane().add(mac_code);
 
-		
 		lblEsiCode = new JLabel("ESIC:");
 		lblEsiCode.setBounds(798, 89, 65, 20);
 		getContentPane().add(lblEsiCode);
@@ -239,7 +245,6 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		esic_no = new TextField(10);
 		esic_no.setBounds(860, 88, 116, 22);
 		getContentPane().add(esic_no);
-
 
 		lblUanNo = new JLabel("UAN:");
 		lblUanNo.setBounds(798, 117, 65, 20);
@@ -249,7 +254,14 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		uan_no.setBounds(860, 116, 116, 22);
 		getContentPane().add(uan_no);
 
-		
+		lblAdharNo = new JLabel("Aadhaar:");
+		lblAdharNo.setBounds(798, 145, 65, 20);
+		getContentPane().add(lblAdharNo);
+
+		adhar_no = new TextField(12);
+		adhar_no.setBounds(860, 144, 116, 22);
+		getContentPane().add(adhar_no);
+
 		lblName = new JLabel("Name:");
 		lblName.setBounds(279, 148, 171, 20);
 		getContentPane().add(lblName);
@@ -257,7 +269,7 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		lblFatherName = new JLabel("Father's Name:");
 		lblFatherName.setBounds(279, 175, 171, 20);
 		getContentPane().add(lblFatherName);
-		
+
 		lblAddress = new JLabel("Address 1:");
 		lblAddress.setBounds(279, 205, 171, 20);
 		getContentPane().add(lblAddress);
@@ -266,7 +278,6 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		fname.setBounds(393, 175, 277, 22);
 		getContentPane().add(fname);
 
-		
 		madd1 = new TextField(40);
 		madd1.setBounds(393, 204, 277, 22);
 		getContentPane().add(madd1);
@@ -282,7 +293,6 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		mcity = new TextField(25);
 		mcity.setBounds(819, 232, 153, 22);
 		getContentPane().add(mcity);
-
 
 		emp_name = new TextField(30);
 		emp_name.setBounds(393, 147, 277, 22);
@@ -320,161 +330,27 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		memail.setBounds(393, 320, 277, 22);
 		getContentPane().add(memail);
 
-		
-
-		lblGross = new JLabel("Gross");
-		lblGross.setBounds(487, 518, 89, 20);
-		getContentPane().add(lblGross);
-
-		gross = new JDoubleField();
-		gross.setHorizontalAlignment(SwingConstants.RIGHT);
-		gross.setMaxLength(10); //Set maximum length             
-		gross.setPrecision(2); //Set precision (1 in your case)              
-		gross.setAllowNegative(false); //Set false to disable negatives
-		gross.setBounds(584, 518, 86, 22);
-		getContentPane().add(gross);
-
-		
-		lblBasic = new JLabel("Basic");
-		lblBasic.setBounds(279, 433, 171, 20);
-		getContentPane().add(lblBasic);
-
-		basic = new JDoubleField();
-		basic.setHorizontalAlignment(SwingConstants.RIGHT);
-		basic.setMaxLength(10); //Set maximum length             
-		basic.setPrecision(2); //Set precision (1 in your case)              
-		basic.setAllowNegative(false); //Set false to disable negatives
-		basic.setBounds(393, 432, 86, 22);
-		getContentPane().add(basic);
-
-
-		lblDa = new JLabel("DA");
-		lblDa.setBounds(279, 461, 171, 20);
-		getContentPane().add(lblDa);
-
-		da = new JDoubleField();
-		da.setHorizontalAlignment(SwingConstants.RIGHT);
-		da.setMaxLength(10); //Set maximum length             
-		da.setPrecision(2); //Set precision (1 in your case)              
-		da.setAllowNegative(false); //Set false to disable negatives
-		da.setBounds(393, 462, 86, 22);
-		getContentPane().add(da);
-
-
-		lblHra = new JLabel("HRA");
-		lblHra.setBounds(279, 491, 171, 20);
-		getContentPane().add(lblHra);
-
-		hra = new JDoubleField();
-		hra.setHorizontalAlignment(SwingConstants.RIGHT);
-		hra.setMaxLength(10); //Set maximum length             
-		hra.setPrecision(2); //Set precision (1 in your case)              
-		hra.setAllowNegative(false); //Set false to disable negatives
-		hra.setBounds(393, 490, 86, 22);
-		getContentPane().add(hra);
-
-
-		lblAdd_hra = new JLabel("Add. HRA");
-		lblAdd_hra.setBounds(279, 517, 171, 20);
-		getContentPane().add(lblAdd_hra);
-
-		add_hra = new JDoubleField();
-		add_hra.setHorizontalAlignment(SwingConstants.RIGHT);
-		add_hra.setMaxLength(10); //Set maximum length             
-		add_hra.setPrecision(2); //Set precision (1 in your case)              
-		add_hra.setAllowNegative(false); //Set false to disable negatives
-		add_hra.setBounds(393, 518, 86, 22);
-		getContentPane().add(add_hra);
-
-		
-		lblIncentive = new JLabel("Incentive");
-		lblIncentive.setBounds(279, 545, 171, 20);
-		getContentPane().add(lblIncentive);
-
-		incentive = new JDoubleField();
-		incentive.setHorizontalAlignment(SwingConstants.RIGHT);
-		incentive.setMaxLength(10); //Set maximum length             
-		incentive.setPrecision(2); //Set precision (1 in your case)              
-		incentive.setAllowNegative(false); //Set false to disable negatives
-		incentive.setBounds(393, 546, 86, 22);
-		getContentPane().add(incentive);
+		topPanel = new JPanel();
+		topPanel.setBackground(SystemColor.window);
+		topPanel.setBounds(265, 390, 740, 212);
+		topPanel.setLayout(new BorderLayout());
+		getContentPane().add(topPanel);
 		
 		
-		lblSpl_incentive = new JLabel("Spl. Incentive");
-		lblSpl_incentive.setBounds(279, 573, 89, 20);
-		getContentPane().add(lblSpl_incentive);
+		createPage1();
+		createPage2();
+		
+		tabbedPane = new JTabbedPane();
+		tabbedPane.addTab("Salary Detail ", panel1);
+		tabbedPane.addTab("Bank Detail   ", panel2);
 
-		spl_incentive = new JDoubleField();
-		spl_incentive.setHorizontalAlignment(SwingConstants.RIGHT);
-		spl_incentive.setMaxLength(10); //Set maximum length             
-		spl_incentive.setPrecision(2); //Set precision (1 in your case)              
-		spl_incentive.setAllowNegative(false); //Set false to disable negatives
-		spl_incentive.setBounds(393, 574, 86, 22);
-		getContentPane().add(spl_incentive);
+		topPanel.add( tabbedPane, BorderLayout.CENTER );
+		tabbedPane.setVisible(true);
+		
 		
 
-		lblLta = new JLabel("LTA");
-		lblLta.setBounds(487, 433, 89, 20);
-		getContentPane().add(lblLta);
-
-		lta = new JDoubleField();
-		lta.setHorizontalAlignment(SwingConstants.RIGHT);
-		lta.setMaxLength(10); //Set maximum length             
-		lta.setPrecision(2); //Set precision (1 in your case)              
-		lta.setAllowNegative(false); //Set false to disable negatives
-		lta.setBounds(584, 432, 86, 22);
-		getContentPane().add(lta);
 
 
-		lblMedical = new JLabel("Medical");
-		lblMedical.setBounds(487, 461, 89, 20);
-		getContentPane().add(lblMedical);
-
-		medical = new JDoubleField();
-		medical.setHorizontalAlignment(SwingConstants.RIGHT);
-		medical.setMaxLength(10); //Set maximum length             
-		medical.setPrecision(2); //Set precision (1 in your case)              
-		medical.setAllowNegative(false); //Set false to disable negatives
-		medical.setBounds(584, 462, 86, 22);
-		getContentPane().add(medical);
-
-		
-		lblBonus = new JLabel("Bonus");
-		lblBonus.setBounds(487, 491, 89, 20);
-		getContentPane().add(lblBonus);
-
-		bonus = new JDoubleField();
-		bonus.setHorizontalAlignment(SwingConstants.RIGHT);
-		bonus.setMaxLength(10); //Set maximum length             
-		bonus.setPrecision(2); //Set precision (1 in your case)              
-		bonus.setAllowNegative(false); //Set false to disable negatives
-		bonus.setBounds(584, 490, 86, 22);
-		getContentPane().add(bonus);
-		
-		lblOtRate = new JLabel("OT Rate");
-		lblOtRate.setBounds(487, 545, 89, 20);
-		getContentPane().add(lblOtRate);
-
-		ot_rate = new JDoubleField();
-		ot_rate.setHorizontalAlignment(SwingConstants.RIGHT);
-		ot_rate.setMaxLength(10); //Set maximum length             
-		ot_rate.setPrecision(2); //Set precision (1 in your case)              
-		ot_rate.setAllowNegative(false); //Set false to disable negatives
-		ot_rate.setBounds(584, 546, 86, 22);
-		getContentPane().add(ot_rate);
-		
-		lblSt_allow = new JLabel("Sterile Rate");
-		lblSt_allow.setBounds(487, 573, 89, 20);
-		getContentPane().add(lblSt_allow);
-
-		st_allow = new JDoubleField();
-		st_allow.setHorizontalAlignment(SwingConstants.RIGHT);
-		st_allow.setMaxLength(10); //Set maximum length             
-		st_allow.setPrecision(2); //Set precision (1 in your case)              
-		st_allow.setAllowNegative(false); //Set false to disable negatives
-		st_allow.setBounds(584, 574, 86, 22);
-		getContentPane().add(st_allow);
-		
 		lblPinCode = new JLabel("Pin Code:");
 		lblPinCode.setBounds(695, 261, 67, 20);
 		getContentPane().add(lblPinCode);
@@ -483,7 +359,6 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		mpin.setBounds(819, 261, 153, 22);
 		getContentPane().add(mpin);
 
-
 		lblPanNo = new JLabel("Pan No:");
 		lblPanNo.setBounds(695, 320, 67, 20);
 		getContentPane().add(lblPanNo);
@@ -491,7 +366,7 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		pan_no = new TextField(10);
 		pan_no.setBounds(819, 320, 153, 22);
 		getContentPane().add(pan_no);
-		
+
 		panel_2 = new JPanel();
 		panel_2.setBorder(new LineBorder(new Color(0, 0, 0), 1, true));
 		panel_2.setBackground(SystemColor.activeCaptionBorder);
@@ -499,103 +374,25 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		getContentPane().add(panel_2);
 
 		lblName_1 = new JLabel("Name:");
-		
+
 		lblName_1.setBounds(22, 161, 83, 20);
 		getContentPane().add(lblName_1);
 
 		party_name = new JFormattedTextField();
 		party_name.setBounds(110, 161, 130, 22);
 		getContentPane().add(party_name);
-		 
-		
-		lblAcNo = new JLabel("A/c No");
-		lblAcNo.setBounds(695, 434, 101, 20);
-		getContentPane().add(lblAcNo);
-		
-		lblBankName = new JLabel("Bank Name");
-		lblBankName.setBounds(695, 462, 101, 20);
-		getContentPane().add(lblBankName);
-		
-		lblAddress_2 = new JLabel("Address");
-		lblAddress_2.setBounds(695, 492, 101, 20);
-		getContentPane().add(lblAddress_2);
-		
-		lblIfscCode = new JLabel("IFSC Code");
-		lblIfscCode.setBounds(695, 518, 101, 20);
-		getContentPane().add(lblIfscCode);
-		
-		bank_accno = new TextField(20);
-		bank_accno.setName("9");
-		bank_accno.setBounds(824, 430, 153, 22);
-		getContentPane().add(bank_accno);
-		
-/*		bank_name = new TextField(20);
-		bank_name.setName("11");
-		bank_name.setBounds(824, 459, 153, 22);
-		getContentPane().add(bank_name);
-		
-*/		
-		
-		bankList = new JComboBox(loginDt.getBankList());
-		bankList.setName("0");
-		bankList.setBounds(824, 459, 153, 22);
-		getContentPane().add(bankList);
-		
 
-		
-		
-		bank_add1 = new TextField(20);
-		bank_add1.setName("13");
-		bank_add1.setBounds(824, 491, 153, 22);
-		getContentPane().add(bank_add1);
-		
-		ifsc_code = new TextField(20);
-		ifsc_code.setName("15");
-		ifsc_code.setBounds(824, 518, 153, 22);
-		getContentPane().add(ifsc_code);
-		
-		lblBonusper = new JLabel("Bonus % & Limit");
-		lblBonusper.setBounds(695, 545, 119, 20);
-		getContentPane().add(lblBonusper);
 
-		bonus_per = new JDoubleField();
-		bonus_per.setHorizontalAlignment(SwingConstants.RIGHT);
-		bonus_per.setMaxLength(10); //Set maximum length             
-		bonus_per.setPrecision(2); //Set precision (1 in your case)              
-		bonus_per.setAllowNegative(false); //Set false to disable negatives
-		bonus_per.setBounds(824, 546, 56, 22);
-		getContentPane().add(bonus_per);
-		
-		bonus_limit = new JDoubleField();
-		bonus_limit.setHorizontalAlignment(SwingConstants.RIGHT);
-		bonus_limit.setMaxLength(10); //Set maximum length             
-		bonus_limit.setPrecision(2); //Set precision (1 in your case)              
-		bonus_limit.setAllowNegative(false); //Set false to disable negatives
-		bonus_limit.setBounds(891, 546, 86, 22);
-		getContentPane().add(bonus_limit);
 
-		
-		lblBonuschk = new JLabel("Bonus Calculation");
-		lblBonuschk.setBounds(695, 574, 119, 20);
-		getContentPane().add(lblBonuschk);
-
-		bonus_check = new JDoubleField();
-		bonus_check.setHorizontalAlignment(SwingConstants.RIGHT);
-		bonus_check.setMaxLength(10); //Set maximum length             
-		bonus_check.setPrecision(2); //Set precision (1 in your case)              
-		bonus_check.setAllowNegative(false); //Set false to disable negatives
-		bonus_check.setBounds(824, 575, 153, 22);
-		getContentPane().add(bonus_check);
-
-		
-		////////////// invoce no table model/////////////////////
-		String [] partyColName=	{"Code.", "Employee Name",""};
-		String datax[][]={{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}};
-		emplyeeTableModel=  new DefaultTableModel(datax,partyColName)
-		{
+		// //////////// invoce no table model/////////////////////
+		String[] partyColName = { "Code.", "Employee Name", "" };
+		String datax[][] = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+				{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+				{} };
+		emplyeeTableModel = new DefaultTableModel(datax, partyColName) {
 			private static final long serialVersionUID = 1L;
-			public boolean isCellEditable(int row, int column) 
-			{
+
+			public boolean isCellEditable(int row, int column) {
 				return false;
 			}
 		};
@@ -609,138 +406,135 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		emplyeeTable.getTableHeader().setFont(font);
 		emplyeeTable.setRowHeight(20);
 		emplyeeTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-//		emplyeeTable.getTableHeader().setPreferredSize(new Dimension(25,25));
-		///////////////////////////////////////////////////////////////////////////
-		emplyeeTable.getColumnModel().getColumn(0).setPreferredWidth(65);   //contact inv no
-		emplyeeTable.getColumnModel().getColumn(1).setPreferredWidth(280);  //party name/////
-		emplyeeTable.getColumnModel().getColumn(2).setMinWidth(0);  //inv_no/////
-		emplyeeTable.getColumnModel().getColumn(2).setMaxWidth(0);  //inv_no/////
-		
+		// emplyeeTable.getTableHeader().setPreferredSize(new Dimension(25,25));
+		// /////////////////////////////////////////////////////////////////////////
+		emplyeeTable.getColumnModel().getColumn(0).setPreferredWidth(65); // contact
+																			// inv
+																			// no
+		emplyeeTable.getColumnModel().getColumn(1).setPreferredWidth(280); // party
+																			// name/////
+		emplyeeTable.getColumnModel().getColumn(2).setMinWidth(0); // inv_no/////
+		emplyeeTable.getColumnModel().getColumn(2).setMaxWidth(0); // inv_no/////
+
 		fillInvTable("");
 
-		scrollPane = new JScrollPane(emplyeeTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		scrollPane = new JScrollPane(emplyeeTable,
+				ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPane.setBounds(16, 189, 232, 434);
 		getContentPane().add(scrollPane);
-		
-		DefaultTableCellRenderer dtc = new DefaultTableCellRenderer() 
-		{
-			public Component getTableCellRendererComponent(JTable table, Object value,boolean isSelected, boolean hasFocus, int row, int column) 
-			{
-				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-				if (emplyeeTable.getSelectedRow()==row )
-				{
-					  c.setBackground(new Color(170, 181, 157));
-					  c.setForeground(Color.BLACK); 
-				}
-				else
-				{
-					  c.setBackground(Color.WHITE);
-					  c.setForeground(Color.BLACK);
+		DefaultTableCellRenderer dtc = new DefaultTableCellRenderer() {
+			public Component getTableCellRendererComponent(JTable table,
+					Object value, boolean isSelected, boolean hasFocus,
+					int row, int column) {
+				Component c = super.getTableCellRendererComponent(table, value,
+						isSelected, hasFocus, row, column);
+
+				if (emplyeeTable.getSelectedRow() == row) {
+					c.setBackground(new Color(170, 181, 157));
+					c.setForeground(Color.BLACK);
+				} else {
+					c.setBackground(Color.WHITE);
+					c.setForeground(Color.BLACK);
 
 				}
-		        return c;
+				return c;
 			}
 		};
-		
+
 		emplyeeTable.getColumnModel().getColumn(0).setCellRenderer(dtc);
 		emplyeeTable.getColumnModel().getColumn(1).setCellRenderer(dtc);
 
-		
-
 		myTableModel = emplyeeTable.getModel();
-        sorter = new TableRowSorter<TableModel>(myTableModel);
-        emplyeeTable.setRowSorter(sorter);
-		party_name.getDocument().addDocumentListener(TableDataSorter.getTableSorter(party_name, sorter,emplyeeTable, 2,false));
+		sorter = new TableRowSorter<TableModel>(myTableModel);
+		emplyeeTable.setRowSorter(sorter);
+		party_name.getDocument().addDocumentListener(
+				TableDataSorter.getTableSorter(party_name, sorter,
+						emplyeeTable, 2, false));
 
- 
-		
-		emplyeeTable.addKeyListener(new KeyAdapter() 
-		{
-			public void keyPressed(KeyEvent evt) 
-			{
+		emplyeeTable.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent evt) {
 				int viewRow = emplyeeTable.getSelectedRow();
-				if(evt.getKeyCode() == KeyEvent.VK_ENTER)
-				{
-                    if (viewRow < 0) {
-                        //Selection got filtered away.
-                        //statusText.setText("");
-                    } else
-                    {
-                        int modelRow = emplyeeTable.convertRowIndexToModel(viewRow);
+				if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+					if (viewRow < 0) {
+						// Selection got filtered away.
+						// statusText.setText("");
+					} else {
+						int modelRow = emplyeeTable
+								.convertRowIndexToModel(viewRow);
 
-                        empDto = (EmployeeMastDto) myTableModel.getValueAt(modelRow, 2);
-    				 	clearAll();
-    					fillData(empDto);
-    					
-                    }
+						empDto = (EmployeeMastDto) myTableModel.getValueAt(
+								modelRow, 2);
+						clearAll();
+						fillData(empDto);
+
+					}
 					evt.consume();
 				}
-				
+
 			}
-			
-			
-			public void keyReleased(KeyEvent evt) 
-			{
+
+			public void keyReleased(KeyEvent evt) {
 				int viewRow = emplyeeTable.getSelectedRow();
-				if((evt.getKeyCode() == KeyEvent.VK_DOWN ) || (evt.getKeyCode() == KeyEvent.VK_UP ) || (evt.getKeyCode() == KeyEvent.VK_PAGE_UP) || (evt.getKeyCode() == KeyEvent.VK_PAGE_DOWN))
-				{
-                    if (viewRow < 0) {
-                        //Selection got filtered away.
-                        //statusText.setText("");
-                    } else
-                    {
-                        int modelRow = emplyeeTable.convertRowIndexToModel(viewRow);
+				if ((evt.getKeyCode() == KeyEvent.VK_DOWN)
+						|| (evt.getKeyCode() == KeyEvent.VK_UP)
+						|| (evt.getKeyCode() == KeyEvent.VK_PAGE_UP)
+						|| (evt.getKeyCode() == KeyEvent.VK_PAGE_DOWN)) {
+					if (viewRow < 0) {
+						// Selection got filtered away.
+						// statusText.setText("");
+					} else {
+						int modelRow = emplyeeTable
+								.convertRowIndexToModel(viewRow);
 
-                        empDto = (EmployeeMastDto) myTableModel.getValueAt(modelRow, 2);
-    				 	clearAll();
-    					fillData(empDto);
+						empDto = (EmployeeMastDto) myTableModel.getValueAt(
+								modelRow, 2);
+						clearAll();
+						fillData(empDto);
 
-    					
-                    }
+					}
 
 					evt.consume();
 				}
-				
-			}
-			
-			
-		});		
-		
-		emplyeeTable.addMouseListener(new MouseListener() 
-		{
-			public void mouseReleased(MouseEvent e){}
-			public void mousePressed(MouseEvent e) {}
-			public void mouseExited(MouseEvent e) {}
-			public void mouseEntered(MouseEvent e) {}
 
-			public void mouseClicked(MouseEvent ee) 
-			{
+			}
+
+		});
+
+		emplyeeTable.addMouseListener(new MouseListener() {
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			public void mousePressed(MouseEvent e) {
+			}
+
+			public void mouseExited(MouseEvent e) {
+			}
+
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			public void mouseClicked(MouseEvent ee) {
 				int viewRow = emplyeeTable.getSelectedRow();
-				 
+
 				if (viewRow < 0) {
-                    //Selection got filtered away.
-                    //statusText.setText("");
-                } else {
-                    
-                    int modelRow = emplyeeTable.convertRowIndexToModel(viewRow);
+					// Selection got filtered away.
+					// statusText.setText("");
+				} else {
 
-                    empDto = (EmployeeMastDto) myTableModel.getValueAt(modelRow, 2);
-				 	clearAll();
+					int modelRow = emplyeeTable.convertRowIndexToModel(viewRow);
+
+					empDto = (EmployeeMastDto) myTableModel.getValueAt(
+							modelRow, 2);
+					clearAll();
 					fillData(empDto);
 
-					
-                } 
-				
- 
-				 
+				}
+
 				ee.consume();
 			}
 		});
-		
-		
-		
-		
 
 		panel_6 = new JPanel();
 		panel_6.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -764,7 +558,6 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		lblPdetail.setForeground(Color.WHITE);
 		lblPdetail.setFont(new Font("Tahoma", Font.BOLD, 12));
 
-
 		panel_8 = new JPanel();
 		panel_8.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel_8.setBackground(new Color(139, 153, 122));
@@ -776,33 +569,26 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		lblSdetail.setForeground(Color.WHITE);
 		lblSdetail.setFont(new Font("Tahoma", Font.BOLD, 12));
 
-		
-		
 		panel_5 = new JPanel();
 		panel_5.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel_5.setBounds(10, 126, 243, 508);
 		getContentPane().add(panel_5);
-			
 
-		KeyListener keyListener = new KeyListener() 
-		{
-			public void keyPressed(KeyEvent keyEvent) 
-			{
+		KeyListener keyListener = new KeyListener() {
+			public void keyPressed(KeyEvent keyEvent) {
 				int key = keyEvent.getKeyCode();
-				if (key == KeyEvent.VK_ENTER) 
-				{
+				if (key == KeyEvent.VK_ENTER) {
 					JTextField textField = (JTextField) keyEvent.getSource();
-					int id = Integer.parseInt(textField.getName());
-					
-					switch (id) 
-					{
+					int id = setIntNumber(textField.getName());
+
+					switch (id) {
 					case 0:
 						emp_code.requestFocus();
 						emp_code.setSelectionStart(0);
 						break;
 					case 1:
-						//mac_code.requestFocus();
-						//mac_code.setSelectionStart(0);
+						// mac_code.requestFocus();
+						// mac_code.setSelectionStart(0);
 						break;
 					case 2:
 						esic_no.requestFocus();
@@ -833,7 +619,7 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						mcity.setSelectionStart(0);
 						break;
 					case 9:
-				 		mstate.requestFocus();
+						mstate.requestFocus();
 						mstate.setSelectionStart(0);
 						break;
 					case 10:
@@ -841,19 +627,19 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						mpin.setSelectionStart(0);
 						break;
 					case 11:
-				 		mphone.requestFocus();
+						mphone.requestFocus();
 						mphone.setSelectionStart(0);
 						break;
 					case 12:
-				 		mobile.requestFocus();
+						mobile.requestFocus();
 						mobile.setSelectionStart(0);
 						break;
 					case 13:
-				 		memail.requestFocus();
+						memail.requestFocus();
 						memail.setSelectionStart(0);
 						break;
 					case 14:
-				 		pan_no.requestFocus();
+						pan_no.requestFocus();
 						pan_no.setSelectionStart(0);
 						break;
 					case 15:
@@ -861,13 +647,11 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						dobirth.setSelectionStart(0);
 						break;
 					case 16:
-						if(isValidDate(dobirth.getText()) || isValidBlankDate(dobirth.getText()))
-						{
+						if (isValidDate(dobirth.getText())
+								|| isValidBlankDate(dobirth.getText())) {
 							dojoin.requestFocus();
 							dojoin.setSelectionStart(0);
-						}
-						else
-						{
+						} else {
 							dobirth.requestFocus();
 							dobirth.setValue(null);
 							checkDate(dobirth);
@@ -875,133 +659,40 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						}
 						break;
 					case 17:
-						if(isValidDate(dojoin.getText()) || isValidBlankDate(dojoin.getText()))
-						{
+						if (isValidDate(dojoin.getText())
+								|| isValidBlankDate(dojoin.getText())) {
 							doresign.requestFocus();
 							doresign.setSelectionStart(0);
-						}
-						else
-						{
+						} else {
 							dojoin.requestFocus();
 							dojoin.setValue(null);
 							checkDate(dojoin);
 							dojoin.setSelectionStart(0);
 						}
-						
+
 						break;
 					case 18:
-						
-						if(isValidDate(doresign.getText()) || isValidBlankDate(doresign.getText()))
-						{
+
+						if (isValidDate(doresign.getText())
+								|| isValidBlankDate(doresign.getText())) {
 							basic.requestFocus();
 							basic.setSelectionStart(0);
-						}
-						else
-						{
+						} else {
 							doresign.requestFocus();
 							doresign.setValue(null);
 							checkDate(doresign);
 							doresign.setSelectionStart(0);
 						}
-					
-						break;
-					case 19:
-						calfunction(basic);
-						da.requestFocus();
-						da.setSelectionStart(0);
-						break;
-					case 20:
-						calfunction(da);
-						hra.requestFocus();
-						hra.setSelectionStart(0);
-						break;
-					case 21:
-						calfunction(hra);
-						add_hra.requestFocus();
-						add_hra.setSelectionStart(0);
-						break;
-					case 22:
-						calfunction(add_hra);
-						incentive.requestFocus();
-						incentive.setSelectionStart(0);
-						break;
-					case 23:
-						calfunction(incentive);
-						spl_incentive.requestFocus();
-						spl_incentive.setSelectionStart(0);
-						break;
-					case 24:
-						calfunction(spl_incentive);
-						lta.requestFocus();
-						lta.setSelectionStart(0);
-						break;
-					case 25:
-						calfunction(lta);
-						medical.requestFocus();
-						medical.setSelectionStart(0);
-						break;
-					case 26:
-						bonus.requestFocus();
-						bonus.setSelectionStart(0);
-						break;
-					case 27:
-						gross.requestFocus();
-						gross.setSelectionStart(0);
-						break;
-					case 28:
-						ot_rate.requestFocus();
-						ot_rate.setSelectionStart(0);
-						break;
-					case 29:
-						st_allow.requestFocus();
-						st_allow.setSelectionStart(0);
-						break;
-					case 30:
-						bank_accno.requestFocus();
-						bank_accno.setSelectionStart(0);
-						break;
-					case 31:
-						bankList.requestFocus();
-						//bank_name.setSelectionStart(0);
-						break;
-					case 32:
-						bank_add1.requestFocus();
-						bank_add1.setSelectionStart(0);
-						break;
-					case 33:
-						ifsc_code.requestFocus();
-						ifsc_code.setSelectionStart(0);
-						break;
-					case 34:
-						bonus_per.requestFocus();
-						bonus_per.setSelectionStart(0);
-						break;
-					case 35:
-						bonus_per.setText(formatter.format(setDoubleNumber((bonus_per.getText()))));
-						bonus_limit.requestFocus();
-						bonus_limit.setSelectionStart(0);
-						break;
-					case 36:
-						bonus_limit.setText(formatter.format(setDoubleNumber((bonus_limit.getText()))));
-						bonus_check.requestFocus();
-						bonus_check.setSelectionStart(0);
-						break;
-					case 37:
-						bonus_check.setText(formatter.format(setDoubleNumber((bonus_check.getText()))));
-				 		btnSave.requestFocus();
-				 		btnSave.setBackground(new Color(139, 153, 122));
+
 						break;
 					}
 				}
-				
-				
-				if (key == KeyEvent.VK_UP) 
-				{
+
+				if (key == KeyEvent.VK_UP) {
 					JTextField textField = (JTextField) keyEvent.getSource();
 					int id = Integer.parseInt(textField.getName());
-					
-					switch (id) 
-					{
+
+					switch (id) {
 					case 2:
 						emp_code.requestFocus();
 						emp_code.setSelectionStart(0);
@@ -1039,7 +730,7 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						mcity.setSelectionStart(0);
 						break;
 					case 11:
-				 		mstate.requestFocus();
+						mstate.requestFocus();
 						mstate.setSelectionStart(0);
 						break;
 					case 12:
@@ -1047,19 +738,19 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						mpin.setSelectionStart(0);
 						break;
 					case 13:
-				 		mphone.requestFocus();
+						mphone.requestFocus();
 						mphone.setSelectionStart(0);
 						break;
 					case 14:
-				 		mobile.requestFocus();
+						mobile.requestFocus();
 						mobile.setSelectionStart(0);
 						break;
 					case 15:
-				 		memail.requestFocus();
+						memail.requestFocus();
 						memail.setSelectionStart(0);
 						break;
 					case 16:
-				 		pan_no.requestFocus();
+						pan_no.requestFocus();
 						pan_no.setSelectionStart(0);
 						break;
 					case 17:
@@ -1128,7 +819,7 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						break;
 					case 33:
 						bankList.requestFocus();
-						//bank_name.setSelectionStart(0);
+						// bank_name.setSelectionStart(0);
 						break;
 					case 34:
 						bank_add1.requestFocus();
@@ -1151,15 +842,13 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 						bonus_check.setSelectionStart(0);
 						break;
 					case 39:
-				 		btnSave.requestFocus();
-				 		btnSave.setBackground(new Color(139, 153, 122));
+						btnSave.requestFocus();
+						btnSave.setBackground(new Color(139, 153, 122));
 						break;
 					}
 				}
 
-
-				if (key == KeyEvent.VK_ESCAPE) 
-				{
+				if (key == KeyEvent.VK_ESCAPE) {
 					clearAll();
 					dispose();
 				}
@@ -1172,10 +861,8 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 			}
 		};
 
-		// ///////////////////////////////////////////////		
-		
-		
-						
+		// ///////////////////////////////////////////////
+
 		mstate = new TextField(15);
 		mstate.setBounds(393, 261, 153, 22);
 		getContentPane().add(mstate);
@@ -1219,68 +906,97 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		doresign.setBounds(819, 351, 153, 22);
 		getContentPane().add(doresign);
 
-		
-		emp_code.addKeyListener(new KeyAdapter() 
-		{
-			public void keyPressed(KeyEvent evt) 
-			{
-				if (evt.getKeyCode() == KeyEvent.VK_ESCAPE) 
-				{
+		emp_code.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent evt) {
+				if (evt.getKeyCode() == KeyEvent.VK_ESCAPE) {
 					clearAll();
 					dispose();
-					
+
 				}
-				if(evt.getKeyCode() == KeyEvent.VK_ENTER)
-				{
-					 boolean chk=false;
-					
-				   if (option.equals("A"))
-				   {
-					   
-						try
-						{
-							String mac_cd=emp_code.getText();
-							 
-							chk = empDao.checkEmployeeExists(loginDt.getDepo_code(), loginDt.getCmp_code(), setIntNumber(mac_cd));
-							
-							if (chk)
-							{
-								JOptionPane.showMessageDialog(EmployeeMaster.this,"Code Already Exists " ,"Duplicate Code",JOptionPane.INFORMATION_MESSAGE);						
+				if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+					boolean chk = false;
+
+					if (option.equals("A")) {
+
+						try {
+							String mac_cd = emp_code.getText();
+
+							chk = empDao.checkEmployeeExists(
+									loginDt.getDepo_code(),
+									loginDt.getCmp_code(), setIntNumber(mac_cd));
+
+							if (chk) {
+								JOptionPane.showMessageDialog(
+										EmployeeMaster.this,
+										"Code Already Exists ",
+										"Duplicate Code",
+										JOptionPane.INFORMATION_MESSAGE);
 								emp_code.setText("");
-								emp_code.requestFocus();							
+								emp_code.requestFocus();
 								emp_code.setSelectionStart(0);
+							} else {
+								if (emp_code.getText().length() > 0) {
+									mac_code.requestFocus();
+									mac_code.setSelectionStart(0);
+								}
 							}
-							else
-							{
-								mac_code.requestFocus();
-								mac_code.setSelectionStart(0);
-							}
-						}
-						catch(Exception e)
-						{
+						} catch (Exception e) {
 							System.out.println(e);
 						}
-				   }
-				   
-					
-					if (emp_code.getText().length()==0 && !chk)
-					{
-						alertMessage(EmployeeMaster.this, "Emp Code Can not be blank");
+					}
+
+					if (emp_code.getText().length() == 0 && !chk) {
+						alertMessage(EmployeeMaster.this,
+								"Emp Code Can not be blank");
 						emp_code.setText("");
 						emp_code.requestFocus();
 						emp_code.setSelectionStart(0);
 					}
 
-
 					evt.consume();
 				}
-				
+
 			}
-		});		
-			
+		});
 
+		emp_code.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				boolean chk = false;
 
-		//desg_code.setName("0");
+				if (option.equals("A")) {
+
+					try {
+						String mac_cd = emp_code.getText();
+
+						chk = empDao.checkEmployeeExists(
+								loginDt.getDepo_code(), loginDt.getCmp_code(),
+								setIntNumber(mac_cd));
+
+						if (chk) {
+							JOptionPane.showMessageDialog(
+									EmployeeMaster.this,
+									"Code Already Exists ", "Duplicate Code",
+									JOptionPane.INFORMATION_MESSAGE);
+							emp_code.setText("");
+							emp_code.requestFocus();
+							emp_code.setSelectionStart(0);
+						} else {
+							if (emp_code.getText().length() > 0) {
+								mac_code.requestFocus();
+								mac_code.setSelectionStart(0);
+							}
+						}
+					} catch (Exception ee) {
+						System.out.println(e);
+					}
+				}
+
+			}
+
+		});
+
+		// desg_code.setName("0");
 		emp_code.setName("1");
 		mac_code.setName("2");
 		esic_no.setName("3");
@@ -1299,28 +1015,9 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		dobirth.setName("16");
 		dojoin.setName("17");
 		doresign.setName("18");
-		basic.setName("19");
-		da.setName("20");
-		hra.setName("21");
-		add_hra.setName("22");
-		incentive.setName("23");
-		spl_incentive.setName("24");
-		lta.setName("25");
-		medical.setName("26");
-		bonus.setName("27");
-		gross.setName("28");
-		ot_rate.setName("29");
-		st_allow.setName("30");
-		bank_accno.setName("31");
-//		bank_name.setName("32");
-		bank_add1.setName("33");
-		ifsc_code.setName("34");
-		bonus_per.setName("35");
-		bonus_limit.setName("36");
-		bonus_check.setName("37");
-		
-		
-		//desg_code.addKeyListener(keyListener);
+
+
+		// desg_code.addKeyListener(keyListener);
 		emp_code.addKeyListener(keyListener);
 		mac_code.addKeyListener(keyListener);
 		esic_no.addKeyListener(keyListener);
@@ -1339,28 +1036,15 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		dobirth.addKeyListener(keyListener);
 		dojoin.addKeyListener(keyListener);
 		doresign.addKeyListener(keyListener);
-		gross.addKeyListener(keyListener);
-		basic.addKeyListener(keyListener);
-		da.addKeyListener(keyListener);
-		hra.addKeyListener(keyListener);
-		add_hra.addKeyListener(keyListener);
-		incentive.addKeyListener(keyListener);
-		spl_incentive.addKeyListener(keyListener);
-		lta.addKeyListener(keyListener);
-		medical.addKeyListener(keyListener);
-		bonus.addKeyListener(keyListener);
-		ot_rate.addKeyListener(keyListener);
-		st_allow.addKeyListener(keyListener);
+
 		bank_accno.addKeyListener(keyListener);
-//		bank_name.addKeyListener(keyListener);
+		// bank_name.addKeyListener(keyListener);
 		bankList.addKeyListener(keyListener);
 		bank_add1.addKeyListener(keyListener);
 		ifsc_code.addKeyListener(keyListener);
 		bonus_per.addKeyListener(keyListener);
 		bonus_limit.addKeyListener(keyListener);
 		bonus_check.addKeyListener(keyListener);
-
-		
 
 		emp_code.addFocusListener(myFocusListener);
 		mac_code.addFocusListener(myFocusListener);
@@ -1393,15 +1077,17 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		bonus.addFocusListener(myFocusListener);
 		ot_rate.addFocusListener(myFocusListener);
 		st_allow.addFocusListener(myFocusListener);
+		food_allowance.addFocusListener(myFocusListener);
+		
 		bank_accno.addFocusListener(myFocusListener);
-//		bank_name.addFocusListener(myFocusListener);
+		// bank_name.addFocusListener(myFocusListener);
 		bankList.addFocusListener(myFocusListener);
 		bank_add1.addFocusListener(myFocusListener);
 		ifsc_code.addFocusListener(myFocusListener);
 		bonus_per.addFocusListener(myFocusListener);
 		bonus_limit.addFocusListener(myFocusListener);
 		bonus_check.addFocusListener(myFocusListener);
-		
+
 		btnAdd.setActionCommand("Add");
 		btnSave.setActionCommand("Save");
 		btnExcel.setActionCommand("Excel");
@@ -1409,47 +1095,43 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		btnResign.setActionCommand("Resign");
 		btnResignation.setActionCommand("Resignation");
 		btnRefresh.setActionCommand("Refresh");
-		
- 
-		 
+
 		btnAdd.setVisible(true);
 		btnSave.setVisible(true);
-		 
-		
+
 		JLabel lblLabel = new JLabel("Label Print :");
 		lblLabel.setBounds(645, 60, 86, 20);
 		getContentPane().add(lblLabel);
-		
-		labelprint =  new JComboBox();
-		labelprint.setModel(new DefaultComboBoxModel(new String[] {"Y", "N"}));
+
+		labelprint = new JComboBox();
+		labelprint
+				.setModel(new DefaultComboBoxModel(new String[] { "Y", "N" }));
 		labelprint.setBounds(742, 60, 38, 22);
 		getContentPane().add(labelprint);
-		
-		emp_status =  new JComboBox();
-		//emp_status.setBackground(Color.LIGHT_GRAY);
-		emp_status.setModel(new DefaultComboBoxModel(new String[] {"Active", "Deactive"}));
+
+		emp_status = new JComboBox();
+		// emp_status.setBackground(Color.LIGHT_GRAY);
+		emp_status.setModel(new DefaultComboBoxModel(new String[] { "Active",
+				"Deactive" }));
 		emp_status.setBounds(880, 60, 96, 22);
 		getContentPane().add(emp_status);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel.setBackground(new Color(139, 153, 122));
 		panel.setBounds(695, 394, 180, 27);
 		getContentPane().add(panel);
-		
+
 		JLabel lblBankDetail = new JLabel("Bank Detail");
 		lblBankDetail.setForeground(Color.WHITE);
 		lblBankDetail.setFont(new Font("Tahoma", Font.BOLD, 12));
 		panel.add(lblBankDetail);
-		
-		
-		
+
 		panel_4 = new JPanel();
 		panel_4.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel_4.setBounds(263, 48, 745, 557);
 		getContentPane().add(panel_4);
-		
-		
+
 		btnAdd.addActionListener(this);
 		btnSave.addActionListener(this);
 		btnExcel.addActionListener(this);
@@ -1459,125 +1141,118 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		btnRefresh.addActionListener(this);
 	}
 
-
-
-
-
-	public void actionPerformed(ActionEvent e) 
-	{
+	public void actionPerformed(ActionEvent e) {
 		System.out.println(e.getActionCommand());
-		if(e.getActionCommand().equalsIgnoreCase("Exit"))
-		{
+		if (e.getActionCommand().equalsIgnoreCase("Exit")) {
 			clearAll();
-			mac_code.setEditable(false);
+			emp_code.setEditable(false);
 			btnAdd.setEnabled(true);
 			btnExcel.setEnabled(true);
 			dispose();
 		}
 
-		if(e.getActionCommand().equalsIgnoreCase("Add")  )
-		{
+		if (e.getActionCommand().equalsIgnoreCase("Add")) {
 			clearAll();
-			option="A";
-			mac_code.setEditable(true);
+			option = "A";
+			emp_code.setEditable(true);
 			dsCombo.requestFocus();
-			mac_code.setEditable(true);
 			btnAdd.setEnabled(false);
 			btnExcel.setEnabled(false);
-			
+
 		}
 
-
-		if(e.getActionCommand().equalsIgnoreCase("Excel"))
-		{
-			new EmployeeList(loginDt.getBrnnm(), loginDt.getDrvnm(),data,repno);
+		if (e.getActionCommand().equalsIgnoreCase("Excel")) {
+			new EmployeeList(loginDt.getBrnnm(), loginDt.getDrvnm(), data,
+					repno);
 			clearAll();
-			
+
 		}
 
-		if(e.getActionCommand().equalsIgnoreCase("Resign"))
-		{
-			new EmployeeList(loginDt.getBrnnm(), loginDt.getDrvnm(),data,3);
+		if (e.getActionCommand().equalsIgnoreCase("Resign")) {
+			Vector sortData = new Vector();
+			Vector col = null;
+			EmployeeMastDto emp = null;
+			int size = data.size();
+			for (int i = 0; i < size; i++) {
+				col = (Vector<?>) data.get(i);
+				emp = (EmployeeMastDto) col.get(2);
+				sortData.add(emp);
+			}
+			Collections.sort(sortData, new DateComparator());
+			new EmployeeList(loginDt.getBrnnm(), loginDt.getDrvnm(), sortData,
+					3);
 			clearAll();
-			
+
 		}
-		if(e.getActionCommand().equalsIgnoreCase("Resignation"))
-		{
+		if (e.getActionCommand().equalsIgnoreCase("Resignation")) {
 			fillInvTable("Resignation");
 			btnResignation.setVisible(false);
 			btnRefresh.setVisible(true);
 		}
-		
-		if(e.getActionCommand().equalsIgnoreCase("Refresh"))
-		{
+
+		if (e.getActionCommand().equalsIgnoreCase("Refresh")) {
 			fillInvTable("");
 			btnResignation.setVisible(true);
 			btnRefresh.setVisible(false);
 		}
-		
-		if(e.getActionCommand().equalsIgnoreCase("Save"))
-		{
+
+		if (e.getActionCommand().equalsIgnoreCase("Save")) {
 			saveData();
-		}		
+		}
 	}
 
-	
-	public void saveData()
-	{
-		if(option.equals("A"))
-		{
-			if (mac_code.getText().length()>0)
-			{
-				boolean chk=false;
-				//boolean chk = empDao.checkEmployeeExists(loginDt.getDepo_code(), loginDt.getDiv_code(), mac_code.getText());
-				if (chk)
-				{
-					JOptionPane.showMessageDialog(EmployeeMaster.this,"Code Already Exists " ,"Duplicate Code",JOptionPane.INFORMATION_MESSAGE);						
-					mac_code.setText("");
-					mac_code.requestFocus();							
-				}
-				else
-				{
+	public void saveData() {
+		if (option.equals("A")) {
+			if (emp_code.getText().length() > 0) {
+				boolean chk = false;
+				// boolean chk =
+				// empDao.checkEmployeeExists(loginDt.getDepo_code(),
+				// loginDt.getDiv_code(), mac_code.getText());
+				if (chk) {
+					JOptionPane.showMessageDialog(EmployeeMaster.this,
+							"Code Already Exists ", "Duplicate Code",
+							JOptionPane.INFORMATION_MESSAGE);
+					emp_code.setText("");
+					emp_code.requestFocus();
+				} else {
 					empDao.addEmployee(setDataForDAO());
 				}
-			}
-			else
-				alertMessage(EmployeeMaster.this, "A/c Code Can not be blank");
-		}
-		else
-		{
+			} else
+				alertMessage(EmployeeMaster.this,
+						"A/c Code Can not be blank");
+		} else {
 			EmployeeMastDto edto = setDataForDAO();
-			if(edto!=null)
-				empDao.updateEmployee(edto,repno);
-			else
-			{
+			if (edto != null)
+				empDao.updateEmployee(edto, repno);
+			else {
 				System.out.println("edrror in setdaomethore ");
 			}
 		}
-		
-//		loginDt.setPrtList(prtdao.getEmpList(loginDt.getDepo_code(), loginDt.getDiv_code()));
-//		loginDt.setPrtmap(prtdao.getEmpMap(loginDt.getDepo_code(), loginDt.getDiv_code()));
 
+		// loginDt.setPrtList(prtdao.getEmpList(loginDt.getDepo_code(),
+		// loginDt.getDiv_code()));
+		// loginDt.setPrtmap(prtdao.getEmpMap(loginDt.getDepo_code(),
+		// loginDt.getDiv_code()));
 
 		fillInvTable("");
 		clearAll();
 	}
-	public EmployeeMastDto setDataForDAO()
-	{
+
+	public EmployeeMastDto setDataForDAO() {
 		EmployeeMastDto empDto = null;
-		try
-		{
+		try {
 			empDto = new EmployeeMastDto();
 			empDto.setCmp_code(loginDt.getCmp_code());
 			empDto.setDepo_code(loginDt.getDepo_code());
 			empDto.setDepartment(dsCombo.getText());
 			empDto.setEmp_code(setIntNumber(emp_code.getText().trim()));
 			empDto.setLabel_print(labelprint.getSelectedItem().toString());
-			empDto.setEmp_status(emp_status.getSelectedIndex()==0?"Y":"N");
+			empDto.setEmp_status(emp_status.getSelectedIndex() == 0 ? "Y" : "N");
 
 			empDto.setPf_no(setIntNumber(mac_code.getText().trim()));
 			empDto.setEsic_no(setLongNumber(esic_no.getText().trim()));
 			empDto.setUan_no(setLongNumber(uan_no.getText().trim()));
+			empDto.setAdhar_no(setLongNumber(adhar_no.getText().trim()));
 			empDto.setEmp_name(emp_name.getText().trim());
 			empDto.setFather_name(fname.getText().trim());
 			empDto.setMadd1(madd1.getText().trim());
@@ -1590,11 +1265,11 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 			empDto.setMobile(mobile.getText().trim());
 			empDto.setMemail(memail.getText().trim());
 			empDto.setPan_no(pan_no.getText().trim());
-			
+
 			empDto.setDobirth(formatDate(dobirth.getText().trim()));
 			empDto.setDojoin(formatDate(dojoin.getText().trim()));
 			empDto.setDoresign(formatDate(doresign.getText().trim()));
-			
+
 			empDto.setGross(setDoubleNumber(gross.getText().trim()));
 			empDto.setBasic(setDoubleNumber(basic.getText().trim()));
 			empDto.setDa(setDoubleNumber(da.getText().trim()));
@@ -1607,23 +1282,22 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 			empDto.setBonus(setDoubleNumber(bonus.getText().trim()));
 			empDto.setOt_rate(setDoubleNumber(ot_rate.getText().trim()));
 			empDto.setStair_alw(setDoubleNumber(st_allow.getText().trim()));
-			
+			empDto.setFood_allowance(setDoubleNumber(food_allowance.getText().trim()));
 			// set bank detail
 			empDto.setBank_accno(bank_accno.getText().trim());
 			empDto.setBank_add1(bank_add1.getText().trim());
 			empDto.setIfsc_code(ifsc_code.getText().trim());
-			
-			empDto.setBank_code(((BankDto) bankList.getSelectedItem()).getBank_code());
-			empDto.setBank(((BankDto) bankList.getSelectedItem()).getBank_name());
+
+			empDto.setBank_code(((BankDto) bankList.getSelectedItem())
+					.getBank_code());
+			empDto.setBank(((BankDto) bankList.getSelectedItem())
+					.getBank_name());
 
 			empDto.setBonus_per(setDoubleNumber(bonus_per.getText().trim()));
 			empDto.setBonus_limit(setDoubleNumber(bonus_limit.getText().trim()));
 			empDto.setBonus_check(setDoubleNumber(bonus_check.getText().trim()));
 
-			
-		}
-		catch(Exception e)
-		{
+		} catch (Exception e) {
 			empDto = null;
 			e.printStackTrace();
 		}
@@ -1632,17 +1306,17 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 
 	}
 
+	public void fillData(EmployeeMastDto empDto) {
 
-
-	public void fillData(EmployeeMastDto empDto)
-	{
-		
-		labelprint.setSelectedIndex(empDto.getLabel_print().equalsIgnoreCase("Y")?0:1);
-		emp_status.setSelectedIndex(empDto.getEmp_status().equalsIgnoreCase("Y")?0:1);
+		labelprint.setSelectedIndex(empDto.getLabel_print().equalsIgnoreCase(
+				"Y") ? 0 : 1);
+		emp_status.setSelectedIndex(empDto.getEmp_status()
+				.equalsIgnoreCase("Y") ? 0 : 1);
 		dsCombo.setText(empDto.getDesignation());
 		emp_code.setText(String.valueOf(empDto.getEmp_code()));
 		esic_no.setText(String.valueOf(empDto.getEsic_no()));
 		uan_no.setText(String.valueOf(empDto.getUan_no()));
+		adhar_no.setText(String.valueOf(empDto.getAdhar_no()));
 		mac_code.setText(String.valueOf(empDto.getPf_no()));
 		emp_name.setText(empDto.getEmp_name());
 		fname.setText(empDto.getFather_name());
@@ -1656,10 +1330,10 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		mobile.setText(empDto.getMobile());
 		memail.setText(empDto.getMemail());
 		pan_no.setText(empDto.getPan_no());
-		dobirth.setText(formatDateScreen(empDto.getDobirth(),dobirth));
-		dojoin.setText(formatDateScreen(empDto.getDojoin(),dojoin));
-		doresign.setText(formatDateScreen(empDto.getDoresign(),doresign));
-		
+		dobirth.setText(formatDateScreen(empDto.getDobirth(), dobirth));
+		dojoin.setText(formatDateScreen(empDto.getDojoin(), dojoin));
+		doresign.setText(formatDateScreen(empDto.getDoresign(), doresign));
+
 		gross.setText(formatter.format(empDto.getGross()));
 		basic.setText(formatter.format(empDto.getBasic()));
 		da.setText(formatter.format(empDto.getDa()));
@@ -1672,81 +1346,75 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		bonus.setText(formatter.format(empDto.getBonus()));
 		ot_rate.setText(formatter.format(empDto.getOt_rate()));
 		st_allow.setText(formatter.format(empDto.getStair_alw()));
-		
-		//setting bank details
+		food_allowance.setText(formatter.format(empDto.getFood_allowance()));
+
+		// setting bank details
 		bank_accno.setText(empDto.getBank_accno());
-//		bank_name.setText(empDto.getBank());
+		// bank_name.setText(empDto.getBank());
 		bankList.setSelectedIndex(getIndex(empDto.getBank_code()));
 		bank_add1.setText(empDto.getBank_add1());
 		ifsc_code.setText(empDto.getIfsc_code());
 		bonus_per.setText(formatter.format(empDto.getBonus_per()));
 		bonus_limit.setText(formatter.format(empDto.getBonus_limit()));
 		bonus_check.setText(formatter.format(empDto.getBonus_check()));
-		
+
 		btnAdd.setEnabled(true);
 		btnExcel.setEnabled(true);
-		option="";
-		
+		option = "";
+
 	}
-	
-	 
-	
-	public void fillInvTable(String search)
-	{
+
+	public void fillInvTable(String search) {
 		emplyeeTableModel.getDataVector().removeAllElements();
 		emplyeeTableModel.fireTableDataChanged();
-		
-		data = (Vector) empDao.getEmployeeList(loginDt.getDepo_code(),loginDt.getCmp_code());
-		
-		 
-		
+
+		data = (Vector) empDao.getEmployeeList(loginDt.getDepo_code(),
+				loginDt.getCmp_code());
+
 		Vector c = null;
 		int s = data.size();
-		
-		for(int i =0;i<s;i++)
-		{
-			c =(Vector) data.get(i);
+
+		for (int i = 0; i < s; i++) {
+			c = (Vector) data.get(i);
 			empDto = (EmployeeMastDto) c.get(2);
-			if(search.equalsIgnoreCase("Resignation"))
-			{
-				if(empDto.getDoresign()!=null)
+			if (search.equalsIgnoreCase("Resignation")) {
+				if (empDto.getDoresign() != null)
 					emplyeeTableModel.addRow(c);
-			}
-			else
-			{
-				if(empDto.getDoresign()==null)
+			} else {
+				if (empDto.getDoresign() == null)
 					emplyeeTableModel.addRow(c);
 			}
 		}
-		
-		if (s==0)
-		{
-			for(int i =0;i<30;i++)
-			{
+
+		if (s == 0) {
+			for (int i = 0; i < 30; i++) {
 				emplyeeTableModel.addRow(new Object[2][]);
 			}
 		}
 
 	}
 
- 
-
-	public void calfunction(JDoubleField dval)
-	{
+	public void calfunction(JDoubleField dval) {
 		dval.setText(formatter.format(setDoubleNumber(dval.getText())));
-		double grossval=setDoubleNumber(basic.getText())+setDoubleNumber(da.getText())+setDoubleNumber(hra.getText())+setDoubleNumber(add_hra.getText())+setDoubleNumber(incentive.getText())+setDoubleNumber(spl_incentive.getText());
+		double grossval = setDoubleNumber(basic.getText())
+				+ setDoubleNumber(da.getText())
+				+ setDoubleNumber(hra.getText())
+				+ setDoubleNumber(add_hra.getText())
+				+ setDoubleNumber(incentive.getText())
+				+ setDoubleNumber(spl_incentive.getText())
+				+ setDoubleNumber(food_allowance.getText());
 		gross.setText(formatter.format(grossval));
-		
+
 	}
 
-	public void clearAll() 
-	{
-	
+	public void clearAll() {
+
 		dsCombo.setText("");
 		emp_code.setText("");
 		mac_code.setText("");
 		esic_no.setText("");
 		uan_no.setText("");
+		adhar_no.setText("");
 		emp_name.setText("");
 		fname.setText("");
 		madd1.setText("");
@@ -1775,8 +1443,9 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		ot_rate.setText("");
 		st_allow.setText("");
 		bank_accno.setText("");
-//		bank_name.setText("");
-//		bankList.setSelectedIndex(0);
+		food_allowance.setText("");
+		// bank_name.setText("");
+		// bankList.setSelectedIndex(0);
 		bankList.setSelectedIndex(5);
 
 		bank_add1.setText("");
@@ -1784,24 +1453,23 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		bonus_per.setText("");
 		bonus_limit.setText("");
 		bonus_check.setText("");
-		
-		//party_name.setText("");
-		option="A";
+
+		// party_name.setText("");
+		option = "A";
 		btnSave.setBackground(null);
 		btnAdd.setEnabled(true);
 		btnExcel.setEnabled(true);
-		//bankList.setSelectedIndex(0);
-		
+		// bankList.setSelectedIndex(0);
+
 	}
 
-
-	public void setFieldEnabled(boolean b)
-	{
+	public void setFieldEnabled(boolean b) {
 		dsCombo.setEnabled(b);
 		emp_code.setEnabled(b);
 		mac_code.setEnabled(b);
 		esic_no.setEnabled(b);
 		uan_no.setEnabled(b);
+		adhar_no.setEnabled(b);
 		emp_name.setEnabled(b);
 		fname.setEnabled(b);
 		madd1.setEnabled(b);
@@ -1829,14 +1497,486 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 		bonus.setEnabled(b);
 		ot_rate.setEnabled(b);
 		st_allow.setEnabled(b);
+		food_allowance.setEnabled(b);
+
+	}
+
+	public class DateComparator implements Comparator<EmployeeMastDto> {
+		public int compare(EmployeeMastDto e1, EmployeeMastDto e2) {
+			long n1 = 0;
+			if (e1.getDoresign() != null)
+				n1 = e1.getDoresign().getTime();
+			long n2 = 0;
+			if (e2.getDoresign() != null)
+				n2 = e2.getDoresign().getTime();
+			/*
+			 * if(e1.getDoresign()==null || e2.getDoresign()==null) return 1;
+			 * else if(e1.getDoresign()!=null && e2.getDoresign()!=null) return
+			 * (e1.getDoresign().after(e2.getDoresign())) ? -1 :
+			 * (e1.getDoresign().before(e2.getDoresign())) ? 1 : 0; //return
+			 * e1.getDoresign().compareTo(e2.getDoresign()); else return 0;
+			 */
+			return (n1 > n2) ? -1 : (n1 < n2) ? 1 : 0;
+			// return (int) (n1-n2);
+		}
+	}
+
+	public void createPage1() {
+		panel1 = new JPanel();
+		panel1.setLayout(null);
+		//panel1.setBackground(Color.LIGHT_GRAY);
+
+		//setFocusAndBackgroundColor(panel1);
+
+		lblBasic = new JLabel("Basic");
+		lblBasic.setBounds(10, 11, 171, 20);
+		panel1.add(lblBasic);
+
+		basic = new JDoubleField();
+		basic.setHorizontalAlignment(SwingConstants.RIGHT);
+		basic.setMaxLength(10); // Set maximum length
+		basic.setPrecision(2); // Set precision (1 in your case)
+		basic.setAllowNegative(false); // Set false to disable negatives
+		basic.setBounds(124, 11, 86, 22);
+		panel1.add(basic);
+		
+		
+		lblDa = new JLabel("DA");
+		lblDa.setBounds(10, 41, 171, 20);
+		panel1.add(lblDa);
+
+		da = new JDoubleField();
+		da.setHorizontalAlignment(SwingConstants.RIGHT);
+		da.setMaxLength(10); // Set maximum length
+		da.setPrecision(2); // Set precision (1 in your case)
+		da.setAllowNegative(false); // Set false to disable negatives
+		da.setBounds(124, 42, 86, 22);
+		panel1.add(da);
+
+		lblHra = new JLabel("HRA");
+		lblHra.setBounds(10, 71, 171, 20);
+		panel1.add(lblHra);
+
+		hra = new JDoubleField();
+		hra.setHorizontalAlignment(SwingConstants.RIGHT);
+		hra.setMaxLength(10); // Set maximum length
+		hra.setPrecision(2); // Set precision (1 in your case)
+		hra.setAllowNegative(false); // Set false to disable negatives
+		hra.setBounds(124, 71, 86, 22);
+		panel1.add(hra);
+
+		lblAdd_hra = new JLabel("Add. HRA");
+		lblAdd_hra.setBounds(10, 101, 171, 20);
+		panel1.add(lblAdd_hra);
+
+		add_hra = new JDoubleField();
+		add_hra.setHorizontalAlignment(SwingConstants.RIGHT);
+		add_hra.setMaxLength(10); // Set maximum length
+		add_hra.setPrecision(2); // Set precision (1 in your case)
+		add_hra.setAllowNegative(false); // Set false to disable negatives
+		add_hra.setBounds(124, 101, 86, 22);
+		panel1.add(add_hra);
+
+		lblIncentive = new JLabel("Incentive");
+		lblIncentive.setBounds(10, 131, 171, 20);
+		panel1.add(lblIncentive);
+
+		incentive = new JDoubleField();
+		incentive.setHorizontalAlignment(SwingConstants.RIGHT);
+		incentive.setMaxLength(10); // Set maximum length
+		incentive.setPrecision(2); // Set precision (1 in your case)
+		incentive.setAllowNegative(false); // Set false to disable negatives
+		incentive.setBounds(124, 131, 86, 22);
+		panel1.add(incentive);
+
+		lblSpl_incentive = new JLabel("Spl. Incentive");
+		lblSpl_incentive.setBounds(10, 159, 89, 20);
+		panel1.add(lblSpl_incentive);
+
+		spl_incentive = new JDoubleField();
+		spl_incentive.setHorizontalAlignment(SwingConstants.RIGHT);
+		spl_incentive.setMaxLength(10); // Set maximum length
+		spl_incentive.setPrecision(2); // Set precision (1 in your case)
+		spl_incentive.setAllowNegative(false); // Set false to disable negatives
+		spl_incentive.setBounds(124, 159, 86, 22);
+		panel1.add(spl_incentive);
+
+
+		lblFoodallowance = new JLabel("Food Allow.");
+		lblFoodallowance.setBounds(237, 11, 171, 20);
+		panel1.add(lblFoodallowance);
+
+		food_allowance = new JDoubleField();
+		food_allowance.setHorizontalAlignment(SwingConstants.RIGHT);
+		food_allowance.setMaxLength(10); // Set maximum length
+		food_allowance.setPrecision(2); // Set precision (1 in your case)
+		food_allowance.setAllowNegative(false); // Set false to disable negatives
+		food_allowance.setBounds(334, 11, 86, 22);
+		panel1.add(food_allowance);
+
+		
+		lblLta = new JLabel("LTA");
+		lblLta.setBounds(237, 41, 89, 20);
+		panel1.add(lblLta);
+
+		lta = new JDoubleField();
+		lta.setHorizontalAlignment(SwingConstants.RIGHT);
+		lta.setMaxLength(10); // Set maximum length
+		lta.setPrecision(2); // Set precision (1 in your case)
+		lta.setAllowNegative(false); // Set false to disable negatives
+		lta.setBounds(334, 41, 86, 22);
+		panel1.add(lta);
+
+		lblMedical = new JLabel("Medical");
+		lblMedical.setBounds(237, 71, 89, 20);
+		panel1.add(lblMedical);
+
+		medical = new JDoubleField();
+		medical.setHorizontalAlignment(SwingConstants.RIGHT);
+		medical.setMaxLength(10); // Set maximum length
+		medical.setPrecision(2); // Set precision (1 in your case)
+		medical.setAllowNegative(false); // Set false to disable negatives
+		medical.setBounds(334, 71, 86, 22);
+		panel1.add(medical);
+
+		lblBonus = new JLabel("Bonus");
+		lblBonus.setBounds(237, 101, 89, 20);
+		panel1.add(lblBonus);
+
+		bonus = new JDoubleField();
+		bonus.setHorizontalAlignment(SwingConstants.RIGHT);
+		bonus.setMaxLength(10); // Set maximum length
+		bonus.setPrecision(2); // Set precision (1 in your case)
+		bonus.setAllowNegative(false); // Set false to disable negatives
+		bonus.setBounds(334, 101, 86, 22);
+		panel1.add(bonus);
+		
+		
+		lblGross = new JLabel("Gross");
+		lblGross.setBounds(237, 131, 89, 20);
+		panel1.add(lblGross);
+
+		gross = new JDoubleField();
+		gross.setHorizontalAlignment(SwingConstants.RIGHT);
+		gross.setMaxLength(10); // Set maximum length
+		gross.setPrecision(2); // Set precision (1 in your case)
+		gross.setAllowNegative(false); // Set false to disable negatives
+		gross.setBounds(334, 131, 86, 22);
+		panel1.add(gross);
+
+
+		
+
+		lblOtRate = new JLabel("OT Rate");
+		lblOtRate.setBounds(237, 158, 89, 20);
+		panel1.add(lblOtRate);
+
+		ot_rate = new JDoubleField();
+		ot_rate.setHorizontalAlignment(SwingConstants.RIGHT);
+		ot_rate.setMaxLength(10); // Set maximum length
+		ot_rate.setPrecision(2); // Set precision (1 in your case)
+		ot_rate.setAllowNegative(false); // Set false to disable negatives
+		ot_rate.setBounds(334, 158, 86, 22);
+		panel1.add(ot_rate);
+
+		lblSt_allow = new JLabel("Sterile Rate");
+		lblSt_allow.setBounds(448, 11, 89, 20);
+		panel1.add(lblSt_allow);
+
+		st_allow = new JDoubleField();
+		st_allow.setHorizontalAlignment(SwingConstants.RIGHT);
+		st_allow.setMaxLength(10); // Set maximum length
+		st_allow.setPrecision(2); // Set precision (1 in your case)
+		st_allow.setAllowNegative(false); // Set false to disable negatives
+		st_allow.setBounds(545, 11, 86, 22);
+		panel1.add(st_allow);
+
+		
+		
+		// /////////////////////////////////////////////////////////////////////////////////////////////
+		KeyListener panel1KeyListener = new KeyAdapter() {
+			public void keyPressed(KeyEvent keyEvent) {
+
+				int id = 0;
+				try {
+					JTextField textField = (JTextField) keyEvent.getSource();
+					id = Integer.parseInt(textField.getName());
+				} catch (Exception e) {
+					JComboBox textCombo = (JComboBox) keyEvent.getSource();
+					id = Integer.parseInt(textCombo.getName());
+				}
+
+				if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+
+					switch (id) {
+					case 1:
+						calfunction(basic);
+						da.requestFocus();
+						da.setSelectionStart(0);
+						break;
+					case 2:
+						calfunction(da);
+						hra.requestFocus();
+						hra.setSelectionStart(0);
+						break;
+					case 3:
+						calfunction(hra);
+						add_hra.requestFocus();
+						add_hra.setSelectionStart(0);
+						break;
+					case 4:
+						calfunction(add_hra);
+						incentive.requestFocus();
+						incentive.setSelectionStart(0);
+						break;
+					case 5:
+						calfunction(incentive);
+						spl_incentive.requestFocus();
+						spl_incentive.setSelectionStart(0);
+						break;
+					case 6:
+						calfunction(spl_incentive);
+						food_allowance.requestFocus();
+						food_allowance.setSelectionStart(0);
+						break;
+					case 7:
+						calfunction(food_allowance);
+						lta.requestFocus();
+						lta.setSelectionStart(0);
+						break;
+					case 8:
+						calfunction(lta);
+						medical.requestFocus();
+						medical.setSelectionStart(0);
+						break;
+					case 9:
+						bonus.requestFocus();
+						bonus.setSelectionStart(0);
+						break;
+					case 10:
+						gross.requestFocus();
+						gross.setSelectionStart(0);
+						break;
+					case 11:
+						ot_rate.requestFocus();
+						ot_rate.setSelectionStart(0);
+						break;
+					case 12:
+						st_allow.requestFocus();
+						st_allow.setSelectionStart(0);
+						break;
+					case 13:
+						btnSave.requestFocus();
+						btnSave.setBackground(new Color(139, 153, 122));
+						break;					}
+
+				}
+
+			}
+
+		};
+
+		
+		basic.setName("1");
+		da.setName("2");
+		hra.setName("3");
+		add_hra.setName("4");
+		incentive.setName("5");
+		spl_incentive.setName("6");
+		food_allowance.setName("7");
+		lta.setName("8");
+		medical.setName("9");
+		bonus.setName("10");
+		gross.setName("11");
+		ot_rate.setName("12");
+		st_allow.setName("13");
+
+		basic.addKeyListener(panel1KeyListener);
+		da.addKeyListener(panel1KeyListener);
+		hra.addKeyListener(panel1KeyListener);
+		add_hra.addKeyListener(panel1KeyListener);
+		incentive.addKeyListener(panel1KeyListener);
+		spl_incentive.addKeyListener(panel1KeyListener);
+		lta.addKeyListener(panel1KeyListener);
+		medical.addKeyListener(panel1KeyListener);
+		bonus.addKeyListener(panel1KeyListener);
+		ot_rate.addKeyListener(panel1KeyListener);
+		st_allow.addKeyListener(panel1KeyListener);
+		gross.addKeyListener(panel1KeyListener);
+		food_allowance.addKeyListener(panel1KeyListener);
+
+
+	}
+
+	public void createPage2() {
+		panel2 = new JPanel();
+		panel2.setLayout(null);
+		//panel1.setBackground(Color.LIGHT_GRAY);
+
+		//setFocusAndBackgroundColor(panel1);
+
+		
+		lblAcNo = new JLabel("A/c No");
+		lblAcNo.setBounds(10, 11, 101, 20);
+		panel2.add(lblAcNo);
+
+		lblBankName = new JLabel("Bank Name");
+		lblBankName.setBounds(10, 41, 101, 20);
+		panel2.add(lblBankName);
+
+		lblAddress_2 = new JLabel("Address");
+		lblAddress_2.setBounds(10, 71, 101, 20);
+		panel2.add(lblAddress_2);
+
+		lblIfscCode = new JLabel("IFSC Code");
+		lblIfscCode.setBounds(10, 101, 101, 20);
+		panel2.add(lblIfscCode);
+
+		bank_accno = new TextField(20);
+		bank_accno.setName("9");
+		bank_accno.setBounds(124, 11, 153, 22);
+		panel2.add(bank_accno);
+
+		/*
+		 * bank_name = new TextField(20); bank_name.setName("11");
+		 * bank_name.setBounds(824, 459, 153, 22);
+		 * getContentPane().add(bank_name);
+		 */
+
+		bankList = new JComboBox(loginDt.getBankList());
+		bankList.setName("0");
+		bankList.setBounds(124, 41, 153, 22);
+		panel2.add(bankList);
+
+		bank_add1 = new TextField(20);
+		bank_add1.setName("13");
+		bank_add1.setBounds(124, 71, 153, 22);
+		panel2.add(bank_add1);
+
+		ifsc_code = new TextField(20);
+		ifsc_code.setName("15");
+		ifsc_code.setBounds(124, 101, 153, 22);
+		panel2.add(ifsc_code);
+
+		lblBonusper = new JLabel("Bonus % & Limit");
+		lblBonusper.setBounds(10, 131, 119, 20);
+		panel2.add(lblBonusper);
+
+		bonus_per = new JDoubleField();
+		bonus_per.setHorizontalAlignment(SwingConstants.RIGHT);
+		bonus_per.setMaxLength(10); // Set maximum length
+		bonus_per.setPrecision(2); // Set precision (1 in your case)
+		bonus_per.setAllowNegative(false); // Set false to disable negatives
+		bonus_per.setBounds(124, 131, 56, 22);
+		panel2.add(bonus_per);
+
+		bonus_limit = new JDoubleField();
+		bonus_limit.setHorizontalAlignment(SwingConstants.RIGHT);
+		bonus_limit.setMaxLength(10); // Set maximum length
+		bonus_limit.setPrecision(2); // Set precision (1 in your case)
+		bonus_limit.setAllowNegative(false); // Set false to disable negatives
+		bonus_limit.setBounds(191, 131, 86, 22);
+		panel2.add(bonus_limit);
+
+		lblBonuschk = new JLabel("Bonus Calculation");
+		lblBonuschk.setBounds(10, 158, 119, 20);
+		panel2.add(lblBonuschk);
+
+		bonus_check = new JDoubleField();
+		bonus_check.setHorizontalAlignment(SwingConstants.RIGHT);
+		bonus_check.setMaxLength(10); // Set maximum length
+		bonus_check.setPrecision(2); // Set precision (1 in your case)
+		bonus_check.setAllowNegative(false); // Set false to disable negatives
+		bonus_check.setBounds(124, 158, 153, 22);
+		panel2.add(bonus_check);
+
+
+		
+		
+		// /////////////////////////////////////////////////////////////////////////////////////////////
+		KeyListener panel2KeyListener = new KeyAdapter() {
+			public void keyPressed(KeyEvent keyEvent) {
+
+				int id = 0;
+				try {
+					JTextField textField = (JTextField) keyEvent.getSource();
+					id = Integer.parseInt(textField.getName());
+				} catch (Exception e) {
+					JComboBox textCombo = (JComboBox) keyEvent.getSource();
+					id = Integer.parseInt(textCombo.getName());
+				}
+
+				if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+
+					switch (id) {
+/*					case 31:
+						bank_accno.requestFocus();
+						bank_accno.setSelectionStart(0);
+						break;
+*/					//case 2:
+						//bankList.requestFocus();
+						// bank_name.setSelectionStart(0);
+						//break;
+					case 31:
+						bank_add1.requestFocus();
+						bank_add1.setSelectionStart(0);
+						break;
+					case 32:
+						ifsc_code.requestFocus();
+						ifsc_code.setSelectionStart(0);
+						break;
+					case 33:
+						bonus_per.requestFocus();
+						bonus_per.setSelectionStart(0);
+						break;
+					case 34:
+						bonus_per.setText(formatter.format(setDoubleNumber((bonus_per.getText()))));
+						bonus_limit.requestFocus();
+						bonus_limit.setSelectionStart(0);
+						break;
+					case 35:
+						bonus_limit.setText(formatter.format(setDoubleNumber((bonus_limit.getText()))));
+						bonus_check.requestFocus();
+						bonus_check.setSelectionStart(0);
+						break;
+					case 36:
+						bonus_check.setText(formatter.format(setDoubleNumber((bonus_check.getText()))));
+						btnSave.requestFocus();
+						btnSave.setBackground(new Color(139, 153, 122));
+						break;
+					case 37:
+						btnSave.requestFocus();
+						btnSave.setBackground(new Color(139, 153, 122));
+						break;					}
+
+				}
+
+			}
+
+		};
+
+		bank_accno.setName("31");
+		// bank_name.setName("32");
+		bank_add1.setName("32");
+		ifsc_code.setName("33");
+		bonus_per.setName("34");
+		bonus_limit.setName("35");
+		bonus_check.setName("36");
+
+
+		bank_accno.addKeyListener(panel2KeyListener);
+		bank_add1.addKeyListener(panel2KeyListener);
+		ifsc_code.addKeyListener(panel2KeyListener);
+		bonus_per.addKeyListener(panel2KeyListener);
+		bonus_limit.addKeyListener(panel2KeyListener);
+		bonus_check.addKeyListener(panel2KeyListener);
 
 
 	}
 	
-	public void setVisible(boolean b)
-	{
-		if(repNm.equalsIgnoreCase("Worker Master"))
-		{
+	
+	public void setVisible(boolean b) {
+		if (repNm.equalsIgnoreCase("Worker Master")) {
 			setFieldEnabled(true);
 			bank_accno.setEnabled(false);
 			bankList.setEnabled(false);
@@ -1848,10 +1988,8 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 			btnResign.setVisible(true);
 			bankList.setSelectedIndex(5);
 
-			repno=1;
-		}
-		else if(repNm.equalsIgnoreCase("Worker Bank Master"))
-		{
+			repno = 1;
+		} else if (repNm.equalsIgnoreCase("Worker Bank Master")) {
 			setFieldEnabled(false);
 			bank_accno.setEnabled(b);
 			bankList.setEnabled(b);
@@ -1861,12 +1999,12 @@ public class EmployeeMaster extends BaseClass implements ActionListener
 			bonus_limit.setEnabled(b);
 			bonus_check.setEnabled(b);
 
-			btnResign.setVisible(false);
+			btnResign.setVisible(true);
 			bankList.setSelectedIndex(5);
-			repno=2;
+			repno = 2;
 		}
 		fillInvTable("");
 		super.setVisible(b);
 	}
+
 }
- 

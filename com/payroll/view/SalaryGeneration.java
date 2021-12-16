@@ -453,6 +453,7 @@ public class SalaryGeneration extends BaseClass implements ActionListener
 		AttdTableModel.getDataVector().removeAllElements();
 		Vector<?> c = null;
 		 mdto=(MonthDto)month.getSelectedItem();
+		 System.out.println("year if "+loginDt.getFin_year()+" mcoide "+mdto.getMnthcode());
 		Vector<?> v = pdao.getSalaryList(loginDt.getDepo_code(),loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(),mdto.getMnthdays()); 
 		int size = v.size();
 		double tot=0.00;

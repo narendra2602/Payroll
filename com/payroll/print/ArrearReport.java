@@ -27,14 +27,12 @@ public class ArrearReport  extends WriteExcel
    SimpleDateFormat sdf;
    String inputFile;
     
-   private String  drvnm,flname,cmp_name,monthname; 
-   private int depo_code, cmp_code, fyear, mnth_code,btnno,repno;
-   private double tot,totbonus;
-   private double[] gtot,gtot1;
+   private String  drvnm,flname,cmp_name; 
+   private int depo_code, cmp_code, fyear, repno,smon,emon;
    ArrayList<?> esicList;
    SheetSettings settings; 
    
-  public ArrearReport(Integer depo_code,Integer cmp_code,Integer fyear,String cmp_name,String drvnm,Integer repno) 
+  public ArrearReport(Integer depo_code,Integer cmp_code,Integer fyear,String cmp_name,String drvnm,Integer repno,Integer smon,Integer emon) 
   
   {
     try 
@@ -47,6 +45,8 @@ public class ArrearReport  extends WriteExcel
     	this.cmp_code=cmp_code;
     	this.fyear=fyear;
     	this.repno=repno;
+    	this.smon=smon;
+    	this.emon=emon;
     	sdf = new SimpleDateFormat("dd/MM/yyyy");
     	
     	flname="Arrear-"+cmp_name.substring(0, 6);
@@ -78,7 +78,16 @@ public class ArrearReport  extends WriteExcel
 	    try 
 	    {
 	    	PayrollDAO pdao = new PayrollDAO();
-	    	esicList=pdao.getArrearReport(depo_code, cmp_code, fyear,(repno==1?"Y":"N"));
+	    	String paid="N";
+	    	if(repno==1)
+	    		paid="Y";
+	    	else if(repno==99)
+	    	{
+	    		paid="O";
+	    		repno=1;
+	    	}
+	    	
+	    	esicList=pdao.getArrearReport(depo_code, cmp_code, fyear,paid,smon,emon);
 	    	createExcel();
 
 	    } catch (Exception ex) {
@@ -115,8 +124,13 @@ public void write() throws IOException, WriteException {
 	   settings = excelSheet.getSettings();
 	   settings.setPrintTitlesRow(0, 4);
 	   settings.setOrientation(PageOrientation.LANDSCAPE);
-	   settings.setLeftMargin(0);
-	   settings.setRightMargin(0);
+	   settings.setLeftMargin(0.50);
+	   settings.setRightMargin(0.50);
+	   
+	   
+	   settings.setTopMargin(0.50);
+	   settings.setBottomMargin(0.50);
+	   settings.setFitWidth(1);
 	   //settings.setFitWidth(1);
 
 	   createLabel(excelSheet);
@@ -207,13 +221,9 @@ public void createHeader1(WritableSheet sheet)
 		int size=esicList.size();
 	
 		EmptranDto emp =null;
-		int pgbrk=0;
-		tot=0.00;
 	
 		
 		int heightInPoints = 18*20;
-		gtot= new double[12];
-		gtot1= new double[12];
 		
 		for (i=0;i<size;i++)
 		{
@@ -229,7 +239,6 @@ public void createHeader1(WritableSheet sheet)
 		    createReport1(sheet, emp);
 			 
 			
-			pgbrk++;
 		}
 		
 		
@@ -245,7 +254,6 @@ public void createHeader1(WritableSheet sheet)
 			    {
 			    	dash=1;
 			    }
-			    tot=0.00;
 			    
 			    if(emp.getEmp_code()>0)
 			    	addNumber(sheet, 0, r, emp.getEmp_code(),dash);

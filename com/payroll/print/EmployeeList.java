@@ -155,9 +155,10 @@ public void createHeader(WritableSheet sheet)
 		   addCaption2(sheet, 32, 3, "Address",20);
 		   addCaption2(sheet, 33, 3, "IFSC Code",15);
 		   addCaption2(sheet, 34, 3, "UAN No",12);
-		   addCaption2(sheet, 35, 3, "Bonus %",12);
-		   addCaption2(sheet, 36, 3, "Bonus Limit",12);
-		   addCaption2(sheet, 37, 3, "Bonus Check",12);
+		   addCaption2(sheet, 35, 3, "Aadhar No",12);
+		   addCaption2(sheet, 36, 3, "Bonus %",12);
+		   addCaption2(sheet, 37, 3, "Bonus Limit",12);
+		   addCaption2(sheet, 38, 3, "Bonus Check",12);
 
 	   }
 	   else
@@ -168,6 +169,10 @@ public void createHeader(WritableSheet sheet)
 		   addCaption2(sheet, 3, 3, "Bank Name",30);
 		   addCaption2(sheet, 4, 3, "Address",20);
 		   addCaption2(sheet, 5, 3, "IFSC Code",15);
+		   addCaption2(sheet, 6, 3, "Bonus %",12);
+		   addCaption2(sheet, 7, 3, "Bonus Limit",12);
+		   addCaption2(sheet, 8, 3, "Bonus Check",12);
+
 		   
 	   }
 	   settings.setHorizontalFreeze(3);
@@ -191,9 +196,17 @@ public void createContent(WritableSheet sheet) throws WriteException,RowsExceede
 	   Vector<?> col=null;
 	   Date curdate = new Date();
 	   for (i=0;i<size;i++)
-	   {
-		   col = (Vector<?>) empList.get(i); 
-		   emp = (EmployeeMastDto) col.get(2);
+	   {   
+		   if(repno==3)
+		   {
+			   emp = (EmployeeMastDto) empList.get(i);
+		   }
+		   else
+		   {
+			   col = (Vector<?>) empList.get(i); 
+			   emp = (EmployeeMastDto) col.get(2);
+		   }
+		   
 		   if(first)
 		   {
 			   createHeader(sheet);
@@ -238,9 +251,10 @@ public void createContent(WritableSheet sheet) throws WriteException,RowsExceede
 				   addLabel(sheet, 32, r, emp.getBank_add1(),dash);
 				   addLabel(sheet, 33, r, emp.getIfsc_code(),dash);
 				   addLabel(sheet,34, r, ""+emp.getUan_no(),dash);
-				   addDouble(sheet,35, r, emp.getBonus_per(),dash);
-				   addDouble(sheet,36, r, emp.getBonus_limit(),dash);
-				   addDouble(sheet,37, r, emp.getBonus_check(),dash);
+				   addLabel(sheet,35, r, ""+emp.getAdhar_no(),dash);
+				   addDouble(sheet,36, r, emp.getBonus_per(),dash);
+				   addDouble(sheet,37, r, emp.getBonus_limit(),dash);
+				   addDouble(sheet,38, r, emp.getBonus_check(),dash);
 
 				   r++;
 			   }
@@ -283,9 +297,10 @@ public void createContent(WritableSheet sheet) throws WriteException,RowsExceede
 					   addLabel(sheet, 32, r, emp.getBank_add1(),dash);
 					   addLabel(sheet, 33, r, emp.getIfsc_code(),dash);
 					   addLabel(sheet,34, r, ""+emp.getUan_no(),dash);
-					   addDouble(sheet,35, r, emp.getBonus_per(),dash);
-					   addDouble(sheet,36, r, emp.getBonus_limit(),dash);
-					   addDouble(sheet,37, r, emp.getBonus_check(),dash);
+					   addLabel(sheet,35, r, ""+emp.getAdhar_no(),dash);
+					   addDouble(sheet,36, r, emp.getBonus_per(),dash);
+					   addDouble(sheet,37, r, emp.getBonus_limit(),dash);
+					   addDouble(sheet,38, r, emp.getBonus_check(),dash);
 
 
 					   r++;
@@ -298,6 +313,10 @@ public void createContent(WritableSheet sheet) throws WriteException,RowsExceede
 					   addLabel(sheet, 3, r, emp.getBank(),dash);
 					   addLabel(sheet, 4, r, emp.getBank_add1(),dash);
 					   addLabel(sheet, 5, r, emp.getIfsc_code(),dash);
+					   addDouble(sheet,6, r, emp.getBonus_per(),dash);
+					   addDouble(sheet,7, r, emp.getBonus_limit(),dash);
+					   addDouble(sheet,8, r, emp.getBonus_check(),dash);
+
 					   r++;
 				   }
 				  

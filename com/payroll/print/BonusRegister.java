@@ -17,6 +17,7 @@ import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
 import com.payroll.dao.PayrollDAO;
+import com.payroll.dto.ContractMastDto;
 import com.payroll.dto.EmployeeMastDto;
 import com.payroll.dto.EmptranDto;
 import com.payroll.excel.WriteExcel;
@@ -32,7 +33,7 @@ public class BonusRegister  extends WriteExcel
     
    private String  drvnm,flname,cmp_name,monthname; 
    private int depo_code, cmp_code, fyear, mnth_code,btnno,repno,sno;
-   private double tot,totbonus,totatten;
+   private double tot,totbonus,totatten,ggtot,ggtotatten;
    private double[] gtot,gtot1,gtot2;
    ArrayList<?> esicList;
    SheetSettings settings; 
@@ -82,7 +83,7 @@ public class BonusRegister  extends WriteExcel
 	    try 
 	    {
 	    	PayrollDAO pdao = new PayrollDAO();
-	    	esicList=pdao.getBonusRegister(depo_code, cmp_code, fyear);
+	    	esicList=pdao.getBonusRegister(depo_code, cmp_code, fyear,repno);
 	    	createExcel();
 
 	    } catch (Exception ex) {
@@ -194,6 +195,9 @@ public void createHeader1(WritableSheet sheet)
 	 	}
 	 	else if(repno==51)
 	 	{
+	 		int noofdays=0;
+	 		ContractMastDto con = BaseClass.loginDt.getBdto();
+	 		noofdays=((fyear%2==0)?366:365);
 		 	sheet.mergeCells(0, 0, 16, 0);
 			addCaption(sheet, 0, 0, "FORM C",40);
 			
@@ -201,53 +205,60 @@ public void createHeader1(WritableSheet sheet)
 			addCaption(sheet, 0, 1, "[See RULE 4(C)]",40);
 
 			sheet.mergeCells(0, 2, 16, 2);
-	 		addCaption1(sheet, 0, 2, " BONUS PAID TO EMPLOYEES FOR THE ACCOUNTING YEAR ENDING ON THE MAR-"+fyear,40);
+	 		addCaption1(sheet, 0, 2, " BONUS PAID TO EMPLOYEES FOR THE ACCOUNTING YEAR ENDING ON THE MAR-"+(fyear+1),40);
 
 	 		sheet.mergeCells(0, 3, 3, 3);
 	 		addCaption3(sheet, 0, 3, "Name of the establishment :  "+cmp_name,10,0);
-			sheet.mergeCells(0, 4, 3, 4);
-	 		addCaption3(sheet, 0, 4, "No of Working days in the year ",10,0);
+	 		sheet.mergeCells(0, 4, 3, 4);
+	 		addCaption3(sheet, 0, 4, "Address :  "+con.getCmp_add1(),30,0);
+	 		sheet.mergeCells(0, 5, 3, 5);
+	 		addCaption3(sheet, 0, 5, "License No :  "+con.getLicense_no(),30,0);
+	 		
+			sheet.mergeCells(0, 6, 3, 6);
+	 		addCaption3(sheet, 0, 6, "No of Working days in the year "+(noofdays),10,0);
 	 		
 	 		
 	 		
 	 		
-	 		addCaption2(sheet, 0, 5, "Sl No",10);
-	 		addCaption2(sheet, 1, 5, "Name of the Employee",30);
-	 		addCaption2(sheet, 2, 5, "Father's Name",20);
-	 		addCaption2(sheet, 3, 5, "Whether he has completed 15 years of age at the begining of the accounting year ",10);
-	 		addCaption2(sheet, 4, 5, "Designation",12);
-	 		addCaption2(sheet, 5, 5, "No. of days worked in the year",10);
-	 		addCaption2(sheet, 6, 5, "Total Salary or wage in respect of the accounting year",10);
-	 		addCaption2(sheet, 7, 5, "Amount of bonus payable under section 10 or 11 as the case may be ",10);
-	 		addCaption2(sheet, 8, 5, "Pooja bonus other custom mary during the accounting year ",10);
-	 		addCaption2(sheet, 9, 5, "Interim bonus or bonus paid advance ",10);
-	 		addCaption2(sheet, 10,5, "Amount of income e-tax deducted ",10);
-	 		addCaption2(sheet, 11,5, "Deduction on account of financial loss, if any, cause by misconduct of the employee",10);
-	 		addCaption2(sheet, 12,5, "Total sum deducted under column 9,10,10A and 11",10);
-	 		addCaption2(sheet, 13,5, "Net Amount payable (Columns 8 minus 12)",10);
-	 		addCaption2(sheet, 14,5, "Amount actually paid",10);
-	 		addCaption2(sheet, 15,5, "Date on which paid ",10);
-	 		addCaption2(sheet, 16,5, "Signature/Thumb impression of the employee ",10);
+	 		addCaption2(sheet, 0, 7, "Sl No",10);
+	 		addCaption2(sheet, 1, 7, "Name of the Employee",30);
+	 		addCaption2(sheet, 2, 7, "Father's Name",20);
+	 		addCaption2(sheet, 3, 7, "Whether he has completed 15 years of age at the begining of the accounting year ",10);
+	 		addCaption2(sheet, 4, 7, "Designation",12);
+	 		addCaption2(sheet, 5, 7, "No. of days worked in the year",10);
+	 		addCaption2(sheet, 6, 7, "Total Salary or wage in respect of the accounting year",10);
+	 		addCaption2(sheet, 7, 7, "Amount of bonus payable under section 10 or 11 as the case may be ",10);
+	 		addCaption2(sheet, 8, 7, "Pooja bonus other custom mary during the accounting year ",10);
+	 		addCaption2(sheet, 9, 7, "Interim bonus or bonus paid advance ",10);
+	 		addCaption2(sheet, 10,7, "Amount of income e-tax deducted ",10);
+	 		addCaption2(sheet, 11,7, "Deduction on account of financial loss, if any, cause by misconduct of the employee",10);
+	 		addCaption2(sheet, 12,7, "Total sum deducted under column 9,10,10A and 11",10);
+	 		addCaption2(sheet, 13,7, "Net Amount payable (Columns 8 minus 12)",10);
+	 		addCaption2(sheet, 14,7, "Amount actually paid",10);
+	 		addCaption2(sheet, 15,7, "Date on which paid ",10);
+	 		addCaption2(sheet, 16,7, "Signature/Thumb impression of the employee ",20);
+	 		addCaption2(sheet, 17,7, "Bank Name ",40);
 
-	 		addCaption2(sheet, 0, 6, "1",10);
-	 		addCaption2(sheet, 1, 6, "2",30);
-	 		addCaption2(sheet, 2, 6, "3",20);
-	 		addCaption2(sheet, 3, 6, "4",10);
-	 		addCaption2(sheet, 4, 6, "5",12);
-	 		addCaption2(sheet, 5, 6, "6",10);
-	 		addCaption2(sheet, 6, 6, "7",10);
-	 		addCaption2(sheet, 7, 6, "8",10);
-	 		addCaption2(sheet, 8, 6, "9",10);
-	 		addCaption2(sheet, 9, 6, "10",10);
-	 		addCaption2(sheet, 10,6, "10A",10);
-	 		addCaption2(sheet, 11,6, "11",10);
-	 		addCaption2(sheet, 12,6, "12",10);
-	 		addCaption2(sheet, 13,6, "13",10);
-	 		addCaption2(sheet, 14,6, "14",10);
-	 		addCaption2(sheet, 15,6, "15",10);
-	 		addCaption2(sheet, 16,6, " ",9);
+	 		addCaption2(sheet, 0, 8, "1",10);
+	 		addCaption2(sheet, 1, 8, "2",30);
+	 		addCaption2(sheet, 2, 8, "3",20);
+	 		addCaption2(sheet, 3, 8, "4",10);
+	 		addCaption2(sheet, 4, 8, "5",12);
+	 		addCaption2(sheet, 5, 8, "6",10);
+	 		addCaption2(sheet, 6, 8, "7",10);
+	 		addCaption2(sheet, 7, 8, "8",10);
+	 		addCaption2(sheet, 8, 8, "9",10);
+	 		addCaption2(sheet, 9, 8, "10",10);
+	 		addCaption2(sheet, 10,8, "10A",10);
+	 		addCaption2(sheet, 11,8, "11",10);
+	 		addCaption2(sheet, 12,8, "12",10);
+	 		addCaption2(sheet, 13,8, "13",10);
+	 		addCaption2(sheet, 14,8, "14",10);
+	 		addCaption2(sheet, 15,8, "15",10);
+	 		addCaption2(sheet, 16,8, " ",20);
+	 		addCaption2(sheet, 17,8, " ",40);
 
-	 		r=7;
+	 		r=9;
 	 	}
 
 }  
@@ -291,7 +302,7 @@ public void createHeader1(WritableSheet sheet)
 				tot+=emp.getAtten()[i];
 			}
 
-			if(tot>=31)
+			if(tot>=30) // earlier tot>=31 change on 30/07/2018
 				print=true;
 		    sheet.setRowView(r, heightInPoints);
 		    	if(repno==5)
@@ -351,7 +362,29 @@ public void createHeader1(WritableSheet sheet)
 			addDouble(sheet, k++, r,  tot,1);
 			addLabel(sheet, k++, r, "",1);
 		}
-			 
+		else if(repno==51) //total for bonus register
+		{
+			addLabel(sheet, 0, r, "",1);
+			addLabel(sheet, 1, r, "",1);
+			addLabel(sheet, 2, r, "Total",1);
+			addLabel(sheet, 3, r, "",1);
+			addLabel(sheet, 4, r, "",1);
+			addDouble(sheet,5, r,  ggtotatten,1);
+			addDouble(sheet,6, r,  ggtot,1);
+			addLabel(sheet, 7, r, "",1);
+			addLabel(sheet, 8, r, "",1);
+			addLabel(sheet, 9, r, "",1);
+			addLabel(sheet, 10, r, "",1);
+			addLabel(sheet, 11, r, "",1);
+			addLabel(sheet, 12, r, "",1);
+			addLabel(sheet, 13, r, "",1);
+			addDouble(sheet,14, r,  totbonus,1);
+			addLabel(sheet, 15, r, "",1);
+			addLabel(sheet, 16, r, "",1);
+			addLabel(sheet, 17, r, "",1);
+			r++;
+
+		}
 	
 		
 		
@@ -428,13 +461,16 @@ public void createHeader1(WritableSheet sheet)
 				for (int i=0;i<12;i++)
 				{
 					tot+=emp.getBonusval()[i];
-					totatten+=emp.getAtten()[i]+emp.getArrear_days();
+					totatten+=emp.getAtten()[i]+emp.getArrdays()[i];
 					gtot[i]+=emp.getBonusval()[i];;
 				}
 					addDouble(sheet, k++, r,  totatten,dash);
 					addDouble(sheet, k++, r,  tot,dash);
 					totbonus+=emp.getBonus_value();
+					ggtot+=tot;
+					ggtotatten+=totatten;
 			 
+					
 					addLabel(sheet, k++, r, "",dash);
 					addLabel(sheet, k++, r, "",dash);
 					addLabel(sheet, k++, r, "",dash);
@@ -444,7 +480,8 @@ public void createHeader1(WritableSheet sheet)
 					addLabel(sheet, k++, r, "",dash);
 					addDouble(sheet, k++, r,  emp.getBonus_value(),dash);
 					addLabel(sheet, k++, r, "",dash);
-					addLabel(sheet, k++, r, "",dash);
+					addLabel(sheet, k++, r, emp.getBank_accno(),dash);
+					addLabel(sheet, k++, r, emp.getBank(),dash);
 					r++;
 	
 		 

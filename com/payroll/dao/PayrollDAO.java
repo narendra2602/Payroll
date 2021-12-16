@@ -13,6 +13,7 @@ import java.util.Vector;
 
 import com.payroll.dto.EmployeeMastDto;
 import com.payroll.dto.EmptranDto;
+import com.payroll.view.BaseClass;
 
  
 
@@ -34,7 +35,7 @@ public class PayrollDAO
 			con.setAutoCommit(false);
 
 			String query="select e.emp_name,e.esic_no,e.pf_no,e.emp_code,ifnull(t.atten_days,0.00) atten,ifnull(t.extra_hrs,0) extrahrs,ifnull(t.arrear_days,0) arrear,ifnull(t.remark,'') remark," +
-			" e.gross,e.basic,e.da,e.hra,e.add_hra,e.incentive,e.spl_incentive,e.lta,e.medical,e.bonus,e.ot_rate,e.stair_alw,t.atten_lock "+
+			" e.gross,e.basic,e.da,e.hra,e.add_hra,e.incentive,e.spl_incentive,e.lta,e.medical,e.bonus,e.ot_rate,e.stair_alw,t.atten_lock,e.food_allowance "+
 			" from employeemast e left join emptran t  "+
 			" on e.cmp_code=t.cmp_code and e.emp_code=t.emp_code and t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? " +
 			" and ifnull(t.del_tag,'')<>'D' where e.depo_code=? and e.cmp_code=? and (e.doresign is null or CONCAT(YEAR(e.doresign),LPAD(MONTH(e.doresign),2,'0'))=?) ";
@@ -77,6 +78,7 @@ public class PayrollDAO
 				emp.setOt_rate(rs.getDouble(19));
 				emp.setStair_alw(rs.getDouble(20));
 				emp.setAtten_lock(rs.getInt(21));
+				emp.setFood_alw(rs.getDouble(22)); // new field added food allowance on 12/11/2019
 				emp.setEmp_code(rs.getInt(4));
 				emp.setEmp_name(rs.getString(1));
 				emp.setEsic_no(rs.getLong(2));
@@ -145,8 +147,8 @@ public class PayrollDAO
 		
 			String query2="insert into emptran (depo_code,cmp_code,doc_type,emp_code,doc_no,doc_date,atten_days," + //7
 			" arrear_days,extra_hrs,gross,basic, da, hra, add_hra, incentive, spl_incentive, lta, medical, ot_rate, stair_alw, " + //20
-			" created_by, created_date,serialno, fin_year, mnth_code,remark,absent_days)"+ //27
-			" values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			" created_by, created_date,serialno, fin_year, mnth_code,remark,absent_days,food_alw)"+ //28
+			" values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 			String query3="update  emptran set atten_days=?,arrear_days=?,extra_hrs=?,remark=?, " + 
 			" modified_by=?, modified_date=?,absent_days=? where fin_year=? and depo_code=? and cmp_code=? and mnth_code=? and emp_code=? ";
@@ -210,6 +212,7 @@ public class PayrollDAO
 					ps2.setInt(25,emp.getMnth_code());
 					ps2.setString(26,emp.getRemark());
 					ps2.setDouble(27,emp.getAbsent_days());
+					ps2.setDouble(28,emp.getFood_alw());
 					i=ps2.executeUpdate();
 				}
 				else
@@ -278,8 +281,10 @@ public class PayrollDAO
 		Vector col=null;
 		EmptranDto emp=null;
 		int sno=1;
-		double basic,da,hra,incentive,add_hra,spl_incentive,gross,pf,esic,empesic,emppf,epspf;
+		double basic,da,hra,incentive,add_hra,spl_incentive,gross,pf,esic,empesic,emppf,epspf,food_allowance,basicForPf;
+		double basicpf,dapf,incentivepf;
 		double presentdays;
+		basicForPf=0.00;
 		try 
 		{
 			con=ConnectionFactory.getConnection();
@@ -292,15 +297,28 @@ public class PayrollDAO
 			" and e.depo_code=? and e.cmp_code=? and e.emp_code=t.emp_code) a ";
 */
 	
+			
 			String query="select emp_code,emp_name,atten_days,basic,da,hra,incentive,ot,medical_value,lta_value,round(basic+da+hra+incentive+ot) gross," +
 			"advance,round(((basic+da)*12)/100) pf,round(((basic+da+hra+incentive+ot)*1.75)/100) esic,round(((basic+da+hra+incentive+ot)*4.75)/100) empesic," +
-			"absent_days,arrear_days,add_hra,spl_incentive,misc_value,stair_value from "+ 
+			"absent_days,arrear_days,add_hra,spl_incentive,misc_value,stair_value,machine1_value,machine2_value,food_alw from "+ 
 			"(select e.emp_code,e.emp_name,e.designation,e.pf_no,e.esic_no,t.basic,t.da,t.hra,t.incentive, "+
 			" round(t.extra_hrs*t.ot_rate) ot,t.medical_value,t.lta_value,t.advance,t.atten_days,t.absent_days,t.arrear_days," +
-			" t.add_hra,t.spl_incentive,t.misc_value,t.stair_value "+
+			" t.add_hra,t.spl_incentive,t.misc_value,t.stair_value,t.machine1_value,t.machine2_value,t.food_alw "+
 			" from emptran t,employeemast e  where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and t.atten_lock=1  and ifnull(t.del_tag,'')<>'D' "+
 			" and e.depo_code=? and e.cmp_code=? and e.emp_code=t.emp_code) a ";
-
+			
+			/*if(mnth_code>202044)
+			{
+				query="select emp_code,emp_name,atten_days,basic,da,hra,incentive,ot,medical_value,lta_value,round(basic+da+hra+incentive+ot) gross," +
+				"advance,round(((basic+da)*10)/100) pf,round(((basic+da+hra+incentive+ot)*1.75)/100) esic,round(((basic+da+hra+incentive+ot)*4.75)/100) empesic," +
+				"absent_days,arrear_days,add_hra,spl_incentive,misc_value,stair_value,machine1_value,machine2_value,food_alw from "+ 
+				"(select e.emp_code,e.emp_name,e.designation,e.pf_no,e.esic_no,t.basic,t.da,t.hra,t.incentive, "+
+				" round(t.extra_hrs*t.ot_rate) ot,t.medical_value,t.lta_value,t.advance,t.atten_days,t.absent_days,t.arrear_days," +
+				" t.add_hra,t.spl_incentive,t.misc_value,t.stair_value,t.machine1_value,t.machine2_value,t.food_alw "+
+				" from emptran t,employeemast e  where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and t.atten_lock=1  and ifnull(t.del_tag,'')<>'D' "+
+				" and e.depo_code=? and e.cmp_code=? and e.emp_code=t.emp_code) a ";
+			}*/
+						
 			
 			ps = con.prepareStatement(query);
 			ps.setInt(1, fyear);
@@ -324,6 +342,13 @@ public class PayrollDAO
 					incentive = roundTwoDecimals(rs.getDouble(7)+((rs.getDouble(7)/30)*rs.getDouble(17)));
 					add_hra = roundTwoDecimals(rs.getDouble(18)+((rs.getDouble(18)/30)*rs.getDouble(17)));
 					spl_incentive = roundTwoDecimals(rs.getDouble(19)+((rs.getDouble(19)/30)*rs.getDouble(17)));
+					food_allowance=roundTwoDecimals(rs.getDouble(3)*rs.getDouble(24)); // presentDays*Food_alw (perday)
+					
+					basicpf = roundTwoDecimals(rs.getDouble(4));
+					dapf = roundTwoDecimals(rs.getDouble(5));
+					incentivepf = roundTwoDecimals(rs.getDouble(7));
+
+					
 				}
 				else if(rs.getDouble(3)==0) // if present days is 0 do not calculate salary (salary is 0)
 				{
@@ -333,6 +358,27 @@ public class PayrollDAO
 					incentive = 0.00;
 					add_hra = 0.00;
 					spl_incentive = 0.00;
+					food_allowance=0.00;
+					
+					basicpf = 0.00;
+					dapf = 0.00;
+					incentivepf = 0.00;
+					
+				}
+				else if(rs.getDouble(3)<5) // if present days is < 5  calculate present days salary
+				{
+					basic = roundTwoDecimals((rs.getDouble(4)/30)*(rs.getDouble(17)+rs.getDouble(3)));
+					da = roundTwoDecimals((rs.getDouble(5)/30)*(rs.getDouble(17)+rs.getDouble(3)));
+					hra = roundTwoDecimals((rs.getDouble(6)/30)*(rs.getDouble(17)+rs.getDouble(3)));
+					incentive = roundTwoDecimals((rs.getDouble(7)/30)*(rs.getDouble(17)+rs.getDouble(3)));
+					add_hra = roundTwoDecimals((rs.getDouble(18)/30)*(rs.getDouble(17)+rs.getDouble(3)));
+					spl_incentive = roundTwoDecimals((rs.getDouble(19)/30)*(rs.getDouble(17)+rs.getDouble(3)));
+					food_allowance=roundTwoDecimals(rs.getDouble(3)*rs.getDouble(24)); // presentDays*Food_alw (perday)
+					
+					basicpf = roundTwoDecimals((rs.getDouble(4)/30)*(rs.getDouble(3)));
+					dapf = roundTwoDecimals((rs.getDouble(5)/30)*(rs.getDouble(3)));
+					incentivepf = roundTwoDecimals((rs.getDouble(7)/30)*(rs.getDouble(3)));
+
 				}
 				else  // if absent days is not 0 calculate salary (monthdays-absent days)
 				{
@@ -350,15 +396,61 @@ public class PayrollDAO
 					incentive = roundTwoDecimals(rs.getDouble(7)+((rs.getDouble(7)/30)*(rs.getDouble(17)-rs.getDouble(16))));
 					add_hra = roundTwoDecimals(rs.getDouble(18)+((rs.getDouble(18)/30)*(rs.getDouble(17)-rs.getDouble(16))));
 					spl_incentive = roundTwoDecimals(rs.getDouble(19)+((rs.getDouble(19)/30)*(rs.getDouble(17)-rs.getDouble(16))));
+					food_allowance=roundTwoDecimals(rs.getDouble(3)*rs.getDouble(24)); // presentDays*Food_alw (perday)
+					
+					basicpf = roundTwoDecimals(rs.getDouble(4)+((rs.getDouble(4)/30)*(rs.getDouble(16)*-1)));
+					dapf = roundTwoDecimals(rs.getDouble(5)+((rs.getDouble(5)/30)*(rs.getDouble(16)*-1)));
+					incentivepf = roundTwoDecimals(rs.getDouble(7)+((rs.getDouble(7)/30)*(rs.getDouble(16)*-1)));
+
+					
 				}
 				
 //				gross=roundTwoDecimals(basic+da+hra+add_hra+incentive+spl_incentive+rs.getDouble(8)+rs.getDouble(20)); // last field Misc value
-				gross=roundTwoDecimals(basic+da+hra+add_hra+incentive+spl_incentive+rs.getDouble(8)+rs.getDouble(20)+rs.getDouble(21)+rs.getDouble(9)+rs.getDouble(10));
+
+				gross=roundTwoDecimals(basic+da+hra+add_hra+incentive+spl_incentive+rs.getDouble(8)+rs.getDouble(20)+rs.getDouble(21)+rs.getDouble(9)+rs.getDouble(10)+rs.getDouble(22)+rs.getDouble(23));
 				pf=roundTwoDecimals((basic+da)*12/100);
+				if(mnth_code>202044)
+					pf=roundTwoDecimals((basic+da)*10/100);
+				
 				emppf=roundTwoDecimals((basic+da)*3.67/100);
 				epspf=roundTwoDecimals((basic+da)*8.33/100);
-				esic=roundTwoDecimals((gross*1.75)/100);
-				empesic=roundTwoDecimals((gross*4.75)/100);
+				
+				if(mnth_code>=201911)// new condition for field food allowance on 12/11/2019 calculation of PF
+				{
+					gross=roundTwoDecimals(basic+da+hra+add_hra+incentive+spl_incentive+rs.getDouble(8)+rs.getDouble(20)+rs.getDouble(21)+rs.getDouble(9)+rs.getDouble(10)+rs.getDouble(22)+rs.getDouble(23)+food_allowance);
+					basicForPf=basicpf+dapf+incentivepf+rs.getDouble(9)+food_allowance;
+					if(basicForPf>15000)
+						pf=roundTwoDecimals(15000*12/100);
+					else
+						pf=roundTwoDecimals((basic+da+incentive+rs.getDouble(9)+food_allowance)*12/100);
+					
+					//if(mnth_code>202044) ///Later implement similar to condition > 15000 
+					//	pf=roundTwoDecimals((basic+da+incentive+rs.getDouble(9)+food_allowance)*10/100);
+
+					if(basicForPf>15000)
+					{
+						emppf=roundTwoDecimals(15000*3.67/100);
+						epspf=roundTwoDecimals(15000*8.33/100);
+					}
+					else
+					{
+						emppf=roundTwoDecimals((basic+da+incentive+rs.getDouble(9)+food_allowance)*3.67/100);
+						epspf=roundTwoDecimals((basic+da+incentive+rs.getDouble(9)+food_allowance)*8.33/100);
+					}
+					
+				}
+				
+				if(mnth_code>201906)
+				{
+					esic=roundTwoDecimals((gross*0.75)/100);
+					empesic=roundTwoDecimals((gross*3.25)/100);
+				}
+				else
+				{
+					esic=roundTwoDecimals((gross*1.75)/100);
+					empesic=roundTwoDecimals((gross*4.75)/100);
+				}
+
 				
 				emp = new EmptranDto();
 				col= new Vector(); 
@@ -385,6 +477,7 @@ public class PayrollDAO
 				emp.setAdd_hra_value(add_hra);
 				emp.setIncentive_value(incentive);
 				emp.setSpl_incen_value(spl_incentive);
+				emp.setFood_value(food_allowance);
 				emp.setOt_value(rs.getDouble(8));
 				emp.setGross(gross);
 				emp.setPf_value(pf);
@@ -394,6 +487,7 @@ public class PayrollDAO
 				emp.setEmployer_esis_value(empesic);
 				emp.setEmp_code(rs.getInt(1));
 				emp.setEmp_name(rs.getString(2));
+				emp.setBasicpf_value(basicForPf);
 				
 				col.add(emp); // hidden emptranDto 16
 				
@@ -446,7 +540,7 @@ public class PayrollDAO
 
 			
 			String query1="update emptran set basic_value=?,da_value=?,hra_value=?,incentive_value=?,spl_incen_value=?, " +
-			"ot_value=?,pf_value=?,esis_value=?,employer_esis_value=?,modified_by=?,modified_date=?,add_hra_value=?,employer_pf=?,eps_pf=? " +
+			"ot_value=?,pf_value=?,esis_value=?,employer_esis_value=?,modified_by=?,modified_date=?,add_hra_value=?,employer_pf=?,eps_pf=?,food_value=?,basicpf_value=? " +
 			" where  fin_year=? and depo_code=? and cmp_code=? and  mnth_code=? and emp_code=? " ;
 
 		
@@ -473,12 +567,14 @@ public class PayrollDAO
 				ps1.setDouble(12, emp.getAdd_hra_value());
 				ps1.setDouble(13,emp.getEmployer_pf());
 				ps1.setDouble(14,emp.getEps_pf());
+				ps1.setDouble(15,emp.getFood_value());
+				ps1.setDouble(16,emp.getBasicpf_value());
 				// where clause
-				ps1.setInt(15,emp.getFin_year());
-				ps1.setInt(16,emp.getDepo_code());
-				ps1.setInt(17,emp.getCmp_code());
-				ps1.setInt(18,emp.getMnth_code());
-				ps1.setInt(19,emp.getEmp_code());
+				ps1.setInt(17,emp.getFin_year());
+				ps1.setInt(18,emp.getDepo_code());
+				ps1.setInt(19,emp.getCmp_code());
+				ps1.setInt(20,emp.getMnth_code());
+				ps1.setInt(21,emp.getEmp_code());
 				i=ps1.executeUpdate();
 		  			
 			}
@@ -515,6 +611,8 @@ public class PayrollDAO
   	{
   		PreparedStatement ps = null;
   		ResultSet rs=null;
+  		PreparedStatement ps1 = null;
+  		ResultSet rs1=null;
   		Connection con=null;
   		ArrayList v =null;
   		 
@@ -540,56 +638,191 @@ public class PayrollDAO
   		if(repno==10)
   			orderby="  order by e.bank_code,e.emp_code ";
   		 
+  		int lmnth_code=0;
+  		int totalmnthdays=0;
   		try 
   		{
   			con=ConnectionFactory.getConnection();
   			con.setAutoCommit(false);
 
+  			
+  			String lastmonthQuery="SELECT MNTH_CODE,day(todate) FROM PERDMAST WHERE MNTH_CODE<? ORDER BY MNTH_CODE DESC LIMIT 1";
+  			ps1=con.prepareStatement(lastmonthQuery);
+  			ps1.setInt(1, mnth_code);
+  			rs1=ps1.executeQuery();
+  			if(rs1.next())
+  			{
+  				lmnth_code=rs1.getInt(1);
+  				totalmnthdays=rs1.getInt(2);
+  			}
+  			
+  			rs1.close();
+  			ps1.close();
+  			
+  			
   			String query="select e.esic_no,e.emp_name,t.atten_days,(t.basic+t.da+t.hra+t.add_hra+t.incentive+t.spl_incentive) totalwages, 0 reason, e.doresign lwdate," +
   			"e.emp_code,e.pf_no,t.esis_value,t.employer_esis_value,t.serialno,t.pf_value,t.advance,t.loan,t.stair_days,t.stair_alw,t.stair_value," +
-  			"t.extra_hrs,t.arrear_days,t.ot_rate,t.ot_value,t.employer_pf,t.eps_pf,(t.basic_value+t.da_value) grosspf,(t.basic+t.da) salarypf," +
-  			"(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incentive_value+t.spl_incen_value+t.stair_value+t.misc_value+t.ot_value+t.lta_value+t.medical_value) netwages," +
+  			"t.extra_hrs,t.arrear_days,t.ot_rate,t.ot_value,t.employer_pf,t.eps_pf,(t.basic_value+t.da_value+t.food_value+t.incentive_value+t.medical_value) grosspf,(t.basic+t.da) salarypf," +
+  			"(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incentive_value+t.spl_incen_value+t.stair_value+t.misc_value+t.ot_value+t.lta_value+t.medical_value+t.food_value) netwages," +
   			"t.absent_days,t.misc_value,  " +
-  			"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,t.lta_value,t.medical_value,t.incentive_value,t.spl_incen_value,t.coupon_amt,e.uan_no "+
+  			"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,t.lta_value,t.medical_value,t.incentive_value,t.spl_incen_value,t.coupon_amt,e.uan_no," +
+  			"t.machine1_rate,t.machine2_rate,t.machine1_days,t.machine2_days,t.machine1_value,t.machine2_value,e.adhar_no,ifnull(e.pan_no,''),t.basicpf_value,0 prevdays "+
   			" from emptran t,employeemast e "+
-			" where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and e.depo_Code=? and e.cmp_code=? "+
+			" where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and ifnull(t.del_tag,'')<>'D' and e.depo_Code=? and e.cmp_code=? "+
 			" and e.emp_code=t.emp_code "+orderby;
 
   			if(repno<3)
   			{
+  				/*query="select e.esic_no,e.emp_name,sum(t.atten_days),sum(totalwages), 0 reason, e.doresign lwdate, "+ 
+  						"e.emp_code,e.pf_no,sum(t.esis_value),sum(t.employer_esis_value),t.serialno,sum(t.pf_value),sum(t.advance),sum(t.loan),t.stair_days,sum(t.stair_alw),sum(t.stair_value), "+ 
+  						"sum(t.extra_hrs),sum(t.arrear_days),t.ot_rate,sum(t.ot_value),sum(t.employer_pf),sum(t.eps_pf), sum(grosspf), sum(salarypf),sum(netwages), "+
+  						"sum(t.absent_days),sum(t.misc_value),   "+
+  						"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,sum(t.lta_value),sum(t.medical_value),sum(t.incentive_value),sum(t.spl_incen_value),sum(t.coupon_amt),e.uan_no," +
+  						"sum(t.machine1_rate),sum(t.machine2_rate),sum(t.machine1_days),sum(t.machine2_days),sum(t.machine1_value),sum(t.machine2_value),e.adhar_no,ifnull(e.pan_no,'')  from "+ 
+  						"(select t.emp_code,0 atten_days,0 totalwages, "+
+  						"sum(t.esic_value) esis_value,0 employer_esis_value,0 serialno,sum(t.pf_value) pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
+  						"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value+t.incen_value) grosspf,0  salarypf,  "+
+  						"sum(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incen_value+t.spl_incen_value) netwages, "+
+  						"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incentive_value,0 spl_incen_value,0 coupon_amt, "+
+  			  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value "+
+  						"from arrear t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='Y' group by t.emp_code "+ 
+  						"union all "+
+  						"select t.emp_code,0 atten_days,0 totalwages, "+ 
+  						"sum(t.esic_value) esis_value,0 employer_esis_value,0 serialno,sum(t.pf_value) pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
+  						"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value+t.incen_value) grosspf,0  salarypf,  "+
+  						"sum(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incen_value+t.spl_incen_value) netwages, "+
+  						"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incentive_value,0 spl_incen_value,0 coupon_amt, "+
+  			  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value "+
+  						"from arrear t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='O' group by t.emp_code) t,employeemast e "+ 
+  						"where  e.depo_Code=? and e.cmp_code=? and e.emp_code=t.emp_code group by t.emp_code "; */
+
+  				// for arrear only implemented on 16/05/2020 special case
+  				/*query="select e.esic_no,e.emp_name,sum(t.atten_days),sum(totalwages), 0 reason, e.doresign lwdate, "+ 
+				"e.emp_code,e.pf_no,sum(t.esis_value),sum(t.employer_esis_value),t.serialno,sum(t.pf_value),sum(t.advance),sum(t.loan),t.stair_days,sum(t.stair_alw),sum(t.stair_value), "+ 
+				"sum(t.extra_hrs),sum(t.arrear_days),t.ot_rate,sum(t.ot_value),sum(t.employer_pf),sum(t.eps_pf), sum(grosspf), sum(salarypf),sum(netwages), "+
+				"sum(t.absent_days),sum(t.misc_value),   "+
+				"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,sum(t.lta_value),sum(t.medical_value),sum(t.incentive_value),sum(t.spl_incen_value),sum(t.coupon_amt),e.uan_no," +
+				"sum(t.machine1_rate),sum(t.machine2_rate),sum(t.machine1_days),sum(t.machine2_days),sum(t.machine1_value),sum(t.machine2_value),e.adhar_no,ifnull(e.pan_no,'')  from "+ 
+				"(select t.emp_code,t.atten_days,(t.basic+t.da+t.hra+t.add_hra+t.incentive+t.spl_incentive) totalwages, "+
+				"t.esis_value,t.employer_esis_value,t.serialno,t.pf_value,t.advance,t.loan,t.stair_days,t.stair_alw,t.stair_value, "+ 
+				"t.extra_hrs,t.arrear_days,t.ot_rate,t.ot_value,t.employer_pf,t.eps_pf,0 grosspf,(t.basic+t.da) salarypf, "+ 
+				"0 netwages, "+ 
+				"t.absent_days,t.misc_value,t.lta_value,t.medical_value,t.incentive_value,t.spl_incen_value,t.coupon_amt, "+
+	  			"t.machine1_rate,t.machine2_rate,t.machine1_days,t.machine2_days,t.machine1_value,t.machine2_value "+
+				"from emptran t where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=?  and ifnull(t.del_tag,'')<>'D' "+ 
+				"union all "+
+				"select t.emp_code,0 atten_days,0 totalwages, "+
+				"sum(t.esic_value) esic_value,0 employer_esis_value,0 serialno,sum(t.pf_value) pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
+				"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value+t.incen_value) grosspf,0  salarypf,  "+
+				"sum(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incen_value+t.spl_incen_value) netwages, "+
+				"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incen_value,0 spl_incen_value,0 coupon_amt, "+
+	  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value "+
+				"from arrear t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='Y' group by t.emp_code "+ 
+				"union all "+
+				"select t.emp_code,0 atten_days,0 totalwages, "+
+				"sum(t.esic_value) esic_value,0 employer_esis_value,0 serialno,sum(t.pf_value) pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
+				"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value+t.incen_value) grosspf,0  salarypf,  "+
+				"sum(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incen_value+t.spl_incen_value) netwages, "+
+				"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incen_value,0 spl_incen_value,0 coupon_amt, "+
+	  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value "+
+				"from arrear t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='O' group by t.emp_code) t,employeemast e "+ 
+				"where  e.depo_Code=? and e.cmp_code=? and e.emp_code=t.emp_code group by t.emp_code "; */
+
+  				
+  				
   				query="select e.esic_no,e.emp_name,sum(t.atten_days),sum(totalwages), 0 reason, e.doresign lwdate, "+ 
 				"e.emp_code,e.pf_no,sum(t.esis_value),sum(t.employer_esis_value),t.serialno,sum(t.pf_value),sum(t.advance),sum(t.loan),t.stair_days,sum(t.stair_alw),sum(t.stair_value), "+ 
 				"sum(t.extra_hrs),sum(t.arrear_days),t.ot_rate,sum(t.ot_value),sum(t.employer_pf),sum(t.eps_pf), sum(grosspf), sum(salarypf),sum(netwages), "+
 				"sum(t.absent_days),sum(t.misc_value),   "+
-				"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,sum(t.lta_value),sum(t.medical_value),sum(t.incentive_value),sum(t.spl_incen_value),sum(t.coupon_amt),e.uan_no  from "+ 
+				"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,sum(t.lta_value),sum(t.medical_value),sum(t.incentive_value),sum(t.spl_incen_value),sum(t.coupon_amt),e.uan_no," +
+				"sum(t.machine1_rate),sum(t.machine2_rate),sum(t.machine1_days),sum(t.machine2_days),sum(t.machine1_value),sum(t.machine2_value),e.adhar_no,ifnull(e.pan_no,''),sum(t.basicpf_value),sum(t.prevdays)  from "+ 
 				"(select t.emp_code,t.atten_days,(t.basic+t.da+t.hra+t.add_hra+t.incentive+t.spl_incentive) totalwages, "+
 				"t.esis_value,t.employer_esis_value,t.serialno,t.pf_value,t.advance,t.loan,t.stair_days,t.stair_alw,t.stair_value, "+ 
-				"t.extra_hrs,t.arrear_days,t.ot_rate,t.ot_value,t.employer_pf,t.eps_pf,(t.basic_value+t.da_value) grosspf,(t.basic+t.da) salarypf, "+ 
-				"(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incentive_value+t.spl_incen_value+t.stair_value+t.misc_value+t.ot_value+t.lta_value+t.medical_value) netwages, "+ 
-				"t.absent_days,t.misc_value,t.lta_value,t.medical_value,t.incentive_value,t.spl_incen_value,t.coupon_amt "+
-				"from emptran t where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? "+ 
+				"t.extra_hrs,t.arrear_days,t.ot_rate,t.ot_value,t.employer_pf,t.eps_pf,(t.basic_value+t.da_value+t.food_value+t.incentive_value+t.medical_value) grosspf,(t.basic+t.da) salarypf, "+ 
+				"(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incentive_value+t.spl_incen_value+t.stair_value+t.misc_value+t.ot_value+t.lta_value+t.medical_value+t.machine1_value+t.machine2_value+t.food_value) netwages, "+ 
+				"t.absent_days,t.misc_value,t.lta_value,t.medical_value,t.incentive_value,t.spl_incen_value,t.coupon_amt, "+
+	  			"t.machine1_rate,t.machine2_rate,t.machine1_days,t.machine2_days,t.machine1_value,t.machine2_value,t.basicpf_value,0 prevdays "+
+				"from emptran t where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=?  and ifnull(t.del_tag,'')<>'D' "+ 
+				"union all "+
+				"select t.emp_code,0 atten_days,0 totalwages, "+
+				"0 esic_value,0 employer_esis_value,0 serialno,0 pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
+				"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,0 grosspf,0  salarypf,  "+
+				"0 netwages, "+
+				"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incen_value,0 spl_incen_value,0 coupon_amt, "+
+	  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value,0 basicpf_value,t.atten_days prevdays "+
+				"from emptran t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and ifnull(t.del_tag,'')<>'D' group by t.emp_code "+ 
 				"union all "+
 				"select t.emp_code,0 atten_days,0 totalwages, "+
 				"sum(t.esic_value) esic_value,0 employer_esis_value,0 serialno,sum(t.pf_value) pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
-				"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value) grosspf,0  salarypf,  "+
+				"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value+t.incen_value) grosspf,0  salarypf,  "+
 				"sum(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incen_value+t.spl_incen_value) netwages, "+
-				"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incen_value,0 spl_incen_value,0 coupon_amt "+
-				"from arrear t where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='Y' group by t.emp_code) t,employeemast e "+ 
+				"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incen_value,0 spl_incen_value,0 coupon_amt, "+
+	  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value,0 basicpf_value,0 prevdays "+
+				"from arrear t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='Y' group by t.emp_code "+ 
+				"union all "+
+				"select t.emp_code,0 atten_days,0 totalwages, "+
+				"sum(t.esic_value) esic_value,0 employer_esis_value,0 serialno,sum(t.pf_value) pf_value,0 advance,0 loan,0 stair_days,0 stair_alw,0 stair_value, "+ 
+				"0 extra_hrs,0 arrear_days,0 ot_rate,0 ot_value,0 employer_pf,0 eps_pf,sum(t.basic_value+t.da_value+t.incen_value) grosspf,0  salarypf,  "+
+				"sum(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incen_value+t.spl_incen_value) netwages, "+
+				"0 absent_days,0 misc_value,0 lta_value,0 medical_value,0 incen_value,0 spl_incen_value,0 coupon_amt, "+
+	  			"0 machine1_rate,0 machine2_rate,0 machine1_days,0 machine2_days,0 machine1_value,0 machine2_value,0 basicpf_value,0 prevdays "+
+				"from arrear t where t.fin_year<=? and t.depo_code=? and t.cmp_code=? and t.arrear_mon=? and t.arrear_paid='O' group by t.emp_code) t,employeemast e "+ 
 				"where  e.depo_Code=? and e.cmp_code=? and e.emp_code=t.emp_code group by t.emp_code "; 
-  			}
+  				
+  				
+  				if(mnth_code==202004 && repno==2)
+  				{
+  					System.out.println("yaha par ayaa hai dekho");
+  	  				query="select e.esic_no,e.emp_name,sum(t.atten_days),sum(totalwages), 0 reason, e.doresign lwdate, "+ 
+  	  					"e.emp_code,e.pf_no,sum(t.esis_value),sum(t.employer_esis_value),t.serialno,sum(t.pf_value),sum(t.advance),sum(t.loan),t.stair_days,sum(t.stair_alw),sum(t.stair_value), "+ 
+  	  					"sum(t.extra_hrs),sum(t.arrear_days),t.ot_rate,sum(t.ot_value),sum(t.employer_pf),sum(t.eps_pf), sum(grosspf), sum(salarypf),sum(netwages), "+
+  	  					"sum(t.absent_days),sum(t.misc_value),   "+
+  	  					"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,sum(t.lta_value),sum(t.medical_value),sum(t.incentive_value),sum(t.spl_incen_value),sum(t.coupon_amt),e.uan_no," +
+  	  					"sum(t.machine1_rate),sum(t.machine2_rate),sum(t.machine1_days),sum(t.machine2_days),sum(t.machine1_value),sum(t.machine2_value),e.adhar_no,ifnull(e.pan_no,''),sum(t.basicpf_value),sum(t.prevdays)  from "+ 
+  	  					"(select t.emp_code,t.atten_days,(t.basic+t.da+t.hra+t.add_hra+t.incentive+t.spl_incentive) totalwages, "+
+  	  					"t.esis_value,t.employer_esis_value,t.serialno,t.pf_value,t.advance,t.loan,t.stair_days,t.stair_alw,t.stair_value, "+ 
+  	  					"t.extra_hrs,t.arrear_days,t.ot_rate,t.ot_value,t.employer_pf,t.eps_pf,(t.basic_value+t.da_value+t.food_value+t.incentive_value+t.medical_value) grosspf,(t.basic+t.da) salarypf, "+ 
+  	  					"(t.basic_value+t.da_value+t.hra_value+t.add_hra_value+t.incentive_value+t.spl_incen_value+t.stair_value+t.misc_value+t.ot_value+t.lta_value+t.medical_value+t.machine1_value+t.machine2_value+t.food_value) netwages, "+ 
+  	  					"t.absent_days,t.misc_value,t.lta_value,t.medical_value,t.incentive_value,t.spl_incen_value,t.coupon_amt, "+
+  	  		  			"t.machine1_rate,t.machine2_rate,t.machine1_days,t.machine2_days,t.machine1_value,t.machine2_value,t.basicpf_value,0 prevdays "+
+  	  					"from emptran t where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=?  and ifnull(t.del_tag,'')<>'D' ) t,employeemast e "+ 
+  	  					"where  e.depo_Code=? and e.cmp_code=? and e.emp_code=t.emp_code group by t.emp_code "; 
+  				}
+
+  			} 
   			ps = con.prepareStatement(query); 
   			if(repno<3)
   			{
-  	  			ps.setInt(1, fyear);
-  	  			ps.setInt(2, depo_code);
-  	  			ps.setInt(3, cmp_code);
-  	  			ps.setInt(4, mnth_code);
-  	  			ps.setInt(5, fyear);
-  	  			ps.setInt(6, depo_code);
-  	  			ps.setInt(7, cmp_code);
-  	  			ps.setInt(8, mnth_code);
-  	  			ps.setInt(9, depo_code);
-  	  			ps.setInt(10, cmp_code);
+  				if(mnth_code==202004 && repno==2)
+  				{
+	  	  			ps.setInt(1, fyear);
+	  	  			ps.setInt(2, depo_code);
+	  	  			ps.setInt(3, cmp_code);
+	  	  			ps.setInt(4, mnth_code);
+	  	  			ps.setInt(5, depo_code);
+	  	  			ps.setInt(6, cmp_code);
+  				}
+  				else
+  				{
+	  	  		    ps.setInt(1, fyear);
+		  			ps.setInt(2, depo_code);
+		  			ps.setInt(3, cmp_code);
+		  			ps.setInt(4, mnth_code);
+		  			ps.setInt(5, fyear);
+		  			ps.setInt(6, depo_code);
+		  			ps.setInt(7, cmp_code);
+		  			ps.setInt(8, lmnth_code);
+		  			ps.setInt(9, fyear);
+		  			ps.setInt(10, depo_code);
+		  			ps.setInt(11, cmp_code); 
+		  			ps.setInt(12, mnth_code);
+	  	  		    ps.setInt(13, fyear);
+		  			ps.setInt(14, depo_code);
+		  			ps.setInt(15, cmp_code);
+		  			ps.setInt(16, mnth_code);
+		  			ps.setInt(17, depo_code);
+		  			ps.setInt(18, cmp_code);
+  				}
 
   			}
   			else
@@ -617,6 +850,7 @@ public class PayrollDAO
   					arrearnet = roundTwoDecimals((rs.getDouble(4)/30)*rs.getDouble(19));
   				}
   				
+  				//System.out.println("arrear basic "+arrearbasic+" 4 "+rs.getDouble(4)+" 19 "+rs.getDouble(19)); 
   				emp = new EmptranDto();
   				emp.setEsic_no(rs.getLong(1));  // ip number
   				emp.setEmp_name(rs.getString(2)); // ip name
@@ -631,8 +865,17 @@ public class PayrollDAO
   				emp.setEmployer_esis_value(rs.getDouble(10));
   				if(repno==1)
   				{
-  	  				emp.setEsis_value(roundTwoDecimals(arrearbasic*1.75/100));
-  	  				emp.setEmployer_esis_value(roundTwoDecimals(arrearbasic*4.75/100));
+  					if(mnth_code>201906)
+  					{
+  						emp.setEsis_value(roundTwoDecimals(arrearbasic*0.75/100));
+  						emp.setEmployer_esis_value(roundTwoDecimals(arrearbasic*3.25/100));
+
+  					}
+  					else
+  					{
+  						emp.setEsis_value(roundTwoDecimals(arrearbasic*1.75/100));
+  						emp.setEmployer_esis_value(roundTwoDecimals(arrearbasic*4.75/100));
+  					}
   				}
   				emp.setSerialno(sno++);
   				emp.setPf_value(rs.getDouble(12));
@@ -667,10 +910,25 @@ public class PayrollDAO
   				emp.setSpl_incen_value(rs.getDouble(37));
   				emp.setCoupon_amt(rs.getDouble(38));
   				emp.setUan_no(rs.getLong(39));
+  				emp.setMachine1_rate(rs.getDouble(40));
+  				emp.setMachine2_rate(rs.getDouble(41));
+  				emp.setMachine1_days(rs.getDouble(42));
+  				emp.setMachine2_days(rs.getDouble(43));
+  				emp.setMachine1_value(rs.getDouble(44));
+  				emp.setMachine2_value(rs.getDouble(45));
   				emp.setArrear_basic_value(arrearbasic);
   				emp.setArrear_net_value(arrearnet);
-  				
+  				emp.setAdhar_no(rs.getLong(46));  
+  				emp.setPan_no(rs.getString(47));
   				emp.setDiffdays(0);
+  				emp.setMnth_code(mnth_code);
+  				emp.setBasicpf_value(rs.getDouble(48));
+  				
+  				//System.out.println(rs.getDouble(48));
+  				emp.setPrev_days(rs.getDouble(49));
+  				emp.setNcp_days(totalmnthdays-(rs.getDouble(19)+rs.getDouble(49)));
+  				
+  				//System.out.println("basic VALUE AND NET VALUE  24 "+rs.getDouble(24)+" 26 "+rs.getDouble(26)+" BASICPF "+rs.getDouble(48));
   				
   				if(rs.getDate(6)!=null)
   				{
@@ -685,7 +943,7 @@ public class PayrollDAO
   						diffDays = diff / (24 * 60 * 60 * 1000);
   					}
   					emp.setDiffdays(diffDays);
-  					System.out.println("days is "+diffDays);
+  					//System.out.println("days is "+diffDays);
   				}
   				v.add(emp);
   			}
@@ -698,6 +956,7 @@ public class PayrollDAO
   			ps.close();
 
   		} catch (Exception ex) {
+  			 ex.printStackTrace();
   			try {
   				con.rollback();
   			} catch (SQLException e) {
@@ -737,7 +996,8 @@ public class PayrollDAO
 			con=ConnectionFactory.getConnection();
 			con.setAutoCommit(false);
 
-			String query="select e.emp_name,e.esic_no,e.pf_no,e.emp_code,e.stair_alw,ifnull(t.stair_days,0) ster,t.advance,t.loan,t.misc_value,t.coupon_amt " +
+			String query="select e.emp_name,e.esic_no,e.pf_no,e.emp_code,e.stair_alw,ifnull(t.stair_days,0) ster,t.advance,t.loan,t.misc_value,t.coupon_amt," +
+			"e.machine1_rate,e.machine2_rate,t.machine1_days,t.machine2_days " +
 			" from employeemast e, emptran t  "+
 			" where  e.cmp_code=t.cmp_code and e.emp_code=t.emp_code and t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? " +
 			" and ifnull(t.del_tag,'')<>'D' and e.depo_code=? and e.cmp_code=? and t.atten_days>0 and t.atten_lock=1 ";
@@ -778,24 +1038,37 @@ public class PayrollDAO
 				{
 					col.add(rs.getDouble(5)); // Sterlite allowance  5
 					col.add(rs.getInt(6)); // Sterlite days  6
+					col.add(lock); // record lock (if 1=yes 0=no)  field   7
 				}
 				else if(option==2)
 				{
 					col.add(rs.getDouble(7)); // Advance  5
 					col.add(rs.getDouble(8)); // Loan  6
+					col.add(lock); // record lock (if 1=yes 0=no)  field   7
 				}
 				else if(option==3) // misc Entry 
 				{
 					col.add(rs.getDouble(9)); // Misc Value  5
 					col.add(0.00); // exra faltu field   6
+					col.add(lock); // record lock (if 1=yes 0=no)  field   7
 				}
 				else if(option==4) // Canteen Coupon Entry 
 				{
-					col.add(rs.getDouble(10)); // Misc Value  5
+					col.add(rs.getDouble(10)); // Coupon amt  5
 					col.add(0.00); // exra faltu field   6
+					col.add(lock); // record lock (if 1=yes 0=no)  field   7
 				}
-				
-				col.add(lock); // record lock (if 1=yes 0=no)  field   7
+				else if(option==6) // Machine Operator Entry 
+				{
+					col.add(rs.getDouble(13)); // Machine1_days 5
+					col.add(rs.getDouble(14)); // Machine2 days 6
+					col.add(lock); // record lock (if 1=yes 0=no)  field   7
+					col.add(rs.getDouble(11)); // Machine1_rate hidden 8
+					col.add(rs.getDouble(12)); // Machine2 rate hidden 9
+				}
+	
+				//yah line if condition mein likh di hai 11/08/2017
+//				col.add(lock); // record lock (if 1=yes 0=no)  field   7
 				v.add(col);
 			}
 
@@ -905,6 +1178,7 @@ public class PayrollDAO
     {
   	  
     	PreparedStatement ps1 = null;
+    	PreparedStatement ps2 = null;
     	Connection con=null;
     	EmptranDto emp=null;
 		
@@ -917,16 +1191,32 @@ public class PayrollDAO
 			String query1="update emptran set advance=?,loan=?,modified_by=?,modified_date=? " +
 			" where  fin_year=? and depo_code=? and cmp_code=? and  mnth_code=? and emp_code=? " ;
 
+			String query2="update loan set repay_amt=? " +
+			" where  fin_year=? and depo_code=? and cmp_code=? and  mnth_code=? and emp_code=? " ;
+
 		
 			con.setAutoCommit(false);
 			
 			ps1 = con.prepareStatement(query1);
+			ps2 = con.prepareStatement(query2);
 			
 			int s=attnlist.size();
 			for (int j=0;j<s;j++)
 			{
 				emp= (EmptranDto) attnlist.get(j);
-				 
+
+				// updated loan table for repay_amt
+				ps2.setDouble(1, emp.getLoan());  
+				// where clause
+				ps2.setInt(2,emp.getFin_year());
+				ps2.setInt(3,emp.getDepo_code());
+				ps2.setInt(4,emp.getCmp_code());
+				ps2.setInt(5,emp.getMnth_code());
+				ps2.setInt(6,emp.getEmp_code());
+				i=ps2.executeUpdate();
+
+				
+				// update emptran for advance and loan 
 				ps1.setDouble(1, emp.getAdvance());
 				ps1.setDouble(2, emp.getLoan());  
 				ps1.setInt(3,emp.getModified_by());
@@ -938,6 +1228,8 @@ public class PayrollDAO
 				ps1.setInt(8,emp.getMnth_code());
 				ps1.setInt(9,emp.getEmp_code());
 				i=ps1.executeUpdate();
+				
+
 		  			
 			}
 			con.commit();
@@ -1098,7 +1390,85 @@ public class PayrollDAO
 		}
 		return i;
 	}
+
     
+    public int updateMachineList(ArrayList<?> attnlist)
+    {
+  	  
+    	PreparedStatement ps1 = null;
+    	Connection con=null;
+    	EmptranDto emp=null;
+		double machine1value=0.00;
+		double machine2value=0.00;
+		int i=0;
+		try 
+		{
+			con=ConnectionFactory.getConnection();
+
+			
+			String query1="update emptran set machine1_days=?,machine2_days=?,machine1_value=?,machine2_value=?,modified_by=?,modified_date=?,machine1_rate=?,machine2_rate=? " +
+			" where  fin_year=? and depo_code=? and cmp_code=? and  mnth_code=? and emp_code=? " ;
+
+
+			
+			con.setAutoCommit(false);
+			
+			ps1 = con.prepareStatement(query1);
+			
+			int s=attnlist.size();
+			for (int j=0;j<s;j++)
+			{
+				emp= (EmptranDto) attnlist.get(j);
+				 
+				machine1value=roundTwoDecimals(emp.getMachine1_days()*emp.getMachine1_rate());
+				machine2value=roundTwoDecimals(emp.getMachine2_days()*emp.getMachine2_rate());
+				ps1.setDouble(1, emp.getMachine1_days());
+				ps1.setDouble(2, emp.getMachine2_days());
+				ps1.setDouble(3, machine1value); // calculate value 
+				ps1.setDouble(4, machine2value); // calculate value 
+				ps1.setInt(5,emp.getModified_by());
+				ps1.setDate(6,setSqlDate(emp.getModified_date()));
+				ps1.setDouble(7, emp.getMachine1_rate()); // machine1 rate 
+				ps1.setDouble(8, emp.getMachine2_rate()); // machine2 rate 
+
+				// where clause
+				ps1.setInt(9,emp.getFin_year());
+				ps1.setInt(10,emp.getDepo_code());
+				ps1.setInt(11,emp.getCmp_code());
+				ps1.setInt(12,emp.getMnth_code());
+				ps1.setInt(13,emp.getEmp_code());
+				i=ps1.executeUpdate();
+		  			
+			}
+			
+			
+			con.commit();
+			con.setAutoCommit(true);
+			ps1.close();
+			
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+			try {
+				con.rollback();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			System.out.println("-------------Exception in PayrollDAO.updateSterliteList " + ex);
+			i=-1;
+		}
+		finally {
+			try {
+				System.out.println("No. of Records Update/Insert : "+i);
+
+				if(ps1 != null){ps1.close();}
+				if(con != null){con.close();}
+			} catch (SQLException e) {
+				System.out.println("-------------Exception in PayrollDAO.Connection.close "+e);
+			}
+		}
+		return i;
+	}
+
     
     public ArrayList<EmptranDto> getSalaryRegister(int depo_code,int cmp_code,int fyear,int mnth_code,int repno)
  	{
@@ -1109,8 +1479,8 @@ public class PayrollDAO
  		 
  		EmptranDto emp=null;
  		int sno=1;
-		double basic,da,hra,add_hra,incentive,spl_incentive,ot,lta,medical,pf,advance,loan,esis,misc,stair_value,coupon_amt;
-		double atten_days,absent_days,arrear_days,extra_hrs;
+		double basic,da,hra,add_hra,incentive,spl_incentive,ot,lta,medical,pf,advance,loan,esis,misc,stair_value,coupon_amt,machine1_value,machine2_value;
+		double atten_days,absent_days,arrear_days,extra_hrs,machine1_days,machine2_days,food_value;
  		String orderby="";
  		String query=null;
   		if(repno==10)
@@ -1134,18 +1504,24 @@ public class PayrollDAO
  			query="select e.emp_code,e.emp_name,ifnull(e.designation,'Worker'),e.pf_no,e.esic_no,sum(t.basic),sum(t.da),sum(t.hra),sum(t.add_hra),sum(t.incentive),sum(t.spl_incentive),sum(t.ot_rate),sum(t.lta),sum(t.medical),sum(t.stair_alw), "+ 
  			"sum(t.basic_value),sum(t.da_value),sum(t.hra_value),sum(t.add_hra_value),sum(t.incentive_value),sum(t.spl_incen_value),sum(t.ot_value),sum(t.lta_value), "+
  			"sum(t.medical_value),sum(t.pf_value),sum(t.advance),sum(t.loan),sum(t.esis_value),sum(t.atten_days),sum(t.arrear_days),sum(t.absent_days),sum(t.stair_days),sum(t.extra_hrs),sum(t.misc_value),sum(t.stair_value),"+ 
- 			"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,t.coupon_amt,e.uan_no from "+
+ 			"ifnull(e.bank,'Direct Cheque'),e.bank_add1,e.ifsc_code,ifnull(e.bank_accno,''),e.bank_code,t.coupon_amt,e.uan_no,t.machine1_value,t.machine2_value,t.machine1_days,t.machine2_days,sum(t.food_value) from "+
  			"(select t.emp_code,t.basic,t.da,t.hra,t.add_hra,t.incentive,t.spl_incentive,t.ot_rate,t.lta,t.medical,t.stair_alw, "+
  			"t.basic_value,t.da_value,t.hra_value,t.add_hra_value,t.incentive_value,t.spl_incen_value,t.ot_value,t.lta_value, "+
  			"t.medical_value,t.pf_value,t.advance,t.loan,t.esis_value,t.atten_days,t.arrear_days,t.absent_days,t.stair_days,t.extra_hrs,t.misc_value,t.stair_value, "+ 
- 			"t.coupon_amt from emptran t "+
+ 			"t.coupon_amt,t.machine1_value,t.machine2_value,t.machine1_days,t.machine2_days,t.food_value from emptran t "+
  			"where t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and t.atten_days<>0 and ifnull(t.del_tag,'')<>'D' "+  
  			"union all "+
  			"select a.emp_code,0 basic,0 da,0 hra,0 add_hra,0 incentive,0 spl_incentive,0 ot_rate,0 lta,0 medical,0 stair_alw,"+ 
  			"sum(basic_value),sum(da_value),sum(hra_value),sum(add_hra_value),sum(incen_value),sum(spl_incen_value),0 ot_value,0 lta_value,"+ 
  			"0 medical_value,sum(pf_value),0 advance,0 loan,sum(esic_value),0 atten_days,0 arrear_days,0 absent_days,0 stair_days,0 extra_hrs,0 misc_value,0 stair_value,"+ 
- 			"0 coupon_amt from arrear a "+
- 			"where fin_year=? and depo_code=? and cmp_code=? and arrear_mon=? and arrear_paid='Y' group by emp_code) t,employeemast e "+  
+ 			"0 coupon_amt,0 machine1_value,0 machine2_value,0 machine1_days,0 machine2_days,0 food_value from arrear a "+
+ 			"where fin_year<=? and depo_code=? and cmp_code=? and arrear_mon=? and arrear_paid='Y' group by emp_code "+  
+ 			"union all "+
+ 			"select a.emp_code,0 basic,0 da,0 hra,0 add_hra,0 incentive,0 spl_incentive,0 ot_rate,0 lta,0 medical,0 stair_alw,"+ 
+ 			"sum(basic_value),sum(da_value),sum(hra_value),sum(add_hra_value),sum(incen_value),sum(spl_incen_value),0 ot_value,0 lta_value,"+ 
+ 			"0 medical_value,sum(pf_value),0 advance,0 loan,sum(esic_value),0 atten_days,0 arrear_days,0 absent_days,0 stair_days,0 extra_hrs,0 misc_value,0 stair_value,"+ 
+ 			"0 coupon_amt,0 machine1_value,0 machine2_value,0 machine1_days,0 machine2_days,0 food_value from arrear a "+
+ 			"where fin_year<=? and depo_code=? and cmp_code=? and arrear_mon=? and arrear_paid='O' group by emp_code) t,employeemast e "+  
  			"where  e.depo_code=? and e.cmp_code=? and e.emp_code=t.emp_code and ifnull(e.del_tag,'')<>'D'  group by t.emp_code "+orderby;
 
  			
@@ -1161,8 +1537,12 @@ public class PayrollDAO
  			ps.setInt(6, depo_code);
  			ps.setInt(7, cmp_code);
  			ps.setInt(8, mnth_code);
- 			ps.setInt(9, depo_code);
- 			ps.setInt(10, cmp_code);
+ 			ps.setInt(9, fyear);
+ 			ps.setInt(10, depo_code);
+ 			ps.setInt(11, cmp_code);
+ 			ps.setInt(12, mnth_code);
+ 			ps.setInt(13, depo_code);
+ 			ps.setInt(14, cmp_code);
  			rs =ps.executeQuery();
  			
  			v = new ArrayList<EmptranDto> ();
@@ -1186,6 +1566,11 @@ public class PayrollDAO
 			arrear_days=0.00;
 			extra_hrs=0.00;
 			coupon_amt=0.00;
+			machine1_value=0.00;
+			machine1_days=0.00;
+			machine2_value=0.00;
+			machine2_days=0.00;
+			food_value=0.00;
 			
  			while (rs.next())
  			{
@@ -1238,6 +1623,11 @@ public class PayrollDAO
   				emp.setBank_code(rs.getInt(40));
  				emp.setCoupon_amt(rs.getDouble(41));
  				emp.setUan_no(rs.getLong(42));
+ 				emp.setMachine1_value(rs.getDouble(43)); 
+ 				emp.setMachine2_value(rs.getDouble(44)); 
+ 				emp.setMachine1_days(rs.getDouble(45)); 
+ 				emp.setMachine2_days(rs.getDouble(46)); 
+ 				emp.setFood_value(rs.getDouble(47)); 
  				
  				basic+=rs.getDouble(16);
  				da+=rs.getDouble(17);
@@ -1255,11 +1645,17 @@ public class PayrollDAO
  				misc+=rs.getDouble(34);
  				stair_value+=rs.getDouble(35);
  				coupon_amt+=rs.getDouble(41);
+ 				machine1_value+=rs.getDouble(43);
+ 				machine2_value+=rs.getDouble(44);
  				
  				atten_days+=rs.getDouble(29);
  				arrear_days+=rs.getDouble(30);
  				absent_days+=rs.getDouble(31);
  				extra_hrs+=rs.getDouble(33);
+ 				machine1_days+=rs.getDouble(45);
+ 				machine2_days+=rs.getDouble(46);
+ 				food_value+=rs.getDouble(47);
+
  				
  				sno++;
  				
@@ -1289,6 +1685,12 @@ public class PayrollDAO
  				emp.setAbsent_days(absent_days);
  				emp.setExtra_hrs(extra_hrs);
  				emp.setCoupon_amt(coupon_amt);
+ 				emp.setMachine1_value(machine1_value); // total machine value
+ 				emp.setMachine2_value(machine2_value); // total machine value
+ 				emp.setMachine1_days(machine1_days); // total machine days
+ 				emp.setMachine2_days(machine2_days); // total machine days
+ 				emp.setFood_value(food_value); // total food value 
+ 				
 				v.add(emp);
 				
  			con.commit();
@@ -1494,7 +1896,7 @@ public class PayrollDAO
 				"(select e.emp_code,e1.emp_name,e.absent_days,mnth_code from emptran e,employeemast e1 "+
 				"where e.fin_year=? and e.depo_code=? and e.cmp_code=? and e1.depo_code=? and e1.cmp_code=? "+
 				"and e.emp_code=? and e.emp_code=e1.emp_code) e "+
-				"on p.mnth_code=e.mnth_code ";
+				"on p.mnth_code=e.mnth_code where p.fin_year=? ";
   			}
   			else if(repno==2)
   			{
@@ -1502,7 +1904,7 @@ public class PayrollDAO
 				"(select e.emp_code,e1.emp_name,e.extra_hrs,e.ot_rate,e.ot_value,e.mnth_code from emptran e,employeemast e1 "+
 				"where e.fin_year=? and e.depo_code=? and e.cmp_code=? and e1.depo_code=? and e1.cmp_code=? "+
 				"and e.emp_code=? and e.emp_code=e1.emp_code) e "+
-				"on p.mnth_code=e.mnth_code ";
+				"on p.mnth_code=e.mnth_code where p.fin_year=? ";
   			}
   			else if(repno==3)
   			{
@@ -1510,7 +1912,7 @@ public class PayrollDAO
 				"(select e.emp_code,e1.emp_name,e.stair_days,e.stair_alw,e.stair_value,e.mnth_code from emptran e,employeemast e1 "+
 				"where e.fin_year=? and e.depo_code=? and e.cmp_code=? and e1.depo_code=? and e1.cmp_code=? "+
 				"and e.emp_code=? and e.emp_code=e1.emp_code) e "+
-				"on p.mnth_code=e.mnth_code ";
+				"on p.mnth_code=e.mnth_code where p.fin_year=? ";
   			}
   			else if(repno==4)
   			{
@@ -1518,9 +1920,18 @@ public class PayrollDAO
 				"(select e.emp_code,e1.emp_name,e.atten_days,mnth_code from emptran e,employeemast e1 "+
 				"where e.fin_year=? and e.depo_code=? and e.cmp_code=? and e1.depo_code=? and e1.cmp_code=? "+
 				"and e.emp_code=? and e.emp_code=e1.emp_code) e "+
-				"on p.mnth_code=e.mnth_code ";
+				"on p.mnth_code=e.mnth_code where p.fin_year=? ";
   			}
-
+  			else if(repno==5)
+  			{
+  				query="select p.month_nm,ifnull(e.emp_code,0),ifnull(e.emp_name,''),ifnull(e.esic_no,''),ifnull(e.pf_no,''),ifnull(e.uan_no,''),ifnull(e.adhar_no,''), "+
+  				"ifnull(e.basic,0.00),ifnull(e.da,0.00),ifnull(e.hra,0.00),ifnull(e.add_hra,0.00),ifnull(e.incentive,0.00),ifnull(e.spl_incentive,0.00), "+
+  				"ifnull(e.lta,0.00),ifnull(e.medical,0.00),ifnull(e.ot_rate,0.00),ifnull(e.stair_alw,0.00),ifnull(e.food_value,0.00)  from perdmast p left join  "+
+  				"(select e.emp_code,e1.emp_name,e1.esic_no,e1.pf_no,e1.uan_no,e1.adhar_no,e.basic,e.da,e.hra,e.add_hra,e.incentive,e.spl_incentive,e.lta,e.medical,e.ot_rate,e.stair_alw ,e.mnth_code,e.food_value from emptran e,employeemast e1 "+ 
+  				"where e.fin_year=? and e.depo_code=? and e.cmp_code=? and e1.depo_code=? and e1.cmp_code=? "+
+  				"and e.emp_code=? and e.emp_code=e1.emp_code) e "+
+  				"on  p.mnth_code=e.mnth_code where p.fin_year=? "  ;
+  			}
   			ps = con.prepareStatement(query);
 			ps.setInt(1, fyear);
   			ps.setInt(2, depo_code);
@@ -1528,6 +1939,7 @@ public class PayrollDAO
   			ps.setInt(4, depo_code);
   			ps.setInt(5, cmp_code);
   			ps.setInt(6, emp_code);
+  			ps.setInt(7, fyear);
   			
   			rs =ps.executeQuery();
   			
@@ -1565,6 +1977,24 @@ public class PayrollDAO
   				}
   				else if(repno==4)
   					emp.setAtten_days(rs.getInt(4));
+  				else if(repno==5)
+  				{
+  					emp.setEsic_no(rs.getLong(4));
+  					emp.setPf_no(rs.getInt(5));
+  					emp.setUan_no(rs.getLong(6));
+  					emp.setAdhar_no(rs.getLong(7));
+  					emp.setBasic(rs.getDouble(8));
+  					emp.setDa(rs.getDouble(9));
+  					emp.setHra(rs.getDouble(10));
+  					emp.setAdd_hra(rs.getDouble(11));
+  					emp.setIncentive(rs.getDouble(12));
+  					emp.setSpl_incentive(rs.getDouble(13));
+  					emp.setLta(rs.getDouble(14));
+  					emp.setMedical(rs.getDouble(15));
+  					emp.setOt_rate(rs.getDouble(16));
+  					emp.setStair_alw(rs.getDouble(17));
+  					emp.setFood_value(rs.getDouble(18));
+  				}
   				v.add(emp);
   			}
 
@@ -1665,6 +2095,8 @@ public class PayrollDAO
     	PreparedStatement ps1 = null;
     	PreparedStatement ps2 = null;
     	PreparedStatement ps3 = null;
+    	PreparedStatement ps4 = null;
+    	
     	Connection con=null;
      
 		
@@ -1678,6 +2110,15 @@ public class PayrollDAO
 			String query2="insert into locktable values (?,?,?,?,?,?,?,?)";
 			String query3="delete from locktable where  depo_code=? and cmp_code=? and mnth_code=? ";
 
+			/*
+			 * After Lock update emptran with loan amount automtically after attendance entry is over {Incomplete} */
+			String query4="update emptran e, "+
+			"(SELECT emp_code,INSTL_AMT FROM LOAN WHERE FIN_YEAR=? AND DEPO_CODE=? AND CMP_CODE=? AND MNTH_CODE=?) l "+
+			"set e.loan=l.instl_amt  "+
+			"where e.fin_year=? and e.depo_code=? and e.cmp_code=? and e.mnth_code=? and e.emp_code=l.emp_code ";
+			
+			
+			
 			
 			con.setAutoCommit(false);
 			
@@ -1695,9 +2136,22 @@ public class PayrollDAO
   			ps3.setInt(3,mnthcode); 
   			i=ps3.executeUpdate();
   			
+			ps4 = con.prepareStatement(query4);
+			ps4.setInt(1,year);
+			ps4.setInt(2,depo);
+			ps4.setInt(3,cmpcode);
+			ps4.setInt(4,mnthcode);
+			ps4.setInt(5,year);
+			ps4.setInt(6,depo);
+			ps4.setInt(7,cmpcode);
+			ps4.setInt(8,mnthcode);
+  			i=ps4.executeUpdate();
+
+  			
+  			
 			ps2 = con.prepareStatement(query2);
 			
-			for(int j=1;j<6;j++)
+			for(int j=1;j<7;j++)
 			{
 				ps2.setInt(1,depo);
 				ps2.setInt(2,cmpcode);
@@ -1772,6 +2226,7 @@ public class PayrollDAO
 				i++;
 			}
 			
+				
 			String query2="delete from bonus where fin_year=? and depo_code=? and cmp_code=? ";
 			
 			String query1="insert into bonus "+
@@ -1859,23 +2314,23 @@ public class PayrollDAO
 			
 			String query3="update bonus b,employeemast e set b.bonus_per=e.bonus_per,b.bonus_limit=e.bonus,b.bonus_check=e.bonus_check "+
 			" where b.fin_year=? and b.depo_code=? and  b.cmp_code=? "+
-			" and e.depo_code=? and  e.cmp_code=? and b.emp_Code=e.emp_code ";
+			" and e.depo_code=? and  e.cmp_code=? and b.emp_Code=e.emp_code "; 
 			
 //			select if(bonus_apr>round(bonus_check+(bonus_check/30)*(atten_apr-30)),if(bonus_check=0,bonus_apr,round(bonus_check+(bonus_check/30)*(atten_apr-30))),bonus_apr) bonus,
 //			select if(arrear_apr>round((bonus_check/30)*adays_apr),if(bonus_check=0,arrear_apr,round((bonus_check/30)*adays_apr)),arrear_apr) bonus,
 			
 			String query4="update bonus set bonus_apr=if(bonus_apr>round(bonus_check+(bonus_check/30)*(atten_apr-if(atten_apr=0,0,"+mondays[0]+"))),if(bonus_check=0,bonus_apr,round(bonus_check+(bonus_check/30)*(atten_apr-if(atten_apr=0,0,"+mondays[0]+")))),bonus_apr),"+
-			"bonus_may=if(bonus_may>round(bonus_check+(bonus_check/30)*(atten_may-if(atten_may=0,0,"+mondays[1]+"))),if(bonus_check=0,bonus_may,round(bonus_check+(bonus_check/30)*(atten_may-if(atten_may=0,0,"+mondays[1]+")))),bonus_may),"+			
+			"bonus_may=if(bonus_may>round(bonus_check+(bonus_check/30)*(atten_may-if(atten_may=0,0,"+mondays[1]+"))),if(bonus_check=0,bonus_may,if(atten_may>0 and atten_may<=1,bonus_may,round(bonus_check+(bonus_check/30)*(atten_may-if(atten_may=0,0,"+mondays[1]+"))))),bonus_may),"+			
 			"bonus_jun=if(bonus_jun>round(bonus_check+(bonus_check/30)*(atten_jun-if(atten_jun=0,0,"+mondays[2]+"))),if(bonus_check=0,bonus_jun,round(bonus_check+(bonus_check/30)*(atten_jun-if(atten_jun=0,0,"+mondays[2]+")))),bonus_jun),"+			
-			"bonus_jul=if(bonus_jul>round(bonus_check+(bonus_check/30)*(atten_jul-if(atten_jul=0,0,"+mondays[3]+"))),if(bonus_check=0,bonus_jul,round(bonus_check+(bonus_check/30)*(atten_jul-if(atten_jul=0,0,"+mondays[3]+")))),bonus_jul),"+			
-			"bonus_aug=if(bonus_aug>round(bonus_check+(bonus_check/30)*(atten_aug-if(atten_aug=0,0,"+mondays[4]+"))),if(bonus_check=0,bonus_aug,round(bonus_check+(bonus_check/30)*(atten_aug-if(atten_aug=0,0,"+mondays[4]+")))),bonus_aug),"+			
+			"bonus_jul=if(bonus_jul>round(bonus_check+(bonus_check/30)*(atten_jul-if(atten_jul=0,0,"+mondays[3]+"))),if(bonus_check=0,bonus_jul,if(atten_jul>0 and atten_jul<=1,bonus_jul,round(bonus_check+(bonus_check/30)*(atten_jul-if(atten_jul=0,0,"+mondays[3]+"))))),bonus_jul),"+			
+			"bonus_aug=if(bonus_aug>round(bonus_check+(bonus_check/30)*(atten_aug-if(atten_aug=0,0,"+mondays[4]+"))),if(bonus_check=0,bonus_aug,if(atten_aug>0 and atten_aug<=1,bonus_aug,round(bonus_check+(bonus_check/30)*(atten_aug-if(atten_aug=0,0,"+mondays[4]+"))))),bonus_aug),"+			
 			"bonus_sep=if(bonus_sep>round(bonus_check+(bonus_check/30)*(atten_sep-if(atten_sep=0,0,"+mondays[5]+"))),if(bonus_check=0,bonus_sep,round(bonus_check+(bonus_check/30)*(atten_sep-if(atten_sep=0,0,"+mondays[5]+")))),bonus_sep),"+			
-			"bonus_oct=if(bonus_oct>round(bonus_check+(bonus_check/30)*(atten_oct-if(atten_oct=0,0,"+mondays[6]+"))),if(bonus_check=0,bonus_oct,round(bonus_check+(bonus_check/30)*(atten_oct-if(atten_oct=0,0,"+mondays[6]+")))),bonus_oct),"+			
+			"bonus_oct=if(bonus_oct>round(bonus_check+(bonus_check/30)*(atten_oct-if(atten_oct=0,0,"+mondays[6]+"))),if(bonus_check=0,bonus_oct,if(atten_oct>0 and atten_oct<=1,bonus_oct,round(bonus_check+(bonus_check/30)*(atten_oct-if(atten_oct=0,0,"+mondays[6]+"))))),bonus_oct),"+			
 			"bonus_nov=if(bonus_nov>round(bonus_check+(bonus_check/30)*(atten_nov-if(atten_nov=0,0,"+mondays[7]+"))),if(bonus_check=0,bonus_nov,round(bonus_check+(bonus_check/30)*(atten_nov-if(atten_nov=0,0,"+mondays[7]+")))),bonus_nov),"+			
-			"bonus_dec=if(bonus_dec>round(bonus_check+(bonus_check/30)*(atten_dec-if(atten_dec=0,0,"+mondays[8]+"))),if(bonus_check=0,bonus_dec,round(bonus_check+(bonus_check/30)*(atten_dec-if(atten_dec=0,0,"+mondays[8]+")))),bonus_dec),"+			
-			"bonus_jan=if(bonus_jan>round(bonus_check+(bonus_check/30)*(atten_jan-if(atten_jan=0,0,"+mondays[9]+"))),if(bonus_check=0,bonus_jan,round(bonus_check+(bonus_check/30)*(atten_jan-if(atten_jan=0,0,"+mondays[9]+")))),bonus_jan),"+			
+			"bonus_dec=if(bonus_dec>round(bonus_check+(bonus_check/30)*(atten_dec-if(atten_dec=0,0,"+mondays[8]+"))),if(bonus_check=0,bonus_dec,if(atten_dec>0 and atten_dec<=1,bonus_dec,round(bonus_check+(bonus_check/30)*(atten_dec-if(atten_dec=0,0,"+mondays[8]+"))))),bonus_dec),"+			
+			"bonus_jan=if(bonus_jan>round(bonus_check+(bonus_check/30)*(atten_jan-if(atten_jan=0,0,"+mondays[9]+"))),if(bonus_check=0,bonus_jan,if(atten_jan>0 and atten_jan<=1,bonus_jan,round(bonus_check+(bonus_check/30)*(atten_jan-if(atten_jan=0,0,"+mondays[9]+"))))),bonus_jan),"+			
 			"bonus_feb=if(bonus_feb>round(bonus_check+(bonus_check/30)*(atten_feb-if(atten_feb=0,0,"+mondays[10]+"))),if(bonus_check=0,bonus_feb,round(bonus_check+(bonus_check/30)*(atten_feb-if(atten_feb=0,0,"+mondays[10]+")))),bonus_feb),"+			
-			"bonus_mar=if(bonus_mar>round(bonus_check+(bonus_check/30)*(atten_mar-if(atten_mar=0,0,"+mondays[11]+"))),if(bonus_check=0,bonus_mar,round(bonus_check+(bonus_check/30)*(atten_mar-if(atten_mar=0,0,"+mondays[11]+")))),bonus_mar),"+			
+			"bonus_mar=if(bonus_mar>round(bonus_check+(bonus_check/30)*(atten_mar-if(atten_mar=0,0,"+mondays[11]+"))),if(bonus_check=0,bonus_mar,if(atten_mar>0 and atten_mar<=1,bonus_mar,round(bonus_check+(bonus_check/30)*(atten_mar-if(atten_mar=0,0,"+mondays[11]+"))))),bonus_mar),"+			
 
 			"arrear_apr=if(arrear_apr>round((bonus_check/30)*adays_apr),if(bonus_check=0,arrear_apr,round((bonus_check/30)*adays_apr)),arrear_apr),"+
 			"arrear_may=if(arrear_may>round((bonus_check/30)*adays_may),if(bonus_check=0,arrear_may,round((bonus_check/30)*adays_may)),arrear_may),"+
@@ -2188,7 +2643,7 @@ public class PayrollDAO
 		}	
 	
 	   
-	   public ArrayList getBonusRegister(int depo_code,int cmp_code,int fyear)
+	   public ArrayList getBonusRegister(int depo_code,int cmp_code,int fyear,int repno)
 	  	{
 	  		PreparedStatement ps = null;
 	  		ResultSet rs=null;
@@ -2196,15 +2651,22 @@ public class PayrollDAO
 
 	  		Connection con=null;
 	  		ArrayList v =null;
-	  		 
+	  		
 	  		 
 	  		double mont[] ;
 	  		double amont[] ;
 	  		double bonusval[];
 	  		EmptranDto emp=null;
+	  		String orderby="";
+	  		if(repno==16)
+	  			orderby="  order by e.bank_code,e.emp_code ";
+	  		else if(repno==5 || repno==51)
+	  			orderby="  order by e.emp_code ";	  			
 	  		 
 	  		 
+	  		
 	  		 
+	  		
 	  		try 
 	  		{
 	  			con=ConnectionFactory.getConnection();
@@ -2215,8 +2677,10 @@ public class PayrollDAO
 	  			" b.atten_apr, b.atten_may, b.atten_jun, b.atten_jul, b.atten_aug, b.atten_sep, b.atten_oct,b.atten_nov, b.atten_dec, b.atten_jan, b.atten_feb, b.atten_mar," +
 	  			" b.bonus_apr+b.arrear_apr, b.bonus_may+b.arrear_may, b.bonus_jun+b.arrear_jun, b.bonus_jul+b.arrear_jul, b.bonus_aug+b.arrear_aug, b.bonus_sep+b.arrear_sep, b.bonus_oct+b.arrear_oct,b.bonus_nov+b.arrear_nov, b.bonus_dec+b.arrear_dec, b.bonus_jan+b.arrear_jan, b.bonus_feb+b.arrear_feb, b.bonus_mar+b.arrear_mar," +
 	  			" b.adays_apr, b.adays_may, b.adays_jun, b.adays_jul, b.adays_aug, b.adays_sep, b.adays_oct,b.adays_nov, b.adays_dec, b.adays_jan, b.adays_feb, b.adays_mar," +
-	  			" b.bonus_applicable, b.bonus_value "+ 
-				" from  bonus b,employeemast e where b.fin_year=? and b.depo_code=? and b.cmp_code=? and e.emp_code=b.emp_code "; 
+	  			" b.bonus_applicable, b.bonus_value,e.bank_accno,e.bank,e.bank_code "+ 
+				" from  bonus b,employeemast e where b.fin_year=? and b.depo_code=? and b.cmp_code=? and e.emp_code=b.emp_code" +
+				" and (e.doresign is null or e.doresign >= (select frdate from yearfil where year=?)) " +
+				" and ifnull(e.del_tag,'')<>'D' "+orderby;
 
 
 	  			 
@@ -2224,6 +2688,8 @@ public class PayrollDAO
 	  			ps.setInt(1, fyear);
   	  			ps.setInt(2, depo_code);
   	  			ps.setInt(3, cmp_code);
+  	  			ps.setInt(4, fyear);
+  	  		 
 		  		rs =ps.executeQuery();
 	  			
 	  			v = new ArrayList();
@@ -2249,6 +2715,9 @@ public class PayrollDAO
 	  				emp.setArrdays(amont);
 	  				emp.setBonusval(bonusval);
 	  				emp.setBonus_value(rs.getDouble(42));
+	  				emp.setBank_accno(rs.getString(43));
+	  				emp.setBank(rs.getString(44));
+	  				emp.setBank_code(rs.getInt(45));
 	  				
 	  				v.add(emp);
 	  			}
@@ -2362,18 +2831,24 @@ public class PayrollDAO
 
 				
 				
+				//String query2="update arrear set pf_value=round(round((basic_value+da_value+incen_value)*12/100,2)),esic_value=round((basic_value+da_value+hra_value+add_hra_value+incen_value+spl_incen_value)*1.75/100) "+ 
+				//"where fin_year=? and depo_code=? and cmp_code=? ";
 				
-				String query2="update arrear set pf_value=round((basic_value+da_value)*12/100),esic_value=round((basic_value+da_value+hra_value+add_hra_value+incen_value+spl_incen_value)*1.75/100) "+ 
+				String query2="update arrear set pf_value=round(round((basic_value+da_value+incen_value)*12/100,2)),esic_value=round((basic_value+da_value+hra_value+add_hra_value+incen_value+spl_incen_value)*0.75/100) "+ 
 				"where fin_year=? and depo_code=? and cmp_code=? ";
+				if(cmon>2020044) // yashpal baghela 26/11/2020 
+					 query2="update arrear set pf_value=round(round((basic_value+da_value+incen_value)*10/100,2)),esic_value=round((basic_value+da_value+hra_value+add_hra_value+incen_value+spl_incen_value)*0.75/100) "+ 
+					 "where fin_year=? and depo_code=? and cmp_code=? ";
+					
 				
 				String query4="update arrear a,emptran e set a.arrear_paid='Y' "+ 
 				"where a.fin_year=? and a.depo_code=? and a.cmp_code=? and a.arrear_mon=? "+
-				"and e.fin_year=? and e.depo_code=? and e.cmp_code=? and a.emp_code=e.emp_Code and e.mnth_code=? and e.atten_days<>0 ";
+				"and e.fin_year>=? and e.depo_code=? and e.cmp_code=? and a.emp_code=e.emp_Code and e.mnth_code=? and e.atten_days<>0 ";
 
 				
 				ps1 = con.prepareStatement(query1);
 				ps1.setInt(1, fyear);
-				ps1.setInt(2, depo);
+				ps1.setInt(2, depo); 
 				ps1.setInt(3, cmp);
 				ps1.setInt(4, cmon);
 				i=ps1.executeUpdate();
@@ -2521,7 +2996,122 @@ public class PayrollDAO
 			return v;
 		}
 
-		   public ArrayList getArrearReport(int depo_code,int cmp_code,int fyear,String paid)
+
+	   
+	   
+		public Vector getPendingArrearList(int depo_code,int cmp_code,int ayear,int mnth_code,int fyear,String paid)
+		{
+			PreparedStatement ps = null;
+			ResultSet rs=null;
+			Connection con=null;
+			Vector v =null;
+			Vector col=null;
+			int sno=1;
+			String mon="b.arrear_mon";
+			
+			int smon = Integer.parseInt(ayear+"04");
+			int emon = Integer.parseInt((ayear+1)+"03");
+			try 
+			{
+				con=ConnectionFactory.getConnection();
+				con.setAutoCommit(false);
+
+/*				String query="select e.emp_name,e.esic_no,e.pf_no,e.emp_code,(b.basic_value+b.da_value+b.hra_value+b.add_hra_value+b.incen_value+b.spl_incen_value) arreara_amt,"+mon+
+				" from employeemast e, arrear b "+  
+				" where  e.cmp_code=b.cmp_code and e.emp_code=b.emp_code and b.fin_year=? and b.depo_code=? and b.cmp_code=? "+   
+				" and e.depo_code=? and e.cmp_code=? and "+mon+"=? group by arrear_mon,emp_code ";
+*/				
+				
+/*				String query = "select e.emp_name,monthname(concat(left(a.mnth_code,4),'-',right(a.mnth_code,2),'-01')) mon,e.esic_no,e.pf_no,a.emp_code, "+ 
+				"(a.basic_value+a.da_value+a.hra_value+a.add_hra_value+a.incen_Value+a.spl_incen_value)-(a.pf_value+a.esic_value) net,a.mnth_code,a.arrear_paid "+
+				"from arrear a, employeemast e "+
+				"where a.fin_year=? and a.depo_code=? and a.cmp_code=? and a.mnth_code between ? and ? "+ 
+				"and e.depo_code=? and e.cmp_code=? and a.emp_code=e.emp_code and a.arrear_paid=? ";
+	*/			
+				
+				//New Query implemented on 07/07/2020 (Yashpal) 
+				String query = "select e.emp_name,monthname(concat(left(a.mnth_code,4),'-',right(a.mnth_code,2),'-01')) mon,e.esic_no,e.pf_no,a.emp_code, "+
+				"(a.basic_value+a.da_value+a.hra_value+a.add_hra_value+a.incen_Value+a.spl_incen_value)-(a.pf_value+a.esic_value) net,a.mnth_code,a.arrear_paid  "+
+				"from arrear a, employeemast e,emptran t  "+
+				"where a.fin_year=? and a.depo_code=? and a.cmp_code=? and a.mnth_code between ? and ? "+
+				"and e.depo_code=? and e.cmp_code=? and a.emp_code=e.emp_code and a.arrear_paid=? "+
+				"and t.fin_year=? and t.depo_code=? and t.cmp_code=? and t.mnth_code=? and t.atten_days>0 and t.atten_lock=1  and t.emp_code=e.emp_code and t.emp_code=a.emp_code "+
+				"and ifnull(t.del_tag,'')<>'D' ";
+
+
+				ps = con.prepareStatement(query);
+				ps.setInt(1, ayear); 
+				ps.setInt(2, depo_code);
+				ps.setInt(3, cmp_code);
+				ps.setInt(4, smon);
+				ps.setInt(5, emon);
+				ps.setInt(6, depo_code);
+				ps.setInt(7, cmp_code);
+				ps.setString(8, paid);
+				ps.setInt(9, fyear);
+				ps.setInt(10, depo_code);
+				ps.setInt(11, cmp_code);
+				ps.setInt(12, mnth_code);
+				rs =ps.executeQuery();
+				
+				
+				boolean first=true;
+				while (rs.next())
+				{
+					if(first)
+					{
+						v = new Vector();
+						first=false;
+					}
+					col= new Vector();
+					if(paid.equals("O"))
+						col.addElement(new Boolean(true));
+					else
+						col.addElement(new Boolean(false));
+					col.addElement(sno++);  // sno 1
+					col.addElement(rs.getString(1)); // emp_name //2
+					col.addElement(rs.getString(2)); // month name  3
+					col.addElement(rs.getString(3)); // esic no  4
+					col.addElement(rs.getString(4)); // pf no  5
+					col.addElement(rs.getInt(5)); // emp_code  6
+					col.addElement(rs.getDouble(6)); // arrear amt  7
+					col.addElement(rs.getDouble(6)); // arrear amt (sanction) 8
+					col.addElement(rs.getInt(7)); // mnth_code  9
+					col.addElement(rs.getString(8)); // paid 10
+					v.add(col);
+				}
+
+
+
+				con.commit();
+				con.setAutoCommit(true);
+				rs.close();
+				ps.close();
+
+			} catch (Exception ex) { ex.printStackTrace();
+				try {
+					con.rollback();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				System.out.println("-------------Exception in PayrollDAO.getArrearList " + ex);
+
+			}
+			finally {
+				try {
+					System.out.println("No. of Records Update/Insert : " );
+
+					if(rs != null){rs.close();}
+					if(ps != null){ps.close();}
+					if(con != null){con.close();}
+				} catch (SQLException e) {
+					System.out.println("-------------Exception in PayrollDAO.Connection.close --- getArrearList "+e);
+				}
+			}
+			return v;
+		}
+
+		   public ArrayList getArrearReport(int depo_code,int cmp_code,int fyear,String paid,int smon,int emon)
 		  	{
 		  		PreparedStatement ps = null;
 		  		ResultSet rs=null;
@@ -2565,7 +3155,7 @@ public class PayrollDAO
 					"a.hra_value,a.add_hra_value,a.incen_Value,a.spl_incen_value,(a.basic_value+a.da_value+a.hra_value+a.add_hra_value+a.incen_Value+a.spl_incen_value) totearn, "+
 					"a.pf_value,a.esic_value,(a.pf_value+a.esic_value) totded,a.arrear_days,a.oldwages,a.newwages "+
 					"from arrear a, employeemast e "+
-					"where a.fin_year=? and a.depo_code=? and a.cmp_code=? "+
+					"where a.fin_year=? and a.depo_code=? and a.cmp_code=? and a.mnth_code between ? and ? "+
 					"and e.depo_code=? and e.cmp_code=? and a.emp_code=e.emp_code and a.arrear_paid=? ";
 
 		  			 
@@ -2573,9 +3163,11 @@ public class PayrollDAO
 		  			ps.setInt(1, fyear);
 	  	  			ps.setInt(2, depo_code);
 	  	  			ps.setInt(3, cmp_code);
-	  	  			ps.setInt(4, depo_code);
-	  	  			ps.setInt(5, cmp_code);
-	  	  			ps.setString(6, paid);
+	  	  			ps.setInt(4, smon);
+	  	  			ps.setInt(5, emon);
+	  	  			ps.setInt(6, depo_code);
+	  	  			ps.setInt(7, cmp_code);
+	  	  			ps.setString(8, paid);
 			  		rs =ps.executeQuery();
 		  			
 		  			v = new ArrayList();
@@ -2766,8 +3358,8 @@ public class PayrollDAO
 					con=ConnectionFactory.getConnection();
 
 					
-					String query1="update arrear set arrear_sanc=?,arrear_paid=round(?*arrear_atten/month_days) " +
-					" where  fin_year=? and depo_code=? and cmp_code=? and  arrear_mon=? and emp_code=? " ;
+					String query1="update arrear set arrear_paid=?,arrear_mon=? " +
+					" where  fin_year=? and depo_code=? and cmp_code=? and  mnth_code=? and emp_code=? and arrear_paid in ('N','O') " ;
 
 					//String query2="update emptran set bonus_per=?,bonus_value=? " +
 					//" where  fin_year=? and depo_code=? and cmp_code=? and  mnth_code=? and emp_code=? " ;
@@ -2782,8 +3374,16 @@ public class PayrollDAO
 					{
 						emp= (EmptranDto) attnlist.get(j);
 
-						ps1.setDouble(1, emp.getArrear_sanc());
-						ps1.setDouble(2, emp.getArrear_sanc()); // bonus_limit  
+						System.out.println(emp.getFin_year());
+						System.out.println(emp.getDepo_code());
+						System.out.println(emp.getCmp_code());
+						System.out.println(emp.getMnth_code());
+						System.out.println(emp.getEmp_code());
+						
+						
+						ps1.setString(1, emp.getPaid()); // Paid 'N' or 'O'
+						ps1.setInt(2, emp.getMnthdays()); // arrear month in which arrear is paid
+						 
 						// where clause
 						ps1.setInt(3,emp.getFin_year());
 						ps1.setInt(4,emp.getDepo_code());
@@ -2941,7 +3541,7 @@ public class PayrollDAO
 						query="select e.emp_name,e.esic_no,e.pf_no,e.emp_code,b.lta_value,b.medical_value,b.mnth_code,MONTHNAME(STR_TO_DATE(right(b.mnth_code,2), '%m')) mon "+
 						" from employeemast e, emptran b  "+
 						" where  e.cmp_code=b.cmp_code and e.emp_code=b.emp_code and b.fin_year=? and b.depo_code=? and b.cmp_code=?  " +
-						"  and e.depo_code=? and e.cmp_code=?  and b.atten_lock=1 ";
+						"  and e.depo_code=? and e.cmp_code=?  and b.atten_lock=1 and b.mnth_code=? ";
 //						"  and e.depo_code=? and e.cmp_code=? and (b.lta_value+b.medical_value)>0 ";
 					}
 
@@ -2966,7 +3566,7 @@ public class PayrollDAO
 					ps.setInt(3, cmp_code);
 					ps.setInt(4, depo_code);
 					ps.setInt(5, cmp_code);
-					if(option==5)
+					if(option==5 || option==2)
 						ps.setInt(6, mnth_code);
 					rs =ps.executeQuery();
 					
@@ -3046,8 +3646,8 @@ public class PayrollDAO
 
 					if(repno==14)
 					{
-						query="select emp_code,emp_name,0.00 lta,0.00 medical,'UnPaid' mon from employeemast where depo_code=? and cmp_Code=? and emp_code not in "+  
-						"(select emp_code from emptran  where fin_year=? and depo_code=? and cmp_code=? and lta_value+medical_value>0) and doresign is null ";
+						query="select emp_code,emp_name,0.00 lta,0.00 medical,'UnPaid' mon from employeemast where depo_code=? and cmp_code=? and emp_code not in "+  
+						"(select emp_code from emptran  where fin_year=? and depo_code=? and cmp_code=? and (lta_value+medical_value)>0) and doresign is null and (lta+medical)>0 ";
 					}
 		  			 
 		  			ps = con.prepareStatement(query);
@@ -3185,14 +3785,13 @@ public class PayrollDAO
 			    	PreparedStatement ps2 = null;
 			    	Connection con=null;
 			     
-					
+							
 					int i=0;
 					try 
 					{
 						con=ConnectionFactory.getConnection();
 
 						String query2="update  locktable set locked_by=?,locked_user=?,locked_date=now(),locked=? where depo_code=? and cmp_code=? and mnth_code=? and entry_type=? ";
-
 						
 						con.setAutoCommit(false);
 						ps2 = con.prepareStatement(query2);
@@ -3243,7 +3842,7 @@ public class PayrollDAO
 					Vector col=null;
 					int sno=1;
 					int lock=0;
-					String name[]={"zero","Sterile Days","Advance Entry","Other Allowance","Canteen Coupon","LTA/Medical"};
+					String name[]={"zero","Sterile Days","Advance Entry","Other Allowance","Canteen Coupon","LTA/Medical","Machine Operator Entry"};
 					try 
 					{
 						con=ConnectionFactory.getConnection();
@@ -3364,7 +3963,204 @@ public class PayrollDAO
 					return i;
 				}
 				
-			
+
+			    public ArrayList getIncrementList(int depo_code,int cmp_code,int fyear,int repno,int mnth_code)
+			  	{
+			  		PreparedStatement ps = null;
+			  		ResultSet rs=null;
+			  		Connection con=null;
+			  		ArrayList v =null;
+			  		EmptranDto emp=null;
+			  		double diff=0.00;
+			  		double prev=0.00;
+			  		int empCode=0;
+			  		int sno=1;
+			  		try 
+			  		{
+			  			con=ConnectionFactory.getConnection();
+			  			con.setAutoCommit(false);
+
+
+						String query="select e.*,concat(p.month_nm,'-',p.yy) monname from perdmast p, "+
+						"(select e.fin_year,e.mnth_code,e.emp_code,m.emp_name,e.gross  from emptran e,employeemast m "+ 
+						"where e.fin_year<=? and e.cmp_code=? and e.mnth_code<=? and m.cmp_code=? and m.emp_code=e.emp_code and (m.doresign is null or m.doresign > (select frdate from perdmast where mnth_code=?)) " +
+						"group by e.emp_code,e.gross) e  where e.mnth_code=p.mnth_code order by e.emp_code,e.mnth_code";
+			  			 
+			  			ps = con.prepareStatement(query);
+		  				ps.setInt(1, fyear);
+		  				ps.setInt(2, cmp_code);
+		  				ps.setInt(3, mnth_code);
+		  				ps.setInt(4, cmp_code);
+		  				ps.setInt(5, mnth_code);
+			  			rs =ps.executeQuery();
+			  			
+			  			v = new ArrayList();
+			  			boolean first=true;
+			  			while (rs.next())
+			  			{
+			  				
+			  				if(first)
+			  				{
+			  					empCode=rs.getInt(3);
+			  					prev=rs.getDouble(5);
+			  					first=false;
+			  					
+			  				}
+			  				if(rs.getInt(3)!=empCode)
+			  				{
+			  					empCode=rs.getInt(3);
+			  					prev=rs.getDouble(5);
+			  				}
+			  				
+			  				diff=rs.getDouble(5)-prev;
+			  				emp = new EmptranDto();
+			  				emp.setSerialno(sno++);
+			  				emp.setEmp_code(rs.getInt(3));
+			  				emp.setEmp_name(rs.getString(4)); // ip name
+			  				emp.setGross(rs.getDouble(5));
+			  				emp.setMedical_value(diff);
+			  				emp.setMonname(rs.getString(6));
+			  				v.add(emp);
+			  				prev=rs.getDouble(5);
+			  			}
+
+
+
+			  			con.commit();
+			  			con.setAutoCommit(true);
+			  			rs.close();
+			  			ps.close();
+
+			  		} catch (Exception ex) {
+			  			try {
+			  				con.rollback();
+			  			} catch (SQLException e) {
+			  				e.printStackTrace();
+			  			}
+			  			System.out.println("-------------Exception in PayrollDAO.getEarningList(ArrayList) " + ex);
+
+			  		}
+			  		finally {
+			  			try {
+			  				System.out.println("No. of Records Update/Insert : " );
+
+			  				if(rs != null){rs.close();}
+			  				if(ps != null){ps.close();}
+			  				if(con != null){con.close();}
+			  			} catch (SQLException e) {
+			  				System.out.println("-------------Exception in PayrollDAO.Connection.close --- getEarningList(ArrayList) "+e);
+			  			}
+			  		}
+			  		return v;
+			  	}    
+
+
+			    
+			    public ArrayList getSalaryDetail(int depo_code,int cmp_code,int fyear,int repno,int mnth_code)
+			    {
+			    	PreparedStatement ps = null;
+			    	ResultSet rs=null;
+			    	Connection con=null;
+			    	ArrayList v =null;
+			    	EmptranDto emp=null;
+			    	try 
+			    	{
+			    		con=ConnectionFactory.getConnection();
+			    		con.setAutoCommit(false);
+
+
+			    		String query="Select MONTHNAME(e.doc_date) AS 'Month Name',e.fin_year,e.emp_code,m.pf_no,m.uan_no,m.esic_no,m.emp_name,M.DESIGNATION,e.basic,e.da,e.hra,e.add_hra,e.incentive,(e.basic+e.da+e.hra+e.add_hra+e.incentive) btotal,"+
+	    				"e.atten_days,e.basic_value,e.da_value,e.hra_value,e.add_hra_value,e.incentive_value, "+
+	    				"(e.basic_value+e.da_value+e.hra_value+e.add_hra_value+e.incentive_value+e.food_value) grosstotal,e.arrear_days, "+
+	    				"e.ot_rate,e.extra_hrs,e.ot_value,e.pf_value,e.esis_value,(e.pf_value+e.esis_value) totded, "+
+	    				"(e.basic_value+e.da_value+e.hra_value+e.add_hra_value+e.incentive_value+e.spl_incen_value+e.lta_value+e.medical_value+e.stair_value+e.ot_value+e.food_value-e.pf_value-e.esis_value) net,e.food_value "+
+	    				"from emptran e, employeemast m where e.fin_year=? and e.cmp_code=?  and e.mnth_code=? and e.atten_days<>0 and ifnull(e.del_tag,'')<>'D' and m.cmp_code=? and e.emp_code=m.emp_code ";
+
+			    		// for arrear table query implement later after discussion
+/*			    		select mnth_code,emp_code,arrear_days,arrear_atten,arrear_mon,
+			    		sum(basic_value),sum(da_value),sum(hra_value),sum(add_hra_value),sum(incen_value),sum(spl_incen_value) from arrear 
+			    		where fin_year=2018 and depo_code=10 and cmp_code=1 AND EMP_CODE=8  group by emp_code,mnth_code;
+*/
+			    		
+
+			    		ps = con.prepareStatement(query);
+			    		ps.setInt(1, fyear);
+			    		ps.setInt(2, cmp_code);
+			    		ps.setInt(3, mnth_code);
+			    		ps.setInt(4, cmp_code);
+			    		rs =ps.executeQuery();
+
+			    		v = new ArrayList();
+
+			    		while (rs.next())
+			    		{
+
+			    			emp = new EmptranDto();
+			    			emp.setMonname(rs.getString(1));
+			    			emp.setFin_year(rs.getInt(2));
+			    			emp.setEmp_code(rs.getInt(3));
+			    			emp.setPf_no(rs.getInt(4));
+			    			emp.setUan_no(rs.getLong(5));
+			    			emp.setEsic_no(rs.getLong(6));
+			    			emp.setEmp_name(rs.getString(7)); // ip name
+			    			emp.setDesignation(rs.getString(8));
+			    			emp.setBasic(rs.getDouble(9));
+			    			emp.setDa(rs.getDouble(10));
+			    			emp.setHra(rs.getDouble(11));
+			    			emp.setAdd_hra(rs.getDouble(12));
+			    			emp.setIncentive(rs.getDouble(13));
+			    			emp.setGross(rs.getDouble(14));
+			    			emp.setAtten_days(rs.getDouble(15));
+			    			emp.setBasic_value(rs.getDouble(16));
+			    			emp.setDa_value(rs.getDouble(17));
+			    			emp.setHra_value(rs.getDouble(18));
+			    			emp.setAdd_hra_value(rs.getDouble(19));
+			    			emp.setIncentive_value(rs.getDouble(20));
+			    			emp.setMisc_value(rs.getDouble(21)); // Total Wages Paid before deduction
+			    			emp.setArrear_days(rs.getDouble(22));
+			    			emp.setOt_rate(rs.getDouble(23));
+			    			emp.setExtra_hrs(rs.getDouble(24));
+			    			emp.setOt_value(rs.getDouble(25));
+			    			emp.setPf_value(rs.getDouble(26));
+			    			emp.setEsis_value(rs.getDouble(27));
+			    			emp.setNet_value(rs.getDouble(29));
+			    			emp.setFood_value(rs.getDouble(30));
+			    			
+			    			
+			    		
+			    			v.add(emp);
+
+			    		}
+
+			    		con.commit();
+			    		con.setAutoCommit(true);
+			    		rs.close();
+			    		ps.close();
+
+			    	} catch (Exception ex) {
+			    		try {
+			    			con.rollback();
+			    		} catch (SQLException e) {
+			    			e.printStackTrace();
+			    		}
+			    		System.out.println("-------------Exception in PayrollDAO.getSalaryDetail(ArrayList) " + ex);
+
+			    	}
+			    	finally {
+			    		try {
+			    			System.out.println("No. of Records Update/Insert : " );
+
+			    			if(rs != null){rs.close();}
+			    			if(ps != null){ps.close();}
+			    			if(con != null){con.close();}
+			    		} catch (SQLException e) {
+			    			System.out.println("-------------Exception in PayrollDAO.Connection.close --- getSalaryDetail(ArrayList) "+e);
+			    		}
+			    	}
+			    	return v;
+			    }    
+
+
 	public double roundTwoDecimals(double d) 
 	{
 	    DecimalFormat twoDForm = new DecimalFormat("0.00");

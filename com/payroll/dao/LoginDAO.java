@@ -415,6 +415,10 @@ public LoginDto getSalesPackage(int division,int depo_code,Connection con,LoginD
 	ResultSet frs1=null;
 	ResultSet rcurr=null;
 
+	PreparedStatement ncurr=null;
+	ResultSet nrcurr=null;
+
+	
 	int fyear=this.fyear;
 	
 	String currmonth =null;
@@ -440,6 +444,7 @@ public LoginDto getSalesPackage(int division,int depo_code,Connection con,LoginD
 		currmonth = "select mth,fin_year,fin_desc,mnth_code,frdate,todate,fin_ord,yy from perdmast where fin_year=(select max(fin_year) from emptran where depo_code=? and cmp_code=? and doc_type=40 and ifnull(del_tag,'')<>'D' )  "+
 		" and curdate() between frdate and todate " ;
 
+		String newmonth = "select mth,fin_year,fin_desc,mnth_code,frdate,todate,fin_ord,yy from perdmast where fin_year=? and curdate() between frdate and todate " ;
 		
 		
 		
@@ -466,6 +471,27 @@ public LoginDto getSalesPackage(int division,int depo_code,Connection con,LoginD
  
 			fyear=rcurr.getInt(2);
    
+		}
+		else
+		{
+			ncurr = con.prepareStatement(newmonth) ;
+			ncurr.setInt(1,ldo.getFin_year() );
+			nrcurr =ncurr.executeQuery();
+
+			if (nrcurr.next())
+			{
+				ldo.setMessage("Accounting Year: "+nrcurr.getString(3)+"    Month: "+nrcurr.getString(1)+"-"+nrcurr.getInt(8));
+				ldo.setFooter("Financial Accounting Year: "+nrcurr.getString(3)+"    Processing Month: "+nrcurr.getString(1)+"-"+nrcurr.getInt(8));
+				ldo.setFin_year(nrcurr.getInt(2));
+				ldo.setMnth_code(nrcurr.getInt(4));
+				ldo.setSdate(nrcurr.getDate(5));
+				ldo.setEdate(nrcurr.getDate(6));
+				ldo.setMnthName(nrcurr.getString(1));
+				ldo.setMno(nrcurr.getInt(7)-1);
+			}
+			ncurr.close();
+			nrcurr.close();
+			
 		}
 
 		curr.close();

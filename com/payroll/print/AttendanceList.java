@@ -145,7 +145,9 @@ public void createContent(WritableSheet sheet) throws WriteException,RowsExceede
 	   int dash=0;
 	   // detail header
 	   int size=attnList.size();
-	    
+	   double adays=0.00; 
+	   double ehrs=0.00; 
+	   double arreardays=0.00; 
 	   EmptranDto emp =null;
 	    
 	   for (i=0;i<size;i++)
@@ -167,11 +169,23 @@ public void createContent(WritableSheet sheet) throws WriteException,RowsExceede
 			   addDouble(sheet, 5, r, emp.getArrear_days(),dash);
 			   addLabel(sheet, 6, r, emp.getRemark(),dash);
 
+			   adays+=emp.getAtten_days();
+			   ehrs+=emp.getExtra_hrs();
+			   arreardays+=emp.getArrear_days();
 //			   addNumber(sheet, 2, r, emp.getEsic_no(),dash);
 //			   addNumber(sheet, 3, r, emp.getPf_no(),dash);
 
 			   r++;
 
 	   }
+	           dash=1;
+			   addLabel(sheet, 0, r, "",dash);
+			   addLabel(sheet, 1, r, "TOTAL",dash);
+			   addLabel(sheet, 2, r, "",dash);
+			   addDouble(sheet, 3, r, adays,dash);
+			   addDouble(sheet, 4, r, ehrs,dash);
+			   addDouble(sheet, 5, r, arreardays,dash);
+			   addLabel(sheet, 6, r, "",dash);
+
 }
 }

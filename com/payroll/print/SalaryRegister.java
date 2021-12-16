@@ -261,13 +261,17 @@ public class SalaryRegister extends WritePDF{
 				createtext4(cb,50,685,"PF.No.");
 				createtext4(cb,175,685,"P.L.");
 				createtext4(cb,215,685,"D.A. R/T");
+				createtext4(cb,335,685,"Opt1 Allow");
 				createtext4(cb,495,685,"Payable");
 				createtext4(cb,545,685,"Signature");
 
 				createtext4(cb,50,675,"Esis.No.");
 				createtext4(cb,175,675,"C.L.");
 				createtext4(cb,215,675,"Hra 5%");
+				createtext4(cb,335,675,"Opt2 Allow");
 
+				
+				
 				createtext4(cb,50,665,"UAN No.");
 				createtext4(cb,175,665,"Arr.Days");
 				createtext4(cb,215,665,"Add.Hra");
@@ -285,12 +289,13 @@ public class SalaryRegister extends WritePDF{
 				createtext4(cb,150,645,"Paid");
 				createtext4(cb,175,645,"Off");
 				createtext4(cb,215,645,"Comm.Rate");
+				createtext4(cb,295,645,"Spl.Inc");
 				createtext4(cb,335,645,"Inct");
 
 				createtext4(cb,150,635,"Days");
 				createtext4(cb,175,635,"Absent");
 				createtext4(cb,255,635,"Hra 5%");
-				createtext4(cb,295,635,"Spl.Inc");
+				createtext4(cb,295,635,"Food Allw");
 				createtext4(cb,335,635,"Gross Amt");
 				createtext4(cb,380,635,"P.Tax");
 				createtext4(cb,415,635,"TDS");
@@ -327,7 +332,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 	try {
 //		rde=0;
  
-		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value();
+		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
 		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt();
 		double net = totearn-totded;
 		double totbasic=vd.getBasic()+vd.getDa()+vd.getHra()+vd.getAdd_hra()+vd.getIncentive()+vd.getSpl_incentive();
@@ -351,11 +356,14 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getDa()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,370,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
+
 			y=y-10;
 
 			createContent4(cb,50,y,vd.getDesignation(),PdfContentByte.ALIGN_LEFT);
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getHra()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,370,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			createContent4(cb,50,y,String.valueOf(vd.getPf_no()),PdfContentByte.ALIGN_LEFT);
@@ -371,6 +379,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent4(cb,50,y,String.valueOf(vd.getEsic_no()),PdfContentByte.ALIGN_LEFT);
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getIncentive()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,370,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
@@ -379,7 +388,9 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getOt_rate()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,285,y,df.format(vd.getHra_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,325,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT); // Food Value
+
 			createContent3(cb,370,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 			
@@ -428,8 +439,10 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			y=y-10;
 
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,375,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,375,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			//createContent3(cb,245,y,df.format(vd.getAdd_hra_value()),PdfContentByte.ALIGN_RIGHT);
@@ -441,13 +454,15 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			y=y-10;
 
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,375,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			createContent3(cb,165,y,df.format(vd.getAtten_days()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,290,y,df.format(vd.getHra_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
+			//createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,330,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT); // Food Value
 			createContent3(cb,375,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 

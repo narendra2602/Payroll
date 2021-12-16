@@ -92,9 +92,117 @@ public class EmptranDto
 	private double oldwages;
 	private double newwages;
 	
+	private double machine1_days;
+	private double machine2_days;
+	private double machine1_rate;
+	private double machine2_rate;
+	private double machine1_value;
+	private double machine2_value;
+	private long adhar_no;
+	private String pan_no;
+	private double instamt;
+	private String paid;
+	private double food_alw;
+	private double food_value;
+	private double basicpf_value;
+	
+	
+	private double prev_days;
+	private double ncp_days;
+
 	
 	
 	
+	public double getPrev_days() {
+		return prev_days;
+	}
+	public void setPrev_days(double prev_days) {
+		this.prev_days = prev_days;
+	}
+	public double getNcp_days() {
+		return ncp_days;
+	}
+	public void setNcp_days(double ncp_days) {
+		this.ncp_days = ncp_days;
+	}
+	public double getBasicpf_value() {
+		return basicpf_value;
+	}
+	public void setBasicpf_value(double basicpf_value) {
+		this.basicpf_value = basicpf_value;
+	}
+	public double getFood_alw() {
+		return food_alw;
+	}
+	public void setFood_alw(double food_alw) {
+		this.food_alw = food_alw;
+	}
+	public double getFood_value() {
+		return food_value;
+	}
+	public void setFood_value(double food_value) {
+		this.food_value = food_value;
+	}
+	public String getPaid() {
+		return paid;
+	}
+	public void setPaid(String paid) {
+		this.paid = paid;
+	}
+	public double getInstamt() {
+		return instamt;
+	}
+	public void setInstamt(double instamt) {
+		this.instamt = instamt;
+	}
+	public String getPan_no() {
+		return pan_no;
+	}
+	public void setPan_no(String pan_no) {
+		this.pan_no = pan_no;
+	}
+	public long getAdhar_no() {
+		return adhar_no;
+	}
+	public void setAdhar_no(long adhar_no) {
+		this.adhar_no = adhar_no;
+	}
+	public double getMachine1_days() {
+		return machine1_days;
+	}
+	public void setMachine1_days(double machine1_days) {
+		this.machine1_days = machine1_days;
+	}
+	public double getMachine2_days() {
+		return machine2_days;
+	}
+	public void setMachine2_days(double machine2_days) {
+		this.machine2_days = machine2_days;
+	}
+	public double getMachine1_rate() {
+		return machine1_rate;
+	}
+	public void setMachine1_rate(double machine1_rate) {
+		this.machine1_rate = machine1_rate;
+	}
+	public double getMachine2_rate() {
+		return machine2_rate;
+	}
+	public void setMachine2_rate(double machine2_rate) {
+		this.machine2_rate = machine2_rate;
+	}
+	public double getMachine1_value() {
+		return machine1_value;
+	}
+	public void setMachine1_value(double machine1_value) {
+		this.machine1_value = machine1_value;
+	}
+	public double getMachine2_value() {
+		return machine2_value;
+	}
+	public void setMachine2_value(double machine2_value) {
+		this.machine2_value = machine2_value;
+	}
 	public double[] getArrdays() {
 		return arrdays;
 	}

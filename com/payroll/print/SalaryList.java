@@ -43,12 +43,13 @@ public class SalaryList extends WritePDF{
 	int  pg,rde;
 	 
  
-	int depo_code,cmp_code,fyear,mnth_code;
+	int depo_code,cmp_code,fyear,mnth_code,repno;
 	String cmp_name,monthname;
 	EmptranDto vd;
 	PayrollDAO pdao;
-	double total;
+	double total,tot;
 	int bkcode;
+	boolean print=false;
 	
 	public SalaryList(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno)
 		{
@@ -60,12 +61,16 @@ public class SalaryList extends WritePDF{
 		this.drvnm=drvnm;
 		this.cmp_name=cmp_name;
 		this.monthname=monthname;
+		this.repno=repno;
 		
 		String pdfFilename = "";
 		y=747;
 		pg=1;
 		sdf2 = new SimpleDateFormat("dd-MM-yy_HH-mma");
-		pdfFilename="SalaryList #"+" "+sdf2.format(new Date())+".pdf";
+		if(repno==16)
+			pdfFilename="BonusList #"+" "+sdf2.format(new Date())+".pdf";
+		else
+			pdfFilename="SalaryList #"+" "+sdf2.format(new Date())+".pdf";
 
 		createPDF(pdfFilename);
         ///// View Report on screen
@@ -107,7 +112,9 @@ public class SalaryList extends WritePDF{
 			fg = new FigToWord();
 			pdao = new PayrollDAO();
 //			salList=pdao.getEsicList(depo_code, cmp_code, fyear, mnth_code,10);
-			if(mnth_code>=201611)
+			if(repno==16)
+				salList= (ArrayList<?>) pdao.getBonusRegister(depo_code, cmp_code, fyear, repno);
+			else if(mnth_code>=201611)
 				salList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,10);
 
 			
@@ -119,7 +126,10 @@ public class SalaryList extends WritePDF{
 			int i=0;
 			if(salList!=null)
 			{
-				lsize=salList.size()-1;
+				if(repno==16)
+					lsize=salList.size();
+				else
+					lsize=salList.size()-1;
 			}
 
 			bkcode=0;
@@ -183,9 +193,18 @@ public class SalaryList extends WritePDF{
 			y=717;
 		 
 			createHeadings(cb,30,747,"M/s. "+cmp_name);
-			createContent2(cb,30,737,"Salary List of Employees Having There A/c in ",PdfContentByte.ALIGN_LEFT);
-			createContent2(cb,30,727,"Staff Salary By "+vd.getBank(),PdfContentByte.ALIGN_LEFT);
-			createContent2(cb,30,717,"Salary for the month "+monthname,PdfContentByte.ALIGN_LEFT);
+			if(repno==16)
+			{
+				createContent2(cb,30,737,"Bonus List of Employees Having There A/c in ",PdfContentByte.ALIGN_LEFT);
+				createContent2(cb,30,727,"Staff Bonus By "+vd.getBank(),PdfContentByte.ALIGN_LEFT);
+				createContent2(cb,30,717,"Bonus for the year "+(fyear+1),PdfContentByte.ALIGN_LEFT);
+			}
+			else
+			{
+				createContent2(cb,30,737,"Salary List of Employees Having There A/c in ",PdfContentByte.ALIGN_LEFT);
+				createContent2(cb,30,727,"Staff Salary By "+vd.getBank(),PdfContentByte.ALIGN_LEFT);
+				createContent2(cb,30,717,"Salary for the month "+monthname,PdfContentByte.ALIGN_LEFT);
+			}
 			
 			createtext4(cb,525,737,"Page # "+(pg++));
 			 
@@ -202,7 +221,7 @@ public class SalaryList extends WritePDF{
 				createtext2(cb,72,697,"Emp Code");
 				createtext2(cb,170,697,"Name of the Employee");
 				createtext2(cb,325,697,"Account No.");
-				createtext2(cb,480,697,"Salary Amount ");
+				createtext2(cb,480,697,repno==16?"Bonus Paid":"Salary Amount ");
 
 			  
 				cb.moveTo(20,688);  // horizontal lines 
@@ -229,7 +248,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 	try {
 //		rde=0;
  
-		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value();
+		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
 		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt();;
 
 		double net = totearn-totded;
@@ -237,8 +256,31 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 		rde=y;
 		checkLn(doc, cb);
 		 
-	
-		if(net>0 && mnth_code>=201611)
+		if(repno==16)
+		{
+			tot=0.00;
+			print=false;
+			for (int i=0;i<12;i++)
+			{
+				tot+=vd.getAtten()[i];
+			}
+
+			if(tot>=31)
+				print=true;
+
+			if(print)
+			{
+				createContent3(cb,30,y,String.valueOf(sno),PdfContentByte.ALIGN_LEFT);
+				createContent3(cb,90,y,String.valueOf(vd.getEmp_code()),PdfContentByte.ALIGN_LEFT);
+				createContent3(cb,170,y,vd.getEmp_name(),PdfContentByte.ALIGN_LEFT);
+				createContent3(cb,325,y,vd.getBank_accno(),PdfContentByte.ALIGN_LEFT);
+				createContent3(cb,525,y,df.format(vd.getBonus_value()),PdfContentByte.ALIGN_RIGHT);
+				total+=vd.getBonus_value();
+				sno++;
+				y=y-14;
+			}
+		}
+		else if(net>0 && mnth_code>=201611)
 		{
 			createContent3(cb,30,y,String.valueOf(sno),PdfContentByte.ALIGN_LEFT);
 			createContent3(cb,90,y,String.valueOf(vd.getEmp_code()),PdfContentByte.ALIGN_LEFT);

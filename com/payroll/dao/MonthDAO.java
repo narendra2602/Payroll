@@ -111,7 +111,7 @@ public class MonthDAO
 		
 		Connection con=null;
 		int i=0;
-		int mno=0;
+		int mno=201604;
 		 
 		try 
 		{
@@ -120,7 +120,7 @@ public class MonthDAO
 
 			 
 			
-			String monQ ="select mth,fin_year,fin_desc,mnth_code,frdate,todate,fin_ord,yy from perdmast  where fin_year=? and mnth_code=?";
+			String monQ ="select mth,fin_year,fin_desc,mnth_code,frdate,todate,fin_ord,yy from perdmast  where fin_year=? and mnth_code=(select if(CONCAT(LEFT(CURDATE(),4),SUBSTRING(CURDATE(),6,2))>Max(mnth_code),max(mnth_code),CONCAT(LEFT(CURDATE(),4),SUBSTRING(CURDATE(),6,2))) from perdmast where fin_year=?)";
 
 		
 			String monfin ="select month_nm,mnth_code,frdate,todate,mth,yy,fin_ord,day(todate)  from perdmast where fin_year=? order by fin_ord ";
@@ -135,7 +135,8 @@ public class MonthDAO
 		 
 			ps = con.prepareStatement(monQ);
 			ps.setInt(1, year);
-			ps.setInt(2, mno);
+			ps.setInt(2, year);
+//			ps.setInt(2, mno);
 			rs= ps.executeQuery();
 			if (rs.next())
 			{

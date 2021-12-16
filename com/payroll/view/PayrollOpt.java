@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Constructor;
+import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -86,10 +87,10 @@ public class PayrollOpt extends BaseClass implements ActionListener
 		lblmonth.setBounds(45, 129, 150, 20);
 		getContentPane().add(lblmonth);
 
-		month = new JComboBox(loginDt.getFmonth());
+		month = new JComboBox(new Vector(loginDt.getFmonth()));
 		month.setBounds(199, 129, 136, 23);
 		getContentPane().add(month);
-		year.setActionCommand("month");
+		month.setActionCommand("month");
 		month.setMaximumRowCount(12);
 		
 		
@@ -141,6 +142,26 @@ public class PayrollOpt extends BaseClass implements ActionListener
 		{
 			dispose();
 		}
+
+		if(e.getActionCommand().equalsIgnoreCase("Year"))
+		{
+			System.out.println("YEAR OPTION IS CHAGNED OR SELECTED ");
+			
+			YearDto yd = (YearDto) year.getSelectedItem();
+			Vector v = (Vector) loginDt.getFmon().get(yd.getYearcode());
+			System.out.println(v.size());
+			
+			month.removeAllItems();
+			MonthDto mn=null;
+			for (int i=0; i<v.size();i++)
+			{
+				 mn = (MonthDto) v.get(i);
+				 month.addItem(mn);
+				 
+			}
+			month.setSelectedIndex(loginDt.getMno());
+		}
+
 		
 		if(e.getActionCommand().equalsIgnoreCase("Excel") || e.getActionCommand().equalsIgnoreCase("Upload") ||  e.getActionCommand().equalsIgnoreCase("PDF") || e.getActionCommand().equalsIgnoreCase("View") || e.getActionCommand().equalsIgnoreCase("Print"))
 		{
@@ -177,6 +198,14 @@ public class PayrollOpt extends BaseClass implements ActionListener
 					repno=13;
 				else if(repNm.startsWith("UnPaid LTA/Medical"))
 					repno=14;
+				else if(repNm.startsWith("Bonus List"))
+					repno=16;
+				else if(repNm.contains("Employee Increment"))
+					repno=18;
+				else if(repNm.startsWith("Employee"))
+					repno=17;
+				else if(repNm.startsWith("Salary Detail Register"))
+					repno=19;
 				
 				YearDto yd = (YearDto) year.getSelectedItem();
 				MonthDto mdto = (MonthDto) month.getSelectedItem();
@@ -184,7 +213,7 @@ public class PayrollOpt extends BaseClass implements ActionListener
 				Class<?> clazz = Class.forName(ClassNm);
 				// create an instance
 				
-				if(repno==10 && e.getActionCommand().equalsIgnoreCase("PDF"))
+				if((repno==10 || repno==16) && e.getActionCommand().equalsIgnoreCase("PDF"))
 				{
 					new SalaryList(loginDt.getDepo_code(),loginDt.getCmp_code(),yd.getYearcode(),mdto.getMnthcode(),loginDt.getBrnnm(),loginDt.getDrvnm(),mdto.getMnthname(),btnno,repno);
 				}
@@ -224,6 +253,12 @@ public class PayrollOpt extends BaseClass implements ActionListener
 		{
 			uploadButton.setText("PDF");
 		}
+		else if(repNm.startsWith("Bonus List"))
+		{
+			uploadButton.setText("PDF");
+			month.setVisible(false);
+			lblmonth.setVisible(false);
+		}
 		else if(repNm.equalsIgnoreCase("Salary Register") || repNm.equalsIgnoreCase("Salary Slip") )
 		{
 			excelButton.setText("PDF");
@@ -249,6 +284,16 @@ public class PayrollOpt extends BaseClass implements ActionListener
 		{
 			month.setVisible(false);
 			lblmonth.setVisible(false);
+		}
+		else if(repNm.equalsIgnoreCase("Salary Detail Register"))
+		{
+			pfbtn.setText("Monthly");
+			arrearbtn.setText("Cummulative");
+			pfbtn.setBounds(85, 67, 100, 23);
+			arrearbtn.setBounds(209, 67, 120, 23);
+			pfbtn.setVisible(true);
+			arrearbtn.setVisible(true);
+				
 		}
 		super.setVisible(b);
 		 

@@ -15,11 +15,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
@@ -32,8 +34,8 @@ import javax.swing.table.DefaultTableModel;
 
 import com.payroll.dao.PayrollDAO;
 import com.payroll.dto.EmptranDto;
-import com.payroll.dto.MonthDto;
-import com.payroll.print.EsicList;
+import com.payroll.dto.YearDto;
+import com.payroll.print.ArrearReport;
 import com.payroll.util.OverWriteTableCellEditor;
 
 public class ArrearCalculation extends BaseClass implements ActionListener 
@@ -60,10 +62,11 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 	int rrow;
  
 	 
-	MonthDto mdto=null;
+	YearDto ydto=null;
 	PayrollDAO pdao=null;
 
-	private JComboBox month;
+	private JComboBox fyear;
+	private JRadioButton rdbtnPending,rdbtnPaid;
 
 	private JLabel lblSelectMonth;
 
@@ -133,28 +136,40 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 		panel_2.setBounds(224, 657, 578, 48);
 		getContentPane().add(panel_2);
 
-		lblDispatchEntry = new JLabel("Arrear Calculation");
+		lblDispatchEntry = new JLabel("Pending Arrear Calculation");
 		lblDispatchEntry.setHorizontalAlignment(SwingConstants.CENTER);
 		lblDispatchEntry.setForeground(Color.BLACK);
 		lblDispatchEntry.setFont(new Font("Tahoma", Font.BOLD, 20));
-		lblDispatchEntry.setBounds(297, 188, 418, 22);
+		lblDispatchEntry.setBounds(287, 188, 418, 22);
 		getContentPane().add(lblDispatchEntry);
 
 		
-		lblSelectMonth = new JLabel("Select Month");
+		lblSelectMonth = new JLabel("Select Year");
 		lblSelectMonth.setBounds(401, 232, 86, 22);
 		getContentPane().add(lblSelectMonth);
 		
-		month = new JComboBox((loginDt.getFmonth()));
-		month.setActionCommand("Month");
-		month.setBounds(492, 232, 154, 22);
-		getContentPane().add(month);
+		fyear = new JComboBox((loginDt.getFyear()));
+		fyear.setActionCommand("Year");
+		fyear.setBounds(492, 232, 154, 22);
+		getContentPane().add(fyear);
 	
+		rdbtnPending = new JRadioButton("Pending");
+		rdbtnPending.setSelected(true);
+		rdbtnPending.setBounds(692, 232, 92, 22);
+		getContentPane().add(rdbtnPending);
+		
+		rdbtnPaid = new JRadioButton("Paid");
+		rdbtnPaid.setBounds(800, 232, 92, 22);
+		getContentPane().add(rdbtnPaid);
+	
+		ButtonGroup b = new ButtonGroup();
+		b.add(rdbtnPending);
+		b.add(rdbtnPaid);
 		
 
 		
 		//////////////////////////////////////////////////////////////////////
-		String[] crDrColName = {"Sno","Employee Name","ESIC No","PF No.","Code","Arrear Amt","Arrear Sanction","",""};
+		String[] crDrColName = {"Sl","Sno","Employee Name","Month","ESIC No","PF No.","Code","Arrear Amt","Arrear Sanction","",""};
 		String cdDrData[][] = {};
 		AttdTableModel = new DefaultTableModel(cdDrData, crDrColName) 
 		{
@@ -162,13 +177,15 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 			
  			public boolean isCellEditable(int row, int column) 
 			{
-				boolean ress = true;
-				int col=AttdTable.getSelectedColumn();
-				if (col<=5) 
+				if(column!=0)
 				{
-					ress = false;
+					return false;
 				}
-				return ress;
+
+				else
+				{
+					return true;
+				}
 			}
  			
 			
@@ -176,11 +193,11 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 			{
 				switch (column) 
 				{
-					case 5:
+					case 0:
+						return Boolean.class;
+					case 7:
 						return Double.class;
 					case 6:
-						return Integer.class;
-					case 7:
 						return Integer.class;
 					case 8:
 						return Double.class;
@@ -204,23 +221,25 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 		AttdTable.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		
 		
-		AttdTable.getColumnModel().getColumn(0).setPreferredWidth(35);//select
-		AttdTable.getColumnModel().getColumn(1).setPreferredWidth(300);//name
-		AttdTable.getColumnModel().getColumn(2).setPreferredWidth(150);//ESIC no
-		AttdTable.getColumnModel().getColumn(3).setPreferredWidth(100);//PF No
-		AttdTable.getColumnModel().getColumn(4).setPreferredWidth(80);//code
-		AttdTable.getColumnModel().getColumn(5).setPreferredWidth(100);//Advance
-		AttdTable.getColumnModel().getColumn(6).setPreferredWidth(125);//Loan
+		AttdTable.getColumnModel().getColumn(0).setPreferredWidth(45);//select
+		AttdTable.getColumnModel().getColumn(1).setPreferredWidth(35);//select
+		AttdTable.getColumnModel().getColumn(2).setPreferredWidth(200);//name
+		AttdTable.getColumnModel().getColumn(3).setPreferredWidth(90);//Month
+		AttdTable.getColumnModel().getColumn(4).setPreferredWidth(120);//ESIC no
+		AttdTable.getColumnModel().getColumn(5).setPreferredWidth(90);//PF No
+		AttdTable.getColumnModel().getColumn(6).setPreferredWidth(80);//code
+		AttdTable.getColumnModel().getColumn(7).setPreferredWidth(100);//Advance
+		AttdTable.getColumnModel().getColumn(8).setPreferredWidth(115);//Loan
 		
-		AttdTable.getColumnModel().getColumn(7).setPreferredWidth(0);
-		AttdTable.getColumnModel().getColumn(7).setMinWidth(0); // hidden emptranDto
-		AttdTable.getColumnModel().getColumn(7).setMaxWidth(0);
+		AttdTable.getColumnModel().getColumn(9).setPreferredWidth(0);
+		AttdTable.getColumnModel().getColumn(9).setMinWidth(0); // hidden emptranDto
+		AttdTable.getColumnModel().getColumn(9).setMaxWidth(0);
 
-		AttdTable.getColumnModel().getColumn(8).setPreferredWidth(0);
-		AttdTable.getColumnModel().getColumn(8).setMinWidth(0); // hidden bonus_applicable
-		AttdTable.getColumnModel().getColumn(8).setMaxWidth(0);
+		AttdTable.getColumnModel().getColumn(10).setPreferredWidth(0);
+		AttdTable.getColumnModel().getColumn(10).setMinWidth(0); // hidden bonus_applicable
+		AttdTable.getColumnModel().getColumn(10).setMaxWidth(0);
 	 
-		AttdTable.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+		AttdTable.getColumnModel().getColumn(7).setCellRenderer(rightRenderer);
 		
 
 		AttdTable.setDefaultEditor(Integer.class, new OverWriteTableCellEditor());
@@ -265,13 +284,15 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 		};
 		
 		 
-		AttdTable.getColumnModel().getColumn(0).setCellRenderer(dtc);
+//		AttdTable.getColumnModel().getColumn(0).setCellRenderer(dtc);
 		AttdTable.getColumnModel().getColumn(1).setCellRenderer(dtc);
 		AttdTable.getColumnModel().getColumn(2).setCellRenderer(dtc);
 		AttdTable.getColumnModel().getColumn(3).setCellRenderer(dtc);
 		AttdTable.getColumnModel().getColumn(4).setCellRenderer(dtc);
 		AttdTable.getColumnModel().getColumn(5).setCellRenderer(dtc);
 		AttdTable.getColumnModel().getColumn(6).setCellRenderer(dtc);
+		AttdTable.getColumnModel().getColumn(7).setCellRenderer(dtc);
+		AttdTable.getColumnModel().getColumn(8).setCellRenderer(dtc);
 		
 		fillTable(); 
 		
@@ -351,7 +372,6 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 	  
 		btnExcel= new JButton("Excel");
 		btnExcel.setActionCommand("Excel");
-		btnExcel.setVisible(false);
 		btnExcel.setBounds(49, 595, 86, 30);
 		getContentPane().add(btnExcel);
 		
@@ -370,7 +390,9 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 		exitButton.addActionListener(this);
 		btnSave.addActionListener(this);
 		btnExcel.addActionListener(this);
-		month.addActionListener(this); 
+		fyear.addActionListener(this); 
+		rdbtnPaid.addActionListener(this);
+		rdbtnPending.addActionListener(this);
 		
 		
 	}
@@ -391,22 +413,27 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 			   for (int i = 0; i < s; i++) 
 			   {
 				   col = (Vector) attnData.get(i);
-				   emp = new EmptranDto();
-				   emp.setEmp_code(setIntNumber(col.get(4).toString()));
-				   emp.setArrear_amt(setDoubleNumber(col.get(5).toString()));
-				   emp.setArrear_sanc(setDoubleNumber(col.get(6).toString()));
-				   emp.setMnthdays(setIntNumber(col.get(7).toString())); // month days
-				   emp.setFin_year(loginDt.getFin_year());
-				   emp.setDepo_code(loginDt.getDepo_code());
-				   emp.setCmp_code(loginDt.getCmp_code());
-				   emp.setMnth_code(mdto.getMnthcode());
-				   emp.setModified_by(loginDt.getLogin_id());
-				   emp.setModified_date(createdDate);
-				   emp.setSerialno(setIntNumber(col.get(0).toString()));
-				   
-				   
-				   
-				   attnList.add(emp);
+				   if((Boolean) col.get(0) || col.get(10).toString().equals("O"))
+				   {
+					   emp = new EmptranDto();
+					   emp.setEmp_code(setIntNumber(col.get(6).toString()));
+					   emp.setArrear_amt(setDoubleNumber(col.get(7).toString()));
+					   emp.setArrear_sanc(setDoubleNumber(col.get(8).toString()));
+					   //emp.setMnthdays(setIntNumber(col.get(7).toString())); // month days
+					   emp.setMnthdays(loginDt.getMnth_code()); // month days jis month mein arrear paid kiya
+					   emp.setFin_year(ydto.getYearcode());
+					   emp.setDepo_code(loginDt.getDepo_code());
+					   emp.setCmp_code(loginDt.getCmp_code());
+					   emp.setMnth_code(setIntNumber(col.get(9).toString()));
+					   //emp.setMnth_code(loginDt.getMnth_code());
+					   emp.setModified_by(loginDt.getLogin_id());
+					   emp.setModified_date(createdDate);
+					   emp.setSerialno(setIntNumber(col.get(1).toString()));
+					   emp.setPaid("N");
+					   if((Boolean) col.get(0))
+						   emp.setPaid("O");
+					   attnList.add(emp);
+				   }
 				} // end of for loop 
 				  
 		} 
@@ -428,9 +455,9 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 		AttdTableModel.fireTableDataChanged();
 
 		Vector<?> c = null;
-		mdto=(MonthDto)month.getSelectedItem();
+		ydto=(YearDto)fyear.getSelectedItem();
 		int mncode=0;
-		Vector<?> v = pdao.getArrearList(loginDt.getDepo_code(),loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(),2); 
+		Vector<?> v = pdao.getPendingArrearList(loginDt.getDepo_code(),loginDt.getCmp_code(), ydto.getYearcode(), loginDt.getMnth_code(),loginDt.getFin_year(),rdbtnPaid.isSelected()?"O":"N"); 
 		int size = 0;
 		if(v!=null)
 			size = v.size();
@@ -451,8 +478,8 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 			}
 		}
 
-		 getMonthIndex(mncode);
-		 month.setSelectedIndex(getMonthIndex(mncode));
+		 //getMonthIndex(mncode);
+		 //fyear.setSelectedIndex(getMonthIndex(mncode));
 		
 	}
 	
@@ -463,14 +490,15 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 
 		if(e.getActionCommand().equalsIgnoreCase("Exit"))
 		{
+			rdbtnPending.setSelected(true);
 			dispose();
 		}
 
 		
-		if(e.getActionCommand().equalsIgnoreCase("Month"))
+		if(e.getActionCommand().equalsIgnoreCase("Year"))
 		{
 
-			 mdto=(MonthDto) month.getSelectedItem();
+			 ydto=(YearDto) fyear.getSelectedItem();
 			 AttdTable.requestFocus();
 			 AttdTable.changeSelection(0, 7, false, false);
 			 AttdTable.editCellAt(0, 7);
@@ -484,6 +512,15 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 			 
 		}
 			
+		if(e.getActionCommand().equalsIgnoreCase("Paid") || e.getActionCommand().equalsIgnoreCase("Pending"))
+		{
+
+			 fillTable();
+			 AttdTable.requestFocus();
+			 AttdTable.changeSelection(0, 5, false, false);
+			 AttdTable.editCellAt(0, 5);
+			 AttdTable.changeSelection(0, 5, false, false);
+		}
 	
 	
 		
@@ -498,9 +535,17 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 			l=Update();
 			if (!l.isEmpty()) 
 			{
-				//h = pdao.updateArrearList(l);
-				//alertMessage(this, "Saved successfully for the Month "+ mdto.getMnthname());
-				alertMessage(this, "Updation Not Done????");
+				String password = confirmationDialongPassword();
+				
+				if(password!=null && password.equalsIgnoreCase("Prompt"))
+				{
+					h = pdao.updateArrearList(l);
+					alertMessage(this, "Saved successfully in Month "+ loginDt.getMnthName());
+					//alertMessage(this, "Updation Not Done????");
+					fillTable();
+				}
+				else
+					alertMessage(this, "Incorrect Password ");
 			}
 
 			 System.out.println("record update "+h);
@@ -510,14 +555,20 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 
 		if(e.getActionCommand().equalsIgnoreCase("Excel"))
 		{
-			new EsicList(loginDt.getDepo_code(), loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(), loginDt.getBrnnm(), loginDt.getDrvnm(), mdto.getMnthname(), 2, 3,0);
+			int smon = Integer.parseInt(ydto.getYearcode()+"04");
+			int emon = Integer.parseInt((ydto.getYearcode()+1)+"03");
+			int repno=11;
+			repno=rdbtnPaid.isSelected()?99:11;
+			
+		//	new EsicList(loginDt.getDepo_code(), loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(), loginDt.getBrnnm(), loginDt.getDrvnm(), mdto.getMnthname(), 2, 3,0);
+			new ArrearReport(loginDt.getDepo_code(), loginDt.getCmp_code(), ydto.getYearcode(),loginDt.getBrnnm(),loginDt.getDrvnm(),repno,smon,emon);
 		}		
 	}
 	
 	
 	public void setVisible(boolean b)
 	{
-		 month.setSelectedIndex(loginDt.getMno());
+		 fyear.setSelectedIndex(1);
 		 fillTable();
 		 super.setVisible(b);
 	}

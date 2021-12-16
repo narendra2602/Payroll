@@ -78,7 +78,7 @@ public class LTAGeneration extends BaseClass implements ActionListener
 		lblMonth.setBounds(61, 136, 110, 20);
 		getContentPane().add(lblMonth);
 
-		smonth = new JComboBox(loginDt.getFmonth());
+		smonth = new JComboBox(new Vector(loginDt.getFmonth()));
 		smonth.setBounds(176, 134, 159, 23);
 		getContentPane().add(smonth);
 		smonth.setActionCommand("month");
@@ -248,7 +248,7 @@ public class LTAGeneration extends BaseClass implements ActionListener
 				YearDto yd = (YearDto) fyear.getSelectedItem();
 				int i=0;
 				Vector v = pdao.getLTAList(loginDt.getDepo_code(), loginDt.getCmp_code(), yd.getYearcode(), sdt.getMnthcode(), 2);
-				
+				System.out.println("year "+yd.getYearcode()+" month "+sdt.getMnthcode());
 				
 				if(v==null)
 				{
@@ -267,11 +267,14 @@ public class LTAGeneration extends BaseClass implements ActionListener
 				}
 				else
 				{
+					
 					int ans=confirmationDialongYes("LTA/Medical");
 					if(ans==1)
 					{
 						Vector c =(Vector<?>) v.get(0);
 						int mncode=setIntNumber(c.get(7).toString());
+						
+						System.out.println("mncode is "+mncode);
 						
 						if(mncode==sdt.getMnthcode())
 						{
@@ -328,6 +331,25 @@ public class LTAGeneration extends BaseClass implements ActionListener
 			dispose();
 			
 		}
+
+		if(e.getActionCommand().equalsIgnoreCase("Year"))
+		{
+			System.out.println("YEAR OPTION IS CHAGNED OR SELECTED ");
+			
+			YearDto yd = (YearDto) fyear.getSelectedItem();
+			Vector v = (Vector) loginDt.getFmon().get(yd.getYearcode());
+			System.out.println(v.size());
+			
+			smonth.removeAllItems();
+			MonthDto mn=null;
+			for (int i=0; i<v.size();i++)
+			{
+				 mn = (MonthDto) v.get(i);
+				 smonth.addItem(mn);
+				 
+			}
+		}
+
 		 
 	    if(e.getActionCommand().equalsIgnoreCase("Submit") )
 	    {

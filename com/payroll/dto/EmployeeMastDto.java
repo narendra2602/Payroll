@@ -40,6 +40,7 @@ public class EmployeeMastDto
 	private double bonus; 
 	private double ot_rate;
 	private double stair_alw;
+	private double food_allowance; // new field inserted on 12/11/2019
 	private String label_print;
 	private String emp_status;
 	private int paymentmode;
@@ -52,16 +53,46 @@ public class EmployeeMastDto
 	private double bonus_per; 
 	private double bonus_limit; 
 	private double bonus_check; 
+	private long adhar_no;
 
 	public String toString()
 	{
-		return emp_name;
+		return emp_name+" ["+emp_code+"]";
 	}
 	
 	
 	
 	
-	
+	public double getFood_allowance() {
+		return food_allowance;
+	}
+
+
+
+
+	public void setFood_allowance(double food_allowance) {
+		this.food_allowance = food_allowance;
+	}
+
+
+
+
+	public long getAdhar_no() {
+		return adhar_no;
+	}
+
+
+
+
+
+	public void setAdhar_no(long adhar_no) {
+		this.adhar_no = adhar_no;
+	}
+
+
+
+
+
 	public double getBonus_per() {
 		return bonus_per;
 	}

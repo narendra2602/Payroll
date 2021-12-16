@@ -22,7 +22,6 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
-import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import com.payroll.dao.ConnectionFactory;
 import com.payroll.dao.LoginDAO;

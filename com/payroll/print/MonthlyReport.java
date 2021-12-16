@@ -30,6 +30,7 @@ public class MonthlyReport  extends WriteExcel
    private String  drvnm,flname,cmp_name,monthname; 
    private int depo_code, cmp_code, fyear, emp_code,btnno,repno;
    private double totadv,totloan,sterlite_days,extra_hrs,absent_days;
+   private double[] gtotal;
    ArrayList<?> esicList;
    SheetSettings settings; 
    
@@ -47,6 +48,7 @@ public class MonthlyReport  extends WriteExcel
     	this.fyear=fyear;
     	this.repno=repno;
     	this.emp_code=emp_code;
+    	gtotal= new double[12];
     	sdf = new SimpleDateFormat("dd/MM/yyyy");
     	
     	flname="Absent-"+cmp_name.substring(0, 6);
@@ -56,6 +58,8 @@ public class MonthlyReport  extends WriteExcel
     		flname="Sterlite-"+cmp_name.substring(0, 6);
     	else if(repno==4)
     		flname="Present-"+cmp_name.substring(0, 6);
+    	else if(repno==5)
+    		flname="EmpBasic-"+cmp_name.substring(0, 6);
 
         jbInit();
   
@@ -156,6 +160,9 @@ public void createHeader(WritableSheet sheet)
 			case 4:
 					createHeader4(sheet); // Present  Days Report Monthly
 					break;
+			case 5:
+					createHeader5(sheet); // Present  Days Report Monthly
+					break;
 		}
 	
 	   
@@ -254,6 +261,41 @@ public void createHeader(WritableSheet sheet)
 			r=4;
 	
 	}  
+
+	public void createHeader5(WritableSheet sheet)
+			   throws WriteException {
+	 
+		
+		 	sheet.mergeCells(0, 0, 15, 0);
+		   // Write a few headers
+		    addCaption(sheet, 0, 0, cmp_name,40);
+	
+	
+		 	sheet.mergeCells(0, 1, 15, 1);
+		    addCaption1(sheet, 0, 1, " Employee Basic Detail Report for the period Apr-"+fyear+" to Mar-"+(fyear+1),40);
+	
+			   addCaption2(sheet, 0, 3, "Month",15);
+			   addCaption2(sheet, 1, 3, "Employee Code",15);
+			   addCaption2(sheet, 2, 3, "Employee  Name",40);
+			   addCaption2(sheet, 3, 3, "ESIC No",20);
+			   addCaption2(sheet, 4, 3, "PF No",20);
+			   addCaption2(sheet, 5, 3, "Aadhar No",20);
+			   addCaption2(sheet, 6, 3, "Basic",15);
+			   addCaption2(sheet, 7, 3, "DA",15);
+			   addCaption2(sheet, 8, 3, "HRA ",15);
+			   addCaption2(sheet, 9, 3, "Add. HRA ",15);
+			   addCaption2(sheet, 10, 3, "Incentive ",15);
+			   addCaption2(sheet, 11, 3, "Sp. Incentive ",15);
+			   addCaption2(sheet, 12, 3, "Food Allowance ",15);
+			   addCaption2(sheet, 13, 3, "LTA ",15);
+			   addCaption2(sheet, 14, 3, "Medical ",15);
+			   addCaption2(sheet, 15, 3, "OT Rate ",15);
+			   addCaption2(sheet, 16, 3, "Sterile Rate ",15);
+			   addCaption2(sheet, 17, 3, "Total ",15);
+			r=4;
+	
+	}  
+	
 	
 	
 	public void createContent(WritableSheet sheet) throws WriteException,RowsExceededException
@@ -298,6 +340,9 @@ public void createHeader(WritableSheet sheet)
 				case 4:
 						createReport4(sheet, emp);
 						break;
+				case 5:
+						createReport5(sheet, emp);
+						break;
 			}
 			
 			pgbrk++;
@@ -328,6 +373,18 @@ public void createHeader(WritableSheet sheet)
 			  addLabel(sheet, 1, r, "",1);
 			  addLabel(sheet, 2, r, "Total",1);
 			  addDouble(sheet, 3, r, absent_days,1);
+		  }
+		  else if(repno==5)
+		  {
+			  addLabel(sheet, 0, r, "",1);
+			  addLabel(sheet, 1, r, "",1);
+			  addLabel(sheet, 2, r, "",1);
+			  addLabel(sheet, 3, r, "",1);
+			  addLabel(sheet, 4, r, "",1);
+			  addLabel(sheet, 5, r, "",1);
+			  addLabel(sheet, 6, r, "Total",1);
+			  for(int i=0;i<12;i++)
+				  addDouble(sheet, i+6, r, gtotal[i],1);
 		  }
 		  
 	}
@@ -408,5 +465,48 @@ public void createHeader(WritableSheet sheet)
 		 
 	}
 	
+	public void createReport5(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+	
+		
+			    int dash=0;
+			    totadv=0.00;
+			    totadv=emp.getBasic()+emp.getDa()+emp.getHra()+emp.getAdd_hra()+emp.getIncentive()+emp.getSpl_incentive()+emp.getFood_value();
+			    addLabel(sheet, 0, r, emp.getMonname(),dash);
+				addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+				addLabel(sheet, 2, r, emp.getEmp_name(),dash);
+				addLong(sheet, 3, r, emp.getEsic_no(),dash);
+				addNumber(sheet, 4, r, emp.getPf_no(),dash);
+				addLabel(sheet, 5, r, String.valueOf(emp.getAdhar_no()),dash);
+				addDouble(sheet, 6, r, emp.getBasic(),dash);
+				addDouble(sheet, 7, r, emp.getDa(),dash);
+				addDouble(sheet, 8, r, emp.getHra(),dash);
+				addDouble(sheet, 9, r, emp.getAdd_hra(),dash);
+				addDouble(sheet, 10, r, emp.getIncentive(),dash);
+				addDouble(sheet, 11, r, emp.getSpl_incentive(),dash);
+				addDouble(sheet, 12, r, emp.getFood_value(),dash);
+				addDouble(sheet, 13, r, emp.getLta(),dash);
+				addDouble(sheet, 14, r, emp.getMedical(),dash);
+				addDouble(sheet, 15, r, emp.getOt_rate(),dash);
+				addDouble(sheet, 16, r, emp.getStair_alw(),dash);
+				addDouble(sheet, 17, r, totadv,dash);
+
+				gtotal[0]+=emp.getBasic();	
+				gtotal[1]+=emp.getDa();
+				gtotal[2]+=emp.getHra();
+				gtotal[3]+=emp.getAdd_hra();
+				gtotal[4]+=emp.getIncentive();
+				gtotal[5]+=emp.getSpl_incentive();
+				gtotal[6]+=emp.getLta();
+				gtotal[7]+=emp.getMedical();
+				gtotal[8]+=emp.getOt_rate();
+				gtotal[9]+=emp.getStair_alw();
+				gtotal[10]+=emp.getFood_value();
+				gtotal[11]+=totadv;
+				r++;
+			 
+	
+		 
+	}
 	 
 }

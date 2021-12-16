@@ -127,6 +127,8 @@ public class MonthlyOpt extends BaseClass implements ActionListener
 					repno=3;
 				if(repNm.startsWith("Present"))
 					repno=4;
+				if(repNm.startsWith("Employee"))
+					repno=5;
 				
 				
 				YearDto yd = (YearDto) year.getSelectedItem();

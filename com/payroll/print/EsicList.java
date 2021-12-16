@@ -12,6 +12,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import javax.print.attribute.standard.MediaSize.Other;
+
 import jxl.Cell;
 import jxl.Sheet;
 import jxl.SheetSettings;
@@ -38,10 +40,11 @@ public class EsicList  extends WriteExcel
    private String  drvnm,flname,cmp_name,monthname; 
    private int depo_code, cmp_code, fyear, mnth_code,btnno,repno,opt;
    private double totadv,totloan,atten_days,extra_hrs,arrear_days,sterlite_days,absent_days,btotal,bgtotal;
-   private double basic,emppf,emppf1,eps,epf,edli,net,epfc,epsc;
+   private double basic,emppf,emppf1,eps,epf,edli,net,epfc,epsc,tot;
    ArrayList<?> esicList;
    SheetSettings settings; 
-   
+   boolean print=false;
+
   public EsicList(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt) 
   
   {
@@ -87,6 +90,16 @@ public class EsicList  extends WriteExcel
     		flname="LTAReg-"+cmp_name.substring(0, 6)+"-"+monthname;
     	else if(repno==14)
     		flname="UnPaidLta-"+cmp_name.substring(0, 6)+"-"+monthname;
+    	else if(repno==15)
+    		flname="Machine-"+cmp_name.substring(0, 6)+"-"+monthname;
+    	else if(repno==16)
+    		flname="BonusList-"+cmp_name.substring(0, 6)+"-"+(fyear+1);
+    	else if(repno==17)
+    		flname="EmpBasicList-"+cmp_name.substring(0, 6)+"-"+(fyear+1);
+    	else if(repno==18)
+    		flname="EmpEarningList-"+cmp_name.substring(0, 6)+"-"+(fyear+1);
+    	else if(repno==19)
+    		flname="SalaryDetail-"+cmp_name.substring(0, 6)+"-"+(fyear+1);
 
 
 
@@ -121,11 +134,16 @@ public class EsicList  extends WriteExcel
 	    try 
 	    {
 	    	PayrollDAO pdao = new PayrollDAO();
-	    	
-	    	if(repno==10)
+	    	if(repno==19)
+	    		esicList=pdao.getSalaryDetail(depo_code, cmp_code, fyear, repno,mnth_code);
+	    	else if(repno==16)
+	    		esicList=pdao.getBonusRegister(depo_code, cmp_code, fyear,repno);
+	    	else if(repno==10 || repno==17)
 	    		esicList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,repno);
 	    	else if(repno==13 || repno==14)
 	    		esicList=pdao.getLTAList(depo_code, cmp_code, fyear, repno);
+	    	else if(repno==18)
+	    		esicList=pdao.getIncrementList(depo_code, cmp_code, fyear, repno,mnth_code);
 	    	else
 	    		esicList=pdao.getEsicList(depo_code, cmp_code, fyear, mnth_code,repno);
 	    	
@@ -238,6 +256,21 @@ public void createHeader(WritableSheet sheet)
 			case 14:
 				createHeader14(sheet); // UnPaid LTA/Medical Register
 				break;
+			case 15:
+				createHeader15(sheet); // Machine Operator Register
+				break;
+			case 16:
+				createHeader16(sheet); // Bonus List Bank Details
+				break;					
+			case 17:
+				createHeader17(sheet); // Employee Basic Details
+				break;					
+			case 18:
+				createHeader18(sheet); // Employee Earning Details
+				break;					
+			case 19:
+				createHeader19(sheet); // Salary Detail Register
+				break;					
 		}
 	
 	   
@@ -275,22 +308,33 @@ public void createHeader1(WritableSheet sheet)
 	   else if(btnno==2) // excel button
 	   {
 
-			sheet.mergeCells(0, 0, 8, 0);
+			sheet.mergeCells(0, 0, 9, 0);
 			   // Write a few headers
 		   addCaption(sheet, 0, 0, cmp_name,40);
 		   
-		   sheet.mergeCells(0, 1, 8, 1);
+		   sheet.mergeCells(0, 1, 9, 1);
 		   addCaption1(sheet, 0, 1, "  ESIC LIST FOR THE MONTH OF "+monthname,40);
 
 		   addCaption2(sheet, 0, 3, "Sno",10);
-		   addCaption2(sheet, 1, 3, "ESIC Number",10);
-		   addCaption2(sheet, 2, 3, "Paid Days ",20);
-		   addCaption2(sheet, 3, 3, "Gross Wages",20);
-		   addCaption2(sheet, 4, 3, "IP Name",30);
-		   addCaption2(sheet, 5, 3, "Total Wages",20);
-		   addCaption2(sheet, 6, 3, "Employee Share 1.75%",15);
-		   addCaption2(sheet, 7, 3, "Employer Share 4.75%",15);
-		   addCaption2(sheet, 8, 3, "Total Share ",15);
+		   addCaption2(sheet, 1, 3, "Employee Code",10);
+		   addCaption2(sheet, 2, 3, "ESIC Number",10);
+		   addCaption2(sheet, 3, 3, "Paid Days ",20);
+		   addCaption2(sheet, 4, 3, "Gross Wages",20);
+		   addCaption2(sheet, 5, 3, "IP Name",30);
+		   addCaption2(sheet, 6, 3, "Total Wages",20);
+		   if(mnth_code>201906)
+		   {
+			   addCaption2(sheet, 7, 3, "Employee Share 0.75%",15);
+			   addCaption2(sheet, 8, 3, "Employer Share 3.25%",15);
+		   }
+		   else
+		   {
+			   addCaption2(sheet, 7, 3, "Employee Share 1.75%",15);
+			   addCaption2(sheet, 8, 3, "Employer Share 4.75%",15);
+		   }
+		 
+
+		   addCaption2(sheet, 9, 3, "Total Share ",15);
 		   r=5;
 	   }
 		
@@ -301,7 +345,7 @@ public void createHeader2(WritableSheet sheet)  throws WriteException {
 
 	 
 	   
-	   if(btnno==2) // upload button
+	   if(btnno==2) // excel button
 	   {
 /*		   addCaption2(sheet, 0, 0, "Employee Number",10);
 		   addCaption2(sheet, 1, 0, "Wages",12);
@@ -318,7 +362,7 @@ public void createHeader2(WritableSheet sheet)  throws WriteException {
 */
 		   
 		   
-		   if(opt==1)
+		   if(opt==1) // PF Radio Button
 		   {
 			   addCaption2(sheet, 0, 0, "EMP CODE",10);
 			   addCaption2(sheet, 1, 0, "PF NO",10);
@@ -334,25 +378,32 @@ public void createHeader2(WritableSheet sheet)  throws WriteException {
 			   addCaption2(sheet, 11, 0, "NCP DAYS",15);
 			   addCaption2(sheet, 12, 0, "REFUND OF ADVANCES",15);
 		   }
-		   else if(opt==2)
+		   else if(opt==2) // Arrear Radio Button (excel)
 		   {
 			   addCaption2(sheet, 0, 0, "EMP CODE",10);
 			   addCaption2(sheet, 1, 0, "PF NO",10);
 			   addCaption2(sheet, 2, 0, "UAN",15);
-			   addCaption2(sheet, 3, 0, "MEMBER NAME ",30);
-			   addCaption2(sheet, 4, 0, "ARREAR EPF WAGES",15);
-			   addCaption2(sheet, 5, 0, "ARREAR EPS WAGES",15);
-			   addCaption2(sheet, 6, 0, "ARREAR EDLI WAGES",15);
-			   addCaption2(sheet, 7, 0, "ARREAR EPF EE SHARE",15);
-			   addCaption2(sheet, 8, 0, "ARREAR EPF ER SHARE",15);
-			   addCaption2(sheet, 9, 0, "ARREAR EPS SHARE",15);
+			   addCaption2(sheet, 3, 0, "PAN",15);
+			   addCaption2(sheet, 4, 0, "AADHAR",15);
+			   addCaption2(sheet, 5, 0, "MEMBER NAME ",30);
+			   addCaption2(sheet, 6, 0, "ARREAR EPF WAGES",15);
+			   addCaption2(sheet, 7, 0, "ARREAR EPS WAGES",15);
+			   addCaption2(sheet, 8, 0, "ARREAR EDLI WAGES",15);
+			   addCaption2(sheet, 9, 0, "ARREAR  WAGES",15);
+			   addCaption2(sheet, 10, 0, "ARREAR EPF EE SHARE",15);
+			   addCaption2(sheet, 11, 0, "ARREAR EPF ER SHARE",15);
+			   addCaption2(sheet, 12, 0, "ARREAR EPS SHARE",15);
+			   addCaption2(sheet, 13, 0, "ARREAR DAYS",15);
+			   addCaption2(sheet, 14, 0, "PRESENT DAYS",15);
+			   addCaption2(sheet, 15, 0, "NCP DAYS",15);
+			   
 		   }
 		   r=1;
 
 			
 			
 	   }
-	   else if(btnno==1) // excel button
+	   else if(btnno==1) // upload button
 	   {
 /*			sheet.mergeCells(0, 0, 8, 0);
 			   // Write a few headers
@@ -376,30 +427,39 @@ public void createHeader2(WritableSheet sheet)  throws WriteException {
 			r=5;
 */			
 			
-			 if(opt==1)
+			 if(opt==1) // PF Radio Button
 			   {
+				   addCaption2(sheet, 0, 0, "EMP CODE",10);
 				   addCaption2(sheet, 0, 0, "UAN",15);
-				   addCaption2(sheet, 1, 0, "MEMBER NAME ",30);
-				   addCaption2(sheet, 2, 0, "GROSS WAGES",15);
-				   addCaption2(sheet, 3, 0, "EPF WAGES",15);
-				   addCaption2(sheet, 4, 0, "EPS WAGES",15);
-				   addCaption2(sheet, 5, 0, "EDLI WAGES",15);
-				   addCaption2(sheet, 6, 0, "EPF CONTRIBUTUION REMITTED",15);
-				   addCaption2(sheet, 7, 0, "EPS CONTRIBUTUION REMITTED",15);
-				   addCaption2(sheet, 8, 0, "EPF EPS DIFF REMITTED",15);
-				   addCaption2(sheet, 9, 0, "NCP DAYS",15);
-				   addCaption2(sheet, 10, 0, "REFUND OF ADVANCES",15);
+				   addCaption2(sheet, 1, 0, "AADHAR",15);
+				   addCaption2(sheet, 2, 0, "PAN",15);
+				   addCaption2(sheet, 3, 0, "MEMBER NAME ",30);
+				   addCaption2(sheet, 4, 0, "GROSS WAGES",15);
+				   addCaption2(sheet, 5, 0, "EPF WAGES",15);
+				   addCaption2(sheet, 6, 0, "EPS WAGES",15);
+				   addCaption2(sheet, 7, 0, "EDLI WAGES",15);
+				   addCaption2(sheet, 8, 0, "EPF CONTRIBUTUION REMITTED",15);
+				   addCaption2(sheet, 9, 0, "EPS CONTRIBUTUION REMITTED",15);
+				   addCaption2(sheet, 10, 0, "EPF EPS DIFF REMITTED",15);
+				   addCaption2(sheet, 11, 0, "NCP DAYS",15);
+				   addCaption2(sheet, 12, 0, "REFUND OF ADVANCES",15);
 			   }
-			   else if(opt==2)
+			   else if(opt==2) // PF Arrear Upload  
 			   {
 				   addCaption2(sheet, 0, 0, "UAN",15);
-				   addCaption2(sheet, 1, 0, "MEMBER NAME ",30);
-				   addCaption2(sheet, 2, 0, "ARREAR EPF WAGES",15);
-				   addCaption2(sheet, 3, 0, "ARREAR EPS WAGES",15);
-				   addCaption2(sheet, 4, 0, "ARREAR EDLI WAGES",15);
-				   addCaption2(sheet, 5, 0, "ARREAR EPF EE SHARE",15);
-				   addCaption2(sheet, 6, 0, "ARREAR EPF ER SHARE",15);
-				   addCaption2(sheet, 7, 0, "ARREAR EPS SHARE",15);
+				   addCaption2(sheet, 1, 0, "AADHAR",15);
+				   addCaption2(sheet, 2, 0, "PAN",15);
+				   addCaption2(sheet, 3, 0, "MEMBER NAME ",30);
+				   addCaption2(sheet, 4, 0, "ARREAR EPF WAGES",15);
+				   addCaption2(sheet, 5, 0, "ARREAR EPS WAGES",15);
+				   addCaption2(sheet, 6, 0, "ARREAR EDLI WAGES",15);
+				   addCaption2(sheet, 7, 0, "ARREAR  WAGES",15);
+				   addCaption2(sheet, 8, 0, "ARREAR EPF EE SHARE",15);
+				   addCaption2(sheet, 9, 0, "ARREAR EPF ER SHARE",15);
+				   addCaption2(sheet, 10, 0, "ARREAR EPS SHARE",15);
+				   addCaption2(sheet, 11, 0, "NCP DAYS",15);
+				   addCaption2(sheet, 12, 0, "PRESENT DAYS",15);
+				   
 			   }
 			   r=1;
 
@@ -652,6 +712,161 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 		r=5;
     
 	}
+
+	public void createHeader15(WritableSheet sheet)  throws WriteException {
+		
+		sheet.mergeCells(0, 0, 6, 0);
+		   // Write a few headers
+	   addCaption(sheet, 0, 0, cmp_name,40);
+	   
+	   sheet.mergeCells(0, 1, 6, 1);
+	   addCaption1(sheet, 0, 1, " MACHINE OPERATOR REPORT FOR THE MONTH OF "+monthname,40);
+	   
+	   addCaption2(sheet, 0, 3, "Sno",10);
+	   addCaption2(sheet, 1, 3, "Employee Code",10);
+	   addCaption2(sheet, 2, 3, "Employee Name",30);
+	   addCaption2(sheet, 3, 3, "Machine1 Days ",20);
+	   addCaption2(sheet, 4, 3, "Machine2 Days ",20);
+	   addCaption2(sheet, 5, 3, "Machine1 Rate",20);
+	   addCaption2(sheet, 6, 3, "Machine2 Rate",20);
+	   addCaption2(sheet, 7, 3, "Machine1 Amount",20);
+	   addCaption2(sheet, 8, 3, "Machine2 Amount",20);
+	   addCaption2(sheet, 9, 3, "Signature",20);
+		r=5;
+	
+	
+	}
+
+	public void createHeader16(WritableSheet sheet)  throws WriteException {
+
+		sheet.mergeCells(0, 0, 3, 0);
+		// Write a few headers
+		addCaption(sheet, 0, 0, cmp_name,40);
+
+		sheet.mergeCells(0, 1, 3, 1);
+		addCaption1(sheet, 0, 1, " Bonus List (Bank Details) FOR THE YEAR OF "+(fyear+1),40);
+
+		addCaption2(sheet, 0, 3, "Sno",10);
+		addCaption2(sheet, 1, 3, "Employee Code",20);
+		addCaption2(sheet, 2, 3, "Employee Name",40);
+		addCaption2(sheet, 3, 3, "A/c No",20);
+		addCaption2(sheet, 4, 3, "Bank Name",30);
+		addCaption2(sheet, 5, 3, "IFSC Code",20);
+		addCaption2(sheet, 6, 3, "Bonus Paid ",20);
+		r=5;
+
+
+	}	
+
+	public void createHeader17(WritableSheet sheet)  throws WriteException {
+
+		sheet.mergeCells(0, 0, 15, 0);
+		// Write a few headers
+		addCaption(sheet, 0, 0, cmp_name,40);
+
+		sheet.mergeCells(0, 1, 15, 1);
+		addCaption1(sheet, 0, 1, " Employee Basic Details For The Month "+monthname,40);
+
+		addCaption2(sheet, 0, 3, "Sno",10);
+		addCaption2(sheet, 1, 3, "Employee Code",20);
+		addCaption2(sheet, 2, 3, "Employee Name",40);
+		addCaption2(sheet, 3, 3, "ESIC No",20);
+		addCaption2(sheet, 4, 3, "PF No",20);
+		addCaption2(sheet, 5, 3, "Aadhar No",20);
+		addCaption2(sheet, 6, 3, "Basic ",15);
+		addCaption2(sheet, 7, 3, "DA",15);
+		addCaption2(sheet, 8, 3, "HRA",15);
+		addCaption2(sheet, 9, 3, "Add HRA",15);
+		addCaption2(sheet, 10, 3, "Incentive",15);
+		addCaption2(sheet, 11, 3, "Sp. Incentive",15);
+		addCaption2(sheet, 12, 3, "Food Allowance",15);
+		addCaption2(sheet, 13, 3, "LTA",15);
+		addCaption2(sheet, 14, 3, "Medical",15);
+		addCaption2(sheet, 15, 3, "OT Rate",15);
+		addCaption2(sheet, 16, 3, "Sterile Rate",15);
+		addCaption2(sheet, 17, 3, "Total",20);
+		r=5;
+
+
+	}	
+
+
+	public void createHeader18(WritableSheet sheet)  throws WriteException 
+	{
+
+		   
+		sheet.mergeCells(0, 0, 4, 0);
+		   // Write a few headers
+	   addCaption(sheet, 0, 0, cmp_name,40);
+	   
+	   sheet.mergeCells(0, 1, 4, 1);
+	   addCaption1(sheet, 0, 1, " Employee Increment Detail FOR THE YEAR "+fyear+"-"+(fyear+1),40);
+	   
+	   addCaption2(sheet, 0, 3, "Sno",10);
+	   addCaption2(sheet, 1, 3, "Employee Code",10);
+	   addCaption2(sheet, 2, 3, "Employee Name",30);
+	   addCaption2(sheet, 3, 3, "Month",30);
+	   addCaption2(sheet, 4, 3, "Gross ",20);
+	   addCaption2(sheet, 5, 3, "Difference",20);
+		r=5;
+    
+	}
+
+	public void createHeader19(WritableSheet sheet)  throws WriteException 
+	{
+
+		   
+		sheet.mergeCells(0, 0, 4, 0);
+		   // Write a few headers
+	   addCaption(sheet, 0, 0, cmp_name,40);
+	   
+	   sheet.mergeCells(0, 1, 4, 1);
+	   addCaption1(sheet, 0, 1, " Salary Detail Register FOR THE YEAR "+fyear+"-"+(fyear+1),40);
+	   
+	   sheet.mergeCells(8, 3, 13, 3);
+	   addCaption1(sheet, 8, 3, "Acual Salary", 45);
+
+	   sheet.mergeCells(15, 3, 20, 3);
+	   addCaption1(sheet, 15, 3, "Salary Got", 45);
+
+	   
+	   addCaption2(sheet, 0, 4, "Month",10);
+	   addCaption2(sheet, 1, 4, "Year",10);
+	   addCaption2(sheet, 2, 4, "Employee Code",10);
+	   addCaption2(sheet, 3, 4, "PF No.",10);
+	   addCaption2(sheet, 4, 4, "UAN No.",25);
+	   addCaption2(sheet, 5, 4, "Esic No.",10);
+	   addCaption2(sheet, 6, 4, "Employee Name",30);
+	   addCaption2(sheet, 7, 4, "Category/Grade",30);
+	   addCaption2(sheet, 8, 4, "Basic ",20);
+	   addCaption2(sheet, 9, 4, "DA",20);
+	   addCaption2(sheet, 10, 4, "HRA",20);
+	   addCaption2(sheet, 11, 4, "A.HRA",20);
+	   addCaption2(sheet, 12, 4, "INC",20);
+	   addCaption2(sheet, 13, 4, "Total",20);
+	   addCaption2(sheet, 14, 4, "Present Days",20);
+	   addCaption2(sheet, 15, 4, "Basic ",20);
+	   addCaption2(sheet, 16, 4, "DA",20);
+	   addCaption2(sheet, 17, 4, "HRA",20);
+	   addCaption2(sheet, 18, 4, "A.HRA",20);
+	   addCaption2(sheet, 19, 4, "INC",20);
+	   addCaption2(sheet, 20, 4, "Total",20);
+	   addCaption2(sheet, 21, 4, "Arrear Days",20);
+	   addCaption2(sheet, 22, 4, "Arrear Amount",20);
+	   addCaption2(sheet, 23, 4, "OT Rates",20);
+	   addCaption2(sheet, 24, 4, "OT Hours",20);
+	   addCaption2(sheet, 25, 4, "OT Value",20);
+	   addCaption2(sheet, 26, 4, "Total Salary",20);
+	   addCaption2(sheet, 27, 4, "PF Ded",20);
+	   addCaption2(sheet, 28, 4, "ESIC Ded",20);
+	   addCaption2(sheet, 29, 4, "Total Ded",20);
+	   addCaption2(sheet, 30, 4, "Net Payable Salary",20);
+
+
+		r=5;
+    
+	}
+
 	
 	public void createContent(WritableSheet sheet) throws WriteException,RowsExceededException
 	{
@@ -664,12 +879,13 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 		if (repno==10)
 			size=size-1;
 		EmptranDto emp =null;
-		int pgbrk=0;
 		totadv=0.00;
 		totloan=0.00;
+		atten_days=0.00;
 		sno=1;
 		 
 		int bkcode=0;
+		int empcode=0;
 		
 		int heightInPoints = 18*20;
 		 
@@ -680,6 +896,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 			if(first)
 			{
 				bkcode=emp.getBank_code();
+				empcode=emp.getEmp_code();
 				createHeader(sheet);
 				first=false;
 			}
@@ -744,10 +961,45 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 				case 14:
 					createReport13(sheet, emp); // Same 13 LTA/Medical (Unpaid)
 					break;
-						
+				case 15:
+					createReport15(sheet, emp); // Machine Operator Report
+					break;
+				case 16:
+					if(bkcode!=emp.getBank_code())
+					{
+						addLabel(sheet, 0, r, " ",1);
+						addLabel(sheet, 1, r, " ",1);
+						addLabel(sheet, 2, r, " ",1);
+						addLabel(sheet, 3, r, " ",1);
+						addLabel(sheet, 4, r, " ",1);
+						addLabel(sheet, 5, r, "Total ",1);
+						addDouble(sheet, 6, r, btotal,1);
+						btotal=0.00;
+						r++;
+
+						bkcode=emp.getBank_code();
+					}
+					createReport16(sheet, emp);
+					break;	
+				case 17:
+					createReport17(sheet, emp); // Employee Basic Details
+					break;
+				case 18:
+					if(empcode!=emp.getEmp_code())
+					{
+						r++;
+						empcode=emp.getEmp_code();
+					}
+					createReport18(sheet, emp); // Employee Earning Details
+					break;
+					
+				case 19:
+					createReport19(sheet, emp); // salary Detail Register
+					break;
+					
 			}
 			
-			pgbrk++;
+			
 	
 			/*if(pgbrk>55)
 			{
@@ -762,13 +1014,14 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 		  {
 			  addLabel(sheet, 0, r, "",1);
 			  addLabel(sheet, 1, r, "",1);
-			  addDouble(sheet, 2, r, atten_days,1);
-			  addLabel(sheet, 3, r, "",1);
-			  addLabel(sheet, 4, r, "Total",1);
-			  addDouble(sheet, 5, r, basic,1);
-			  addDouble(sheet, 6, r, emppf,1);
-			  addDouble(sheet, 7, r, emppf1,1);
-			  addDouble(sheet, 8, r, (emppf+emppf1),1);
+			  addLabel(sheet, 2, r, "",1);
+			  addDouble(sheet, 3, r, atten_days,1);
+			  addLabel(sheet, 4, r, "",1);
+			  addLabel(sheet, 5, r, "Total",1);
+			  addDouble(sheet, 6, r, basic,1);
+			  addDouble(sheet, 7, r, emppf,1);
+			  addDouble(sheet, 8, r, emppf1,1);
+			  addDouble(sheet, 9, r, (emppf+emppf1),1);
 		  }
 		  else if(repno==2 && btnno==22)
 		  {
@@ -837,7 +1090,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 			  addLabel(sheet, 2, r, "Total",1);
 			  addDouble(sheet, 3, r, totadv,1);
 		  }
-		  else if(repno==10)
+		  else if(repno==10 || repno==16)
 		  {
 			  	addLabel(sheet, 0, r, " ",1);
 				addLabel(sheet, 1, r, " ",1);
@@ -864,6 +1117,19 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 			  addLabel(sheet, 3, r, "Total",1);
 			  addDouble(sheet, 4, r, totadv,1);
 			  addDouble(sheet, 5, r, totloan,1);
+		  }
+		  else if(repno==15)
+		  {
+			  addLabel(sheet, 0, r, "",1);
+			  addLabel(sheet, 1, r, "",1);
+			  addLabel(sheet, 2, r, "Total",1);
+			  addDouble(sheet, 3, r, sterlite_days,1);
+			  addDouble(sheet, 4, r, arrear_days,1);
+			  addLabel(sheet, 5, r, "",1);
+			  addLabel(sheet, 6, r, "",1);
+			  addDouble(sheet, 7, r, totadv,1);
+			  addDouble(sheet, 8, r, totloan,1);
+			  addLabel(sheet, 9, r, "",1);
 		  }
 
 		  
@@ -930,35 +1196,42 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 				if(opt==1)
 				{
 					addNumber(sheet, 0, r, emp.getSerialno(),dash);
-					addLong(sheet, 1, r, emp.getEsic_no(),dash);
-					addNumber(sheet, 2, r, ((int) emp.getAtten_days()),dash);
-					addDouble(sheet, 3, r, emp.getGross(),dash);
-					addLabel(sheet, 4, r, emp.getEmp_name(),dash);
-					addDouble(sheet, 5, r, emp.getNet_value(),dash);
-					addDouble(sheet, 6, r, emp.getEsis_value(),dash);
-					addDouble(sheet, 7, r, emp.getEmployer_esis_value(),dash);
-					addDouble(sheet, 8, r, (emp.getEsis_value()+emp.getEmployer_esis_value()),dash);
+					addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+					addLong(sheet, 2, r, emp.getEsic_no(),dash);
+					addNumber(sheet, 3, r, ((int) emp.getAtten_days()),dash);
+					addDouble(sheet, 4, r, emp.getGross(),dash);
+					addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+					addDouble(sheet, 6, r, emp.getNet_value(),dash);
+					addDouble(sheet, 7, r, emp.getEsis_value(),dash);
+					addDouble(sheet, 8, r, emp.getEmployer_esis_value(),dash);
+					addDouble(sheet, 9, r, (emp.getEsis_value()+emp.getEmployer_esis_value()),dash);
 					r++;
+					atten_days+=(int) emp.getAtten_days();
+					basic+=(opt==1?emp.getNet_value():emp.getArrear_basic_value());
+					emppf+=emp.getEsis_value();
+					emppf1+=emp.getEmployer_esis_value();
 				}
 				else if(opt==2 && emp.getArrear_days()>0)
 				{
 					addNumber(sheet, 0, r, emp.getSerialno(),dash);
-					addLong(sheet, 1, r, emp.getEsic_no(),dash);
-					addNumber(sheet, 2, r, ((int) emp.getArrear_days()),dash);
-					addDouble(sheet, 3, r, emp.getGross(),dash);
-					addLabel(sheet, 4, r, emp.getEmp_name(),dash);
-					addDouble(sheet, 5, r, emp.getArrear_basic_value(),dash);
+					addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+					addLong(sheet, 2, r, emp.getEsic_no(),dash);
+					addNumber(sheet, 3, r, ((int) emp.getArrear_days()),dash);
+					addDouble(sheet, 4, r, emp.getGross(),dash);
+					addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+					addDouble(sheet, 6, r, emp.getArrear_basic_value(),dash);
 
-					addDouble(sheet, 6, r, emp.getEsis_value(),dash);
-					addDouble(sheet, 7, r, emp.getEmployer_esis_value(),dash);
-					addDouble(sheet, 8, r, (emp.getEsis_value()+emp.getEmployer_esis_value()),dash);
+					addDouble(sheet, 7, r, emp.getEsis_value(),dash);
+					addDouble(sheet, 8, r, emp.getEmployer_esis_value(),dash);
+					addDouble(sheet, 9, r, (emp.getEsis_value()+emp.getEmployer_esis_value()),dash);
 					r++;
+					atten_days+=(int) emp.getArrear_days();
+					basic+=(opt==1?emp.getNet_value():emp.getArrear_basic_value());
+					emppf+=emp.getEsis_value();
+					emppf1+=emp.getEmployer_esis_value();
 				}
 				
-				atten_days+=emp.getAtten_days();
-				basic+=(opt==1?emp.getNet_value():emp.getArrear_basic_value());
-				emppf+=emp.getEsis_value();
-				emppf1+=emp.getEmployer_esis_value();
+//				atten_days+=emp.getAtten_days();
 			}
 	
 			
@@ -1001,24 +1274,37 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 						{
 							basicValue=emp.getBasic_value()-emp.getArrear_basic_value();
 							netValue=emp.getNet_value()-emp.getArrear_net_value();
+							
+							if(emp.getBasicpf_value()>15000 && basicValue>0)
+							{
+								epfcontri=roundTwoDecimals(15000*12/100);
+								epscontri=roundTwoDecimals(15000*8.33/100);
+							}
+							else
+							{
+								epfcontri=roundTwoDecimals(basicValue*12/100);
+								epscontri=roundTwoDecimals(basicValue*8.33/100);
+							}
 		
-							epfcontri=roundTwoDecimals(basicValue*12/100);
-							epscontri=roundTwoDecimals(basicValue*8.33/100);
-		
+							if(emp.getMnth_code()>2020044)
+								epfcontri=roundTwoDecimals(basicValue*10/100);
 							if(btnno==1)
 							{
 //								addLong(sheet, 0, r, emp.getUan_no(),dash);
 								addLabel(sheet, 0, r, String.valueOf(emp.getUan_no()),dash);
-								addLabel(sheet, 1, r, emp.getEmp_name(),dash);
-								addNumber(sheet, 2, r, (int) netValue,dash);
-								addNumber(sheet, 3, r, (int) basicValue,dash);
-								addNumber(sheet, 4, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addLabel(sheet, 1, r, String.valueOf(emp.getAdhar_no()),dash);
+								addLabel(sheet, 2, r, emp.getPan_no(),dash);
+								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
+								addNumber(sheet, 4, r, (int) netValue,dash);
+//								addNumber(sheet, 5, r, (int) basicValue,dash); change on 28/05/2020 by Yashpal
 								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 6, r, (int) epfcontri,dash);
-								addNumber(sheet, 7, r, (int) epscontri,dash);
-								addNumber(sheet, 8, r, (int) (epfcontri-epscontri),dash);
-								addNumber(sheet, 9, r, (int) emp.getAbsent_days(),dash);
-								addLabel(sheet, 10, r, String.valueOf(0),dash);
+								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 8, r, (int) epfcontri,dash);
+								addNumber(sheet, 9, r, (int) epscontri,dash);
+								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);
+								addNumber(sheet, 11, r, (int) emp.getAbsent_days(),dash);
+								addLabel(sheet, 12, r, String.valueOf(0),dash);
 							}
 							else if(btnno==2)
 							{
@@ -1028,7 +1314,8 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 //								addLong(sheet, 2, r, emp.getUan_no(),dash);
 								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
 								addNumber(sheet, 4, r, (int) netValue,dash);
-								addNumber(sheet, 5, r, (int) basicValue,dash);
+//								addNumber(sheet, 5, r, (int) basicValue,dash); change on 28/05/2020 by Yashpal
+								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 8, r, (int) epfcontri,dash);
@@ -1040,40 +1327,73 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 							r++;
 						}
 						
-						else if(opt==2 && emp.getArrear_days()>0)
+						else if(opt==2 && emp.getArrear_days()>=0) // arrear button isSelected
 						{
 							basicValue=emp.getArrear_basic_value();
 							netValue=emp.getArrear_net_value();
+							//YEH LINE ABHI LAGAYO 15/05/2020	
+							//basicValue=emp.getBasic_value()+emp.getArrear_basic_value();
+							//netValue=emp.getNet_value()+emp.getArrear_net_value();
+							
+							if(emp.getBasicpf_value()>15000 && basicValue>0)
+
+							{
+								epfcontri=roundTwoDecimals(15000*12/100);
+								epscontri=roundTwoDecimals(15000*8.33/100);
+							}
+							else
+							{
+								epfcontri=roundTwoDecimals(basicValue*12/100);
+								epscontri=roundTwoDecimals(basicValue*8.33/100);
+							}
+							
 		
-							epfcontri=roundTwoDecimals(basicValue*12/100);
-							epscontri=roundTwoDecimals(basicValue*8.33/100);
+							if(emp.getMnth_code()>2020044)
+								epfcontri=roundTwoDecimals(basicValue*10/100);
+
 		
-		
-							if(btnno==1)
+							if(btnno==1) // upload button
 							{
 //								addLong(sheet, 0, r, emp.getUan_no(),dash);
 								addLabel(sheet, 0, r, String.valueOf(emp.getUan_no()),dash);
-								addLabel(sheet, 1, r, emp.getEmp_name(),dash);
-								addNumber(sheet, 2, r, (int) netValue,dash);
-								addNumber(sheet, 3, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addLabel(sheet, 1, r, String.valueOf(emp.getAdhar_no()),dash);
+								addLabel(sheet, 2, r, emp.getPan_no(),dash);
+								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
+//								addNumber(sheet, 4, r, (int) netValue,dash);
 								addNumber(sheet, 4, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 5, r, (int) epfcontri,dash);
-								addNumber(sheet, 6, r, (int) epscontri,dash);
-								addNumber(sheet, 7, r, (int) (epfcontri-epscontri),dash);					
+								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 8, r, (int) epfcontri,dash);
+								addNumber(sheet, 9, r, (int) (epfcontri-epscontri),dash);					
+								addNumber(sheet, 10, r, (int) epscontri,dash);
+								addNumber(sheet, 11, r, (int) emp.getNcp_days(),dash);
+								addNumber(sheet, 12, r, (int) emp.getPrev_days(),dash);
+//								addNumber(sheet, 11, r, (int) emp.getAbsent_days(),dash);
+//								addNumber(sheet, 12, r, (int) emp.getAtten_days(),dash);
 							}
-							else if(btnno==2)
+							else if(btnno==2) //excel button
 							{
 								addNumber(sheet, 0, r, emp.getEmp_code(),dash);
 								addLabel(sheet, 1, r, String.valueOf(emp.getPf_no()),dash);
 								addLabel(sheet, 2, r, String.valueOf(emp.getUan_no()),dash);
+								addLabel(sheet, 3, r, emp.getPan_no(),dash);
+								addLabel(sheet, 4, r, String.valueOf(emp.getAdhar_no()),dash);
 								//addLong(sheet, 2, r, emp.getUan_no(),dash);
-								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
-								addNumber(sheet, 4, r, (int) netValue,dash);
-								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+//								addNumber(sheet, 4, r, (int) netValue,dash);
 								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 7, r, (int) epfcontri,dash);
-								addNumber(sheet, 8, r, (int) epscontri,dash);
-								addNumber(sheet, 9, r, (int) (epfcontri-epscontri),dash);					
+								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 8, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 9, r, (int) (basicValue>15000?15000:basicValue),dash);
+								addNumber(sheet, 10, r, (int) epfcontri,dash);
+								addNumber(sheet, 11, r, (int) epscontri,dash);
+								addNumber(sheet, 12, r, (int) (epfcontri-epscontri),dash);					
+								addNumber(sheet, 13, r, (int) emp.getArrear_days(),dash);
+								addNumber(sheet, 14, r, (int) emp.getPrev_days(),dash);
+								addNumber(sheet, 15, r, (int) emp.getNcp_days(),dash);
+//								addNumber(sheet, 14, r, (int) emp.getAtten_days(),dash);
+//								addNumber(sheet, 15, r, (int) emp.getAbsent_days(),dash);
 							}
 						 	r++;
 		
@@ -1323,7 +1643,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	
 		
 			int dash=0;
-			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value();
+			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getFood_value();
 //			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getIncentive_value()+emp.getOt_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getSpl_incen_value()+emp.getMisc_value()+emp.getLta_value()+emp.getMedical_value()+emp.getStair_value();
 			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt();;
 			double net = totearn-totded;
@@ -1429,6 +1749,198 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 			 
 		 
 	}
+
+	
+	/**
+	 * Machine Operator Report
+	 * @param sheet
+	 * @param emp
+	 * @throws WriteException
+	 * @throws RowsExceededException
+	 */
+	public void createReport15(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+	
+		
+			int dash=0;
+			if(emp.getMachine1_days()+emp.getMachine2_days()>0)
+			{
+//				addNumber(sheet, 0, r, emp.getSerialno(),dash);
+				addNumber(sheet, 0, r, sno,dash);
+				addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+				addLabel(sheet, 2, r, emp.getEmp_name(),dash);
+				addDouble(sheet, 3, r, emp.getMachine1_days(),dash);
+				addDouble(sheet, 4, r, emp.getMachine2_days(),dash);
+				addDouble(sheet, 5, r, emp.getMachine1_rate(),dash);
+				addDouble(sheet, 6, r, emp.getMachine2_rate(),dash);
+				addDouble(sheet, 7, r, emp.getMachine1_value(),dash);
+				addDouble(sheet, 8, r, emp.getMachine2_value(),dash);
+				addLabel(sheet, 9, r, "",dash);
+				sterlite_days+=emp.getMachine1_days();
+				arrear_days+=emp.getMachine2_days();
+				totadv+=emp.getMachine1_value();
+				totloan+=emp.getMachine2_value();
+				r++;
+				sno++;
+			}
+	}
+
+	/**
+	 * Bonus List with Bank Details
+	 * @param sheet
+	 * @param emp
+	 * @throws WriteException
+	 * @throws RowsExceededException
+	 */
+	public void createReport16(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+	
+		
+			int dash=0;
+			
+			tot=0.00;
+			print=false;
+			for (int i=0;i<12;i++)
+			{
+				tot+=emp.getAtten()[i];
+			}
+
+			if(tot>=30)
+				print=true;
+
+			if(print)
+			{
+				addNumber(sheet, 0, r, emp.getSerialno(),dash);
+				addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+				addLabel(sheet, 2, r, emp.getEmp_name(),dash);
+				addLabel(sheet, 3, r, emp.getBank_accno(),dash);
+				addLabel(sheet, 4, r, emp.getBank(),dash);
+				addLabel(sheet, 5, r, emp.getIfsc_code(),dash);
+				addDouble(sheet, 6, r, emp.getBonus_value(),dash);
+				btotal+=emp.getBonus_value();
+				bgtotal+=emp.getBonus_value();
+				r++;
+			}
+	}
+	
+
+	/**
+	 * Employee List with Basic Details
+	 * @param sheet
+	 * @param emp
+	 * @throws WriteException
+	 * @throws RowsExceededException
+	 */
+	public void createReport17(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+	
+		
+			int dash=0;
+			
+			tot=0.00;
+			tot=emp.getBasic()+emp.getDa()+emp.getHra()+emp.getAdd_hra()+emp.getIncentive()+emp.getSpl_incen_value()+emp.getFood_value();
+
+			addNumber(sheet, 0, r, emp.getSerialno(),dash);
+			addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+			addLabel(sheet, 2, r, emp.getEmp_name(),dash);
+			addLong(sheet, 3, r, emp.getEsic_no(),dash);
+			addNumber(sheet,4, r, emp.getPf_no(),dash);
+			addLong(sheet, 5, r, emp.getAdhar_no(),dash);
+			addDouble(sheet, 6, r, emp.getBasic(),dash);
+			addDouble(sheet, 7, r, emp.getDa(),dash);
+			addDouble(sheet, 8, r, emp.getHra(),dash);
+			addDouble(sheet, 9, r, emp.getAdd_hra(),dash);
+			addDouble(sheet, 10, r, emp.getIncentive(),dash);
+			addDouble(sheet, 11, r, emp.getSpl_incentive(),dash);
+			addDouble(sheet, 12, r, emp.getFood_value(),dash);
+			addDouble(sheet, 13, r, emp.getLta(),dash);
+			addDouble(sheet, 14, r, emp.getMedical(),dash);
+			addDouble(sheet, 15, r, emp.getOt_rate(),dash);
+			addDouble(sheet, 16, r, emp.getStair_alw(),dash);
+			addDouble(sheet, 17, r, tot,dash);
+			r++;
+	}
+	
+
+	/**
+	 * Employee Earning List
+	 * @param sheet
+	 * @param emp
+	 * @throws WriteException
+	 * @throws RowsExceededException
+	 */
+	public void createReport18(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+	
+		
+			int dash=0;
+			{
+				addNumber(sheet, 0, r, sno,dash);
+				addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+				addLabel(sheet, 2, r, emp.getEmp_name(),dash);
+				addLabel(sheet, 3, r, emp.getMonname(),dash);
+				addDouble(sheet, 4, r, emp.getGross(),dash);
+				addDouble(sheet, 5, r, emp.getMedical_value(),dash);
+				r++;
+				sno++;
+			}
+			 
+		 
+	}
+
+	/**
+	 * Salary Detail Register
+	 * @param sheet
+	 * @param emp
+	 * @throws WriteException
+	 * @throws RowsExceededException
+	 */
+	public void createReport19(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+	
+		
+			int dash=0;
+			{
+				addLabel(sheet, 0, r, emp.getMonname(),dash);
+				addNumber(sheet, 1, r, emp.getFin_year(),dash);
+				addNumber(sheet, 2, r, emp.getEmp_code(),dash);
+				addNumber(sheet, 3, r, emp.getPf_no(),dash);
+				addLabel(sheet, 4, r, String.valueOf(emp.getUan_no()),dash);
+				addLong(sheet, 5, r, emp.getEsic_no(),dash);
+				addLabel(sheet, 6, r, emp.getEmp_name(),dash);
+				addLabel(sheet, 7, r, emp.getDesignation(),dash);
+				addDouble(sheet, 8, r, emp.getBasic(),dash);
+				addDouble(sheet, 9, r, emp.getDa(),dash);
+				addDouble(sheet,10, r, emp.getHra(),dash);
+				addDouble(sheet,11, r, emp.getAdd_hra(),dash);
+				addDouble(sheet,12, r, emp.getIncentive(),dash);
+				addDouble(sheet,13, r, emp.getGross(),dash);
+				addDouble(sheet,14, r, emp.getAtten_days(),dash);
+				addDouble(sheet,15, r, emp.getBasic_value(),dash);
+				addDouble(sheet,16, r, emp.getDa_value(),dash);
+				addDouble(sheet,17, r, emp.getHra_value(),dash);
+				addDouble(sheet,18, r, emp.getAdd_hra_value(),dash);
+				addDouble(sheet,19, r, emp.getIncentive_value(),dash);
+				addDouble(sheet,20, r, emp.getMisc_value(),dash);
+				addDouble(sheet,21, r, emp.getArrear_days(),dash);
+				addDouble(sheet,22, r, emp.getArrear_amt(),dash);
+				addDouble(sheet,23, r, emp.getOt_rate(),dash);
+				addDouble(sheet,24, r, emp.getExtra_hrs(),dash);
+				addDouble(sheet,25, r, emp.getOt_value(),dash);
+				addDouble(sheet,26, r, emp.getMisc_value()+emp.getOt_value(),dash);
+				addDouble(sheet,27, r, emp.getPf_value(),dash);
+				addDouble(sheet,28, r, emp.getEsis_value(),dash);
+				addDouble(sheet,29, r, (emp.getPf_value()+emp.getEsis_value()),dash);
+				addDouble(sheet,30, r, emp.getNet_value(),dash);
+
+				
+				r++;
+				
+			}
+			 
+		 
+	}
+	
 	
 	public void createCSV(File filename)
 	{
@@ -1473,7 +1985,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	          if (row.length > 0)
 	          {
 	            bw.write(row[0].getContents());
-	            for (int j = 1; j < row.length; j++)
+	            for (int j = 3; j < row.length; j++)
 	            {
 //	              bw.write(',');
 	              bw.write("#~#");
@@ -1485,6 +1997,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	      }
 	      bw.flush();
 	      bw.close();
+	       
 	    }
 	    catch (UnsupportedEncodingException e)
 	    {
@@ -1504,6 +2017,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	public double roundTwoDecimals(double d) 
 	{
 	    DecimalFormat twoDForm = new DecimalFormat("0.00");
+	    System.out.println("value of d is "+d); 
 	    double roundval = Double.valueOf(twoDForm.format(d));
 	    return ((int) (roundval+.50));
 //	    return Double.valueOf(twoDForm.format((int) (d+.50)));

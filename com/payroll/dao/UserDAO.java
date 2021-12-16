@@ -94,7 +94,7 @@ public class UserDAO
 			con.setAutoCommit(false);
 
 			String brnQ = "select depo_code,cmp_add1,cmp_add2,cmp_add3,cmp_city,cmp_phone,cmp_fax,cmp_email," +
-					"cmp_code,cmp_name,cmp_abvr from contractormast where cmp_code in " +
+					"cmp_code,cmp_name,cmp_abvr,license_no from contractormast where cmp_code in " +
 					"(select depo_code from userdepo where user_id=? and status='Y') "+
 					"order by cmp_code" ;
 
@@ -119,6 +119,7 @@ public class UserDAO
 				brn.setCmp_email(rs.getString(8));
 				brn.setCmp_code(rs.getInt(9));
 				brn.setCmp_abvr(rs.getString(11));
+				brn.setLicense_no(rs.getString(12));
 				v.add(brn);
 				newcode=rs.getInt(9);
 			}

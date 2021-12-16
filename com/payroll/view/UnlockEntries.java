@@ -81,7 +81,8 @@ public class UnlockEntries extends BaseClass implements ActionListener
 		smonth.setActionCommand("month");
 		smonth.setMaximumRowCount(12);
 
-		
+		smonth.setSelectedIndex(loginDt.getMno());
+
 		 
 		lblPassword = new JLabel("Password:");
 		lblPassword.setForeground(Color.BLUE);
