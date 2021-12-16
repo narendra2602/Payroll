@@ -827,7 +827,7 @@ public class PayrollDAO
   			}
   			else
   			{
-  				ps.setInt(1, fyear);
+  				ps.setInt(1, fyear); 
   				ps.setInt(2, depo_code);
   				ps.setInt(3, cmp_code);
   				ps.setInt(4, mnth_code);
