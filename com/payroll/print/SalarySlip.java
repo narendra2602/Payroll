@@ -312,7 +312,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
 
 		//double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getIncentive_value()+vd.getOt_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getSpl_incen_value()+vd.getMisc_value()+vd.getLta_value()+vd.getMedical_value();
-		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt();
+		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax();
 		double net = totearn-totded;
 		double totbasic=vd.getBasic()+vd.getDa()+vd.getHra()+vd.getAdd_hra()+vd.getIncentive();
 		rde=y;

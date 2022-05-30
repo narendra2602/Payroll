@@ -56,6 +56,8 @@ public class YearlyReport  extends WriteExcel
 				flname="Sterlite-"+cmp_name.substring(0, 6);
 			else if(repno==4)
 				flname="Present-"+cmp_name.substring(0, 6);
+			else if(repno==7)
+				flname="ProfTax-"+cmp_name.substring(0, 6);
 			jbInit();
 
 			File file=null;
@@ -141,7 +143,7 @@ public class YearlyReport  extends WriteExcel
 			throws WriteException {
 
 
-		switch(repno)
+/*		switch(repno)
 		{
 		case 1:
 			createHeader1(sheet); // Absent Report
@@ -156,8 +158,9 @@ public class YearlyReport  extends WriteExcel
 			createHeader1(sheet); // Present Report
 			break;					
 		}
+*/
 
-
+		createHeader1(sheet); // Absent Report
 
 		//	   settings.setHorizontalFreeze(3);
 		settings.setVerticalFreeze(4);
@@ -178,6 +181,12 @@ public class YearlyReport  extends WriteExcel
 		sheet.mergeCells(0, 1, 14, 1);
 		if(repno==1)
 			addCaption1(sheet, 0, 1, " Absent Report for the year "+fyear+"-"+(fyear+1),40);
+		else if(repno==2)
+			addCaption1(sheet, 0, 1, " OT Report for the year "+fyear+"-"+(fyear+1),40);
+		else if(repno==3)
+			addCaption1(sheet, 0, 1, " Sterlite Report for the year "+fyear+"-"+(fyear+1),40);
+		else if(repno==7)
+			addCaption1(sheet, 0, 1, " Professional Tax Report for the year "+fyear+"-"+(fyear+1),40);
 		else
 			addCaption1(sheet, 0, 1, " Present Report for the year "+fyear+"-"+(fyear+1),40);
 
@@ -298,8 +307,9 @@ public class YearlyReport  extends WriteExcel
 			}
 
 			sheet.setRowView(r, heightInPoints);
+			createReport1(sheet, emp);
 
-			switch(repno)
+/*			switch(repno)
 			{
 			case 1:
 				createReport1(sheet, emp);
@@ -314,7 +324,7 @@ public class YearlyReport  extends WriteExcel
 				createReport1(sheet, emp);
 				break;
 			}
-
+*/
 			pgbrk++;
 
 			int k=3;

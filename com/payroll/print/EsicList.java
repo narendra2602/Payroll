@@ -66,8 +66,10 @@ public class EsicList  extends WriteExcel
     	
     	
     	flname="ESICList-"+cmp_name.substring(0, 6)+"-"+monthname;
-    	if(repno==2)
+    	if(repno==2 && opt==1)
     		flname="PFList-"+cmp_name.substring(0, 6)+"-"+monthname;
+    	else if(repno==2 && opt==2)
+    		flname="ArrearList-"+cmp_name.substring(0, 6)+"-"+monthname;
     	else if(repno==3)
     		flname="LoanList-"+cmp_name.substring(0, 6)+"-"+monthname;
     	else if(repno==4)
@@ -450,13 +452,13 @@ public void createHeader2(WritableSheet sheet)  throws WriteException {
 				   addCaption2(sheet, 1, 0, "AADHAR",15);
 				   addCaption2(sheet, 2, 0, "PAN",15);
 				   addCaption2(sheet, 3, 0, "MEMBER NAME ",30);
-				   addCaption2(sheet, 4, 0, "ARREAR EPF WAGES",15);
-				   addCaption2(sheet, 5, 0, "ARREAR EPS WAGES",15);
-				   addCaption2(sheet, 6, 0, "ARREAR EDLI WAGES",15);
-				   addCaption2(sheet, 7, 0, "ARREAR  WAGES",15);
+				   addCaption2(sheet, 4, 0, "ARREAR  WAGES",15);
+				   addCaption2(sheet, 5, 0, "ARREAR EPF WAGES",15);
+				   addCaption2(sheet, 6, 0, "ARREAR EPS WAGES",15);
+				   addCaption2(sheet, 7, 0, "ARREAR EDLI WAGES",15);
 				   addCaption2(sheet, 8, 0, "ARREAR EPF EE SHARE",15);
-				   addCaption2(sheet, 9, 0, "ARREAR EPF ER SHARE",15);
-				   addCaption2(sheet, 10, 0, "ARREAR EPS SHARE",15);
+				   addCaption2(sheet, 9, 0, "ARREAR EPS SHARE",15);
+				   addCaption2(sheet, 10, 0, "ARREAR EPF ER SHARE",15);
 				   addCaption2(sheet, 11, 0, "NCP DAYS",15);
 				   addCaption2(sheet, 12, 0, "PRESENT DAYS",15);
 				   
@@ -1275,7 +1277,8 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 							basicValue=emp.getBasic_value()-emp.getArrear_basic_value();
 							netValue=emp.getNet_value()-emp.getArrear_net_value();
 							
-							if(emp.getBasicpf_value()>15000 && basicValue>0)
+							if(emp.getBasicpf_value()>15000 && basicValue>0) //change on 04/03/2022 by Yashpal
+//							if(emp.getGross()>15000 && basicValue>0)   //change on 06/04/2022 by Yashpal
 							{
 								epfcontri=roundTwoDecimals(15000*12/100);
 								epscontri=roundTwoDecimals(15000*8.33/100);
@@ -1288,6 +1291,13 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 		
 							if(emp.getMnth_code()>2020044)
 								epfcontri=roundTwoDecimals(basicValue*10/100);
+							
+							//Change on 08/03/2022 by Yashpal (diff will be add in diff column
+							if(emp.getMnth_code()>=202202 && epscontri>1250)
+							{
+								epscontri=1250;
+							}
+							
 							if(btnno==1)
 							{
 //								addLong(sheet, 0, r, emp.getUan_no(),dash);
@@ -1297,9 +1307,19 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
 								addNumber(sheet, 4, r, (int) netValue,dash);
 //								addNumber(sheet, 5, r, (int) basicValue,dash); change on 28/05/2020 by Yashpal
+								
+//								change on 04/03/2022 by Yashpal again change on 06/04/2022			
 								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+								
+/*								addNumber(sheet, 5, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
+								addNumber(sheet, 6, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
+								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+*/								//change on 09/03/2022 by Yahpal
+//								addNumber(sheet, 7, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
+
+								
 								addNumber(sheet, 8, r, (int) epfcontri,dash);
 								addNumber(sheet, 9, r, (int) epscontri,dash);
 								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);
@@ -1315,9 +1335,17 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
 								addNumber(sheet, 4, r, (int) netValue,dash);
 //								addNumber(sheet, 5, r, (int) basicValue,dash); change on 28/05/2020 by Yashpal
+								
+//								change on 04/03/2022 by Yashpal	and again change on 06/04/2022
 								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+								
+								//addNumber(sheet, 5, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
+								//addNumber(sheet, 6, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
+								//addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
+//								addNumber(sheet, 7, r, (int) (emp.getGross()>15000?15000:basicValue),dash); // comment on 09/03/200 by Yashpal
+
 								addNumber(sheet, 8, r, (int) epfcontri,dash);
 								addNumber(sheet, 9, r, (int) epscontri,dash);
 								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);
@@ -1327,7 +1355,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 							r++;
 						}
 						
-						else if(opt==2 && emp.getArrear_days()>=0) // arrear button isSelected
+						else if(opt==2 && emp.getArrear_days()>=0 && emp.getArrear_basic_value()>0) // arrear button isSelected
 						{
 							basicValue=emp.getArrear_basic_value();
 							netValue=emp.getArrear_net_value();
@@ -1365,10 +1393,12 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
 								addNumber(sheet, 8, r, (int) epfcontri,dash);
-								addNumber(sheet, 9, r, (int) (epfcontri-epscontri),dash);					
-								addNumber(sheet, 10, r, (int) epscontri,dash);
+								addNumber(sheet, 9, r, (int) epscontri,dash);
+								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);					
 								addNumber(sheet, 11, r, (int) emp.getNcp_days(),dash);
-								addNumber(sheet, 12, r, (int) emp.getPrev_days(),dash);
+//								addNumber(sheet, 12, r, (int) emp.getPrev_days(),dash); //comment on 09/03/2022 by YashPal
+								addNumber(sheet, 12, r, 0,dash); //fixed 0 on 09/03/2022 by YashPal
+								
 //								addNumber(sheet, 11, r, (int) emp.getAbsent_days(),dash);
 //								addNumber(sheet, 12, r, (int) emp.getAtten_days(),dash);
 							}
@@ -1391,7 +1421,10 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 								addNumber(sheet, 12, r, (int) (epfcontri-epscontri),dash);					
 								addNumber(sheet, 13, r, (int) emp.getArrear_days(),dash);
 								addNumber(sheet, 14, r, (int) emp.getPrev_days(),dash);
+								
 								addNumber(sheet, 15, r, (int) emp.getNcp_days(),dash);
+//								addNumber(sheet, 15, r, 0,dash); //fixed 0 on 09/03/2022 by YashPal
+								
 //								addNumber(sheet, 14, r, (int) emp.getAtten_days(),dash);
 //								addNumber(sheet, 15, r, (int) emp.getAbsent_days(),dash);
 							}
@@ -1402,8 +1435,14 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 						net+= (int) netValue;
 						basic+=(int) basicValue;
 						epf+=(int) basicValue;
-						eps+=(int) (basicValue>15000?15000:basicValue);
+						
+//						change on 04/03/2022 by Yashpal
+/*						eps+=(int) (basicValue>15000?15000:basicValue);
 						epf+=(int) (basicValue>15000?15000:basicValue);
+*/						
+						eps+=(int) (emp.getGross()>15000?15000:basicValue);
+						epf+=(int) (emp.getGross()>15000?15000:basicValue);
+
 						epfc+=epf;
 						epsc+=eps;
 
@@ -1645,7 +1684,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 			int dash=0;
 			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getFood_value();
 //			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getIncentive_value()+emp.getOt_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getSpl_incen_value()+emp.getMisc_value()+emp.getLta_value()+emp.getMedical_value()+emp.getStair_value();
-			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt();;
+			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt()+emp.getProf_tax();;
 			double net = totearn-totded;
 			
 			if(net>0)

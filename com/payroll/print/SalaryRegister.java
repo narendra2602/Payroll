@@ -333,7 +333,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 //		rde=0;
  
 		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
-		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt();
+		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax();
 		double net = totearn-totded;
 		double totbasic=vd.getBasic()+vd.getDa()+vd.getHra()+vd.getAdd_hra()+vd.getIncentive()+vd.getSpl_incentive();
 		rde=y;
@@ -392,6 +392,8 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,325,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT); // Food Value
 
 			createContent3(cb,370,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,405,y,df.format(vd.getProf_tax()),PdfContentByte.ALIGN_RIGHT); 
+
 			y=y-10;
 			
 			createContent4(cb,50,y,String.valueOf(vd.getSerialno()),PdfContentByte.ALIGN_LEFT);
@@ -464,6 +466,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			//createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,330,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT); // Food Value
 			createContent3(cb,375,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,410,y,df.format(vd.getProf_tax()),PdfContentByte.ALIGN_RIGHT); 
 			y=y-10;
 
 			createContent3(cb,205,y,df.format(vd.getAbsent_days()),PdfContentByte.ALIGN_RIGHT);

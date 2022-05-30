@@ -139,9 +139,11 @@ public class YearlyOpt extends BaseClass implements ActionListener
 					repno=2;
 				else if(repNm.startsWith("Sterile"))
 					repno=3;
-				if(repNm.startsWith("Present"))
+				else if(repNm.startsWith("Present"))
 					repno=4;
-				if(repNm.startsWith("Bonus"))
+				else if(repNm.startsWith("Professional"))
+					repno=7;
+				else if(repNm.startsWith("Bonus"))
 				{
 					if(pendingbtn.isSelected())
 						repno=51;

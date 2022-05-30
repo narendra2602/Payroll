@@ -80,7 +80,7 @@ public class BaseClass extends JFrame {
 		  simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");  // Date Format
 		  ipaddress =getIpAdress();
 		  packageName="Labour Contractor PayRoll";
-		  version="Version : 06.12.2021-V1";
+		  version="Version : 25.05.2022-V1";
 		  
        myFocusListener = new FocusListener() {
        public void focusGained(FocusEvent focusEvent) {
