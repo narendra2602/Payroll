@@ -541,7 +541,7 @@ public class LTACalculation extends BaseClass implements ActionListener
 
 		if(e.getActionCommand().equalsIgnoreCase("Excel"))
 		{
-			new EsicList(loginDt.getDepo_code(), loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(), loginDt.getBrnnm(), loginDt.getDrvnm(), mdto.getMnthname(), 2, 12,0);
+			new EsicList(loginDt.getDepo_code(), loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(), loginDt.getBrnnm(), loginDt.getDrvnm(), mdto.getMnthname(), 2, 12,0,"");
 		}		
 	}
 	

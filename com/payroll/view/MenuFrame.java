@@ -1,11 +1,13 @@
 package com.payroll.view;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.SystemColor;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import javax.swing.JToolBar;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
+import com.payroll.dao.ConnectionFactory;
 import com.payroll.dao.MenuDAO;
 import com.payroll.dto.ChildMenuDto;
 import com.payroll.dto.ContractMastDto;
@@ -362,6 +365,53 @@ public class MenuFrame extends BaseClass implements ActionListener
 				//map.get(c);
 				//String nam="com.aristo.print.MISRepo19";
 
+				// =========================================
+		        // OPEN PDF DIRECTLY
+		        // =========================================
+				if (c.endsWith(".pdf"))
+				{
+				    try
+				    {
+
+				    	String pdfName =
+				                c.replaceFirst("^com\\.", "");
+
+				        File appFolder = new File(ConnectionFactory.getPdfDrvnm());
+
+				        System.out.println("pdfName "+pdfName);
+				        File pdfFile = new File(appFolder, pdfName);
+
+				        System.out.println("App Folder : "
+				                + appFolder.getAbsolutePath());
+
+				        System.out.println("PDF Path : "
+				                + pdfFile.getAbsolutePath());
+				       
+				        if (pdfFile.exists())
+				        {
+				            Desktop.getDesktop().open(pdfFile);
+				        }
+				        else
+				        {
+				            JOptionPane.showMessageDialog(
+				                    null,
+				                    "PDF file not found\n"
+				                    + pdfFile.getAbsolutePath()
+				            );
+				        }
+				    }
+				    catch (Exception ex)
+				    {
+				        ex.printStackTrace();
+				    }
+
+				    return;
+				}
+				// =========================================
+		        // YOUR EXISTING FRAME LOGIC
+		        // =========================================
+
+				
 				
 				panel.setVisible(false);
 				panel_2.setVisible(false);

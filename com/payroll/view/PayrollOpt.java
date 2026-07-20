@@ -30,7 +30,7 @@ public class PayrollOpt extends BaseClass implements ActionListener
  
 	private JComboBox year,month;
 	String ClassNm,repNm;;
-	private JRadioButton pfbtn,arrearbtn;
+	private JRadioButton pfbtn,arrearbtn,consolidated;
 
 	 
 	public  PayrollOpt(String nm,String repNm)
@@ -66,10 +66,17 @@ public class PayrollOpt extends BaseClass implements ActionListener
 		arrearbtn.setBounds(209, 67, 80, 23);
 		getContentPane().add(arrearbtn);
 
+		consolidated = new JRadioButton("Consolidated");
+		consolidated.setVisible(false);
+		consolidated.setBounds(209, 67, 80, 23);
+		getContentPane().add(consolidated);
+
+		
 		//Group the radio buttons.
 	    ButtonGroup group = new ButtonGroup();
 	    group.add(pfbtn);
 	    group.add(arrearbtn);
+	    group.add(consolidated);
 	    
 	    
 		sdateLeb = new JLabel("Financial Year:");
@@ -124,6 +131,8 @@ public class PayrollOpt extends BaseClass implements ActionListener
 		pfbtn.setActionCommand("1");
 		arrearbtn.addActionListener(this);
 		arrearbtn.setActionCommand("2");
+		consolidated.addActionListener(this);
+		consolidated.setActionCommand("3");
 		setAlwaysOnTop(true);
 		
 	}
@@ -140,6 +149,7 @@ public class PayrollOpt extends BaseClass implements ActionListener
 	{
 		if(e.getActionCommand().equalsIgnoreCase("Exit"))
 		{
+			resetAll();
 			dispose();
 		}
 
@@ -159,10 +169,16 @@ public class PayrollOpt extends BaseClass implements ActionListener
 				 month.addItem(mn);
 				 
 			}
+			System.out.println("mno ki value "+loginDt.getMno());
 			month.setSelectedIndex(loginDt.getMno());
 		}
 
-		
+		if(e.getActionCommand().equalsIgnoreCase("3"))
+			uploadButton.setEnabled(false);
+		else
+			uploadButton.setEnabled(true);
+
+				
 		if(e.getActionCommand().equalsIgnoreCase("Excel") || e.getActionCommand().equalsIgnoreCase("Upload") ||  e.getActionCommand().equalsIgnoreCase("PDF") || e.getActionCommand().equalsIgnoreCase("View") || e.getActionCommand().equalsIgnoreCase("Print"))
 		{
 			try
@@ -172,6 +188,8 @@ public class PayrollOpt extends BaseClass implements ActionListener
 				int opt=1;
 				if(arrearbtn.isSelected())
 					opt=2;
+				else if(consolidated.isSelected())
+					opt=3;
 				
 				if(e.getActionCommand().equalsIgnoreCase("Excel") || e.getActionCommand().equalsIgnoreCase("Print"))
 					btnno=2;
@@ -224,8 +242,8 @@ public class PayrollOpt extends BaseClass implements ActionListener
 				}
 				else
 				{
-					Constructor<?> constructor = clazz.getConstructor(Integer.class,Integer.class,Integer.class,Integer.class, String.class,String.class,String.class,Integer.class,Integer.class,Integer.class);
-					Object ob = (Object)constructor.newInstance(loginDt.getDepo_code(),loginDt.getCmp_code(),yd.getYearcode(),mdto.getMnthcode(),loginDt.getBrnnm(),loginDt.getDrvnm(),mdto.getMnthname(),btnno,repno,opt);
+					Constructor<?> constructor = clazz.getConstructor(Integer.class,Integer.class,Integer.class,Integer.class, String.class,String.class,String.class,Integer.class,Integer.class,Integer.class,String.class);
+					Object ob = (Object)constructor.newInstance(loginDt.getDepo_code(),loginDt.getCmp_code(),yd.getYearcode(),mdto.getMnthcode(),loginDt.getBrnnm(),loginDt.getDrvnm(),mdto.getMnthname(),btnno,repno,opt,loginDt.getAddress());
 				}
 				resetAll();
 				dispose();
@@ -259,10 +277,16 @@ public class PayrollOpt extends BaseClass implements ActionListener
 			month.setVisible(false);
 			lblmonth.setVisible(false);
 		}
-		else if(repNm.equalsIgnoreCase("Salary Register") || repNm.equalsIgnoreCase("Salary Slip") )
+		else if(repNm.equalsIgnoreCase("Salary Slip") )
 		{
 			excelButton.setText("PDF");
 		}
+		else if(repNm.equalsIgnoreCase("Salary Register"))
+		{
+			uploadButton.setText("Excel");
+			excelButton.setText("PDF");
+		}
+
 		else if(repNm.contains("Label Printing"))
 		{						   
 			excelButton.setText("Print");
@@ -272,12 +296,21 @@ public class PayrollOpt extends BaseClass implements ActionListener
 			pfbtn.setText("ESIC");
 			pfbtn.setVisible(true);
 			arrearbtn.setVisible(true);
+			
+			consolidated.setVisible(true);
+			arrearbtn.setBounds(159, 67, 80, 23);
+			consolidated.setBounds(239, 67, 110, 23);
+
 			uploadButton.setText("Upload");	
 		}
 		else if(repNm.equalsIgnoreCase("PF List"))
 		{
 			pfbtn.setVisible(true);
 			arrearbtn.setVisible(true);
+			consolidated.setVisible(true);
+			arrearbtn.setBounds(159, 67, 80, 23);
+			consolidated.setBounds(239, 67, 110, 23);
+
 			uploadButton.setText("Upload");	
 		}
 		else if(repNm.startsWith("LTA/Medical") || repNm.startsWith("UnPaid LTA/Medical"))

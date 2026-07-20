@@ -31,6 +31,7 @@ public class ArrearReport  extends WriteExcel
    private int depo_code, cmp_code, fyear, repno,smon,emon;
    ArrayList<?> esicList;
    SheetSettings settings; 
+   String paid="N";
    
   public ArrearReport(Integer depo_code,Integer cmp_code,Integer fyear,String cmp_name,String drvnm,Integer repno,Integer smon,Integer emon) 
   
@@ -78,7 +79,9 @@ public class ArrearReport  extends WriteExcel
 	    try 
 	    {
 	    	PayrollDAO pdao = new PayrollDAO();
-	    	String paid="N";
+	    	
+	    	System.out.println("repor no is "+repno);
+	    	
 	    	if(repno==1)
 	    		paid="Y";
 	    	else if(repno==99)
@@ -86,7 +89,12 @@ public class ArrearReport  extends WriteExcel
 	    		paid="O";
 	    		repno=1;
 	    	}
-	    	
+	    	else if(repno==11)
+	    	{
+	    		paid="O";
+	    		repno=1;
+	    	}
+	    	System.out.println("paid "+paid);
 	    	esicList=pdao.getArrearReport(depo_code, cmp_code, fyear,paid,smon,emon);
 	    	createExcel();
 
@@ -164,13 +172,14 @@ public void createHeader1(WritableSheet sheet)
 		   throws WriteException {
  
 	
-	 	sheet.mergeCells(0, 0, 17, 0);
+	 	sheet.mergeCells(0, 0, 18, 0);
 	   // Write a few headers
 	   addCaption(sheet, 0, 0, cmp_name,40);
 
 
-	 	sheet.mergeCells(0, 1, 17, 1);
-	 	addCaption1(sheet, 0, 1, (repno==1?"[Paid]":"[Pending]")+" Arrear Payment Statement for the year "+fyear+"-"+(fyear+1),40);
+	 	sheet.mergeCells(0, 1, 18, 1);
+	 	
+	 	addCaption1(sheet, 0, 1, (paid.equalsIgnoreCase("Y")?"[Paid]":"[Pending]")+" Arrear Payment Statement for the year "+fyear+"-"+(fyear+1),40);
 
 		   addCaption2(sheet, 0, 3, "",10);
 		   addCaption2(sheet, 1, 3, "",30);
@@ -181,9 +190,9 @@ public void createHeader1(WritableSheet sheet)
 		   addCaption2(sheet, 6, 3, "",10);
 		   sheet.mergeCells(7, 3, 13, 3);
 		   addCaption2(sheet, 7, 3, "Arrears Earnings",10);
-		   sheet.mergeCells(14, 3, 16, 3);
+		   sheet.mergeCells(14, 3, 17, 3);
 		   addCaption2(sheet, 14, 3, "Arrears Deduction",10);
-		   addCaption2(sheet, 17, 3, "",10);
+		   addCaption2(sheet, 18, 3, "",10);
 		   
 		   
 		   addCaption2(sheet, 0, 4, "Code",10);
@@ -202,8 +211,9 @@ public void createHeader1(WritableSheet sheet)
 		   addCaption2(sheet, 13, 4, "Total Earning",10);
 		   addCaption2(sheet, 14, 4, "PF",10);
 		   addCaption2(sheet, 15, 4, "Esic",10);
-		   addCaption2(sheet, 16, 4, "Total Deduction",10);
-		   addCaption2(sheet, 17, 4, "Payable Amount ",10);
+		   addCaption2(sheet, 16, 4, "Prof Tax",10);
+		   addCaption2(sheet, 17, 4, "Total Deduction",10);
+		   addCaption2(sheet, 18, 4, "Payable Amount ",10);
 		   r=5;
 
 }  
@@ -252,7 +262,7 @@ public void createHeader1(WritableSheet sheet)
 			    int dash=0;
 			    if(emp.getEmp_code()<0)
 			    {
-			    	dash=1;
+			    	dash=3;
 			    }
 			    
 			    if(emp.getEmp_code()>0)
@@ -274,8 +284,9 @@ public void createHeader1(WritableSheet sheet)
 				addDouble(sheet, 13, r, emp.getTds_value(),dash); // totearn
 				addDouble(sheet, 14, r, emp.getPf_value(),dash);
 				addDouble(sheet, 15, r, emp.getEsis_value(),dash);
-				addDouble(sheet, 16, r, emp.getMisc_value(),dash); // totded
-				addDouble(sheet, 17, r, emp.getNet_value(),dash); // payable amt
+				addDouble(sheet, 16, r, emp.getProf_tax(),dash);
+				addDouble(sheet, 17, r, emp.getMisc_value(),dash); // totded
+				addDouble(sheet, 18, r, emp.getNet_value(),dash); // payable amt
 				r++;
 	 
 		 

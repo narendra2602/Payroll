@@ -451,11 +451,20 @@ public class SalaryGeneration extends BaseClass implements ActionListener
 	public void fillTable()
 	{
 		AttdTableModel.getDataVector().removeAllElements();
+		Vector<?> v = null;
 		Vector<?> c = null;
 		 mdto=(MonthDto)month.getSelectedItem();
-		 System.out.println("year if "+loginDt.getFin_year()+" mcoide "+mdto.getMnthcode());
-		Vector<?> v = pdao.getSalaryList(loginDt.getDepo_code(),loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(),mdto.getMnthdays()); 
-		int size = v.size();
+		 System.out.println("year if *** "+loginDt.getFin_year()+" mcoide "+mdto.getMnthcode());
+		 
+		 if(mdto.getMnthcode()>202505)
+		 {
+			  v = pdao.getSalaryListNew(loginDt.getDepo_code(),loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(),mdto.getMnthdays()); 
+		 }
+		 else
+		 {
+			  v = pdao.getSalaryList(loginDt.getDepo_code(),loginDt.getCmp_code(), loginDt.getFin_year(), mdto.getMnthcode(),mdto.getMnthdays()); 
+		 }
+		 int size = v.size();
 		double tot=0.00;
 		if(size==0)
 			alertMessage(SalaryGeneration.this, "Attendance is not Finalize!!!");
@@ -536,7 +545,10 @@ public class SalaryGeneration extends BaseClass implements ActionListener
 			l=salaryUpdate();
 			if (!l.isEmpty()) 
 			{
-				h = pdao.updateSalaryList(l);
+				if(mdto.getMnthcode()>202505)
+					h = pdao.updateSalaryListNew(l);
+				else
+					h = pdao.updateSalaryList(l);
 				alertMessage(this, "Salary Generated successfully for the Month "+ mdto.getMnthname());
 			}
 

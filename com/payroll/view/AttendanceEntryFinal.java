@@ -508,7 +508,7 @@ public class AttendanceEntryFinal extends BaseClass implements ActionListener
 			l=attendanceAddUpdate();
 			if (!l.isEmpty()) 
 			{
-				h = pdao.addAttendance(l);
+				h = pdao.addAttendancenNew(l);
 				alertMessage(this, "Attendance Saved successfully for the Month "+ mdto.getMnthname());
 			}
 

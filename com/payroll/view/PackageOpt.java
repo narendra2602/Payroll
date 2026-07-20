@@ -325,6 +325,7 @@ public class PackageOpt extends BaseClass implements ActionListener
 			loginDt = new LoginDto();
 			loginDt.setFooter("");
 			loginDt.setBrnnm(brn.getCmp_name());
+			loginDt.setAddress(brn.getCmp_add1()+" GSTINo-:"+brn.getCmp_panno());
 			loginDt.setDepo_code(brn.getDepo_code());
 			loginDt.setCmp_code(brn.getNewcode());
 			new ContractorMaster().setVisible(true);

@@ -12,6 +12,7 @@ import jxl.format.VerticalAlignment;
 import jxl.write.Label;
 import jxl.write.Number;
 import jxl.write.NumberFormat;
+import jxl.write.WritableCell;
 import jxl.write.WritableCellFormat;
 import jxl.write.WritableFont;
 import jxl.write.WritableSheet;
@@ -19,7 +20,7 @@ import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
 
-public class WriteExcel {
+public class WriteExcel  {
 
   protected static WritableCellFormat timesBoldUnderline;
   protected static WritableCellFormat times;
@@ -36,7 +37,9 @@ public class WriteExcel {
   protected static WritableCellFormat head3;
   protected static WritableCellFormat head4;
   
-  protected static WritableCellFormat dp2cell; 
+  protected static WritableCellFormat dp2cell;
+  
+  protected static Colour CUSTOM_GREEN;
   
   public static void createLabel(WritableSheet sheet)
       throws WriteException {
@@ -49,6 +52,7 @@ public class WriteExcel {
     times.setWrap(true);
     times.setVerticalAlignment(VerticalAlignment.TOP);
     
+    
     // Create create a bold font with unterlines
     WritableFont times10ptBoldUnderline = new WritableFont(WritableFont.TIMES, 14, WritableFont.BOLD, false,
         UnderlineStyle.NO_UNDERLINE);
@@ -56,17 +60,23 @@ public class WriteExcel {
     // Lets automatically wrap the cells
     //timesBoldUnderline.setWrap(true);
 
-    WritableFont head1Bold = new WritableFont(WritableFont.TIMES, 11, WritableFont.BOLD, false,
+    WritableFont head1Bold = new WritableFont(WritableFont.TIMES, 8, WritableFont.BOLD, false,
             UnderlineStyle.NO_UNDERLINE);
         head1 = new WritableCellFormat(head1Bold);
 
     
-    WritableFont head2Bold = new WritableFont(WritableFont.TIMES, 10, WritableFont.BOLD, false,
+    WritableFont head2Bold = new WritableFont(WritableFont.TIMES, 8, WritableFont.BOLD, false,
             UnderlineStyle.NO_UNDERLINE);
         head2 = new WritableCellFormat(head2Bold);
 //        head2.setBackground(Colour.PERIWINKLE);
  
-        
+        WritableFont head3Bold = new WritableFont(WritableFont.TIMES, 11, WritableFont.BOLD, false,
+                UnderlineStyle.NO_UNDERLINE);
+            head3 = new WritableCellFormat(head3Bold);
+//            head2.setBackground(Colour.PERIWINKLE);
+     
+       
+        CUSTOM_GREEN = new Colour(0x2a, "customGreen", 107, 143, 107){};            
         Colour myColour  ;
         
         myColour= new Colour(0x2a, "1", 0, 255, 0) {
@@ -88,30 +98,32 @@ public class WriteExcel {
  // Create cell font and format
     NumberFormat dp2 = new NumberFormat("0.00");        
     WritableFont cellFont = new WritableFont(WritableFont.TIMES, 11);
+    WritableFont cellFont1 = new WritableFont(WritableFont.TIMES, 8);
     cellFont.setColour(Colour.BLACK);
     
     cellFormat = new WritableCellFormat(dp2);
-    cellFormat.setBackground(myColour);
-    cellFormat.setBorder(Border.ALL, BorderLineStyle.THIN);
-    cellFormat.setFont(cellFont);
+    cellFormat.setBackground(Colour.WHITE);
+    cellFormat.setBorder(Border.LEFT,BorderLineStyle.THIN);
+    cellFormat.setBorder(Border.RIGHT,BorderLineStyle.THIN);
+    cellFormat.setFont(cellFont1);
     
     
     cellFormat1 = new WritableCellFormat(dp2);
-    cellFormat1.setBackground(Colour.LAVENDER);
+    cellFormat1.setBackground(myColour);
     cellFormat1.setBorder(Border.ALL, BorderLineStyle.THIN);
     cellFormat1.setFont(cellFont);
     
 
     
-    cellFormat2 = new WritableCellFormat(dp2);
-    cellFormat2.setBackground(Colour.PERIWINKLE);
+    cellFormat2 = new WritableCellFormat();
+    cellFormat2.setBackground(myColour);
     cellFormat2.setBorder(Border.ALL, BorderLineStyle.THIN);
-    cellFormat2.setFont(cellFont);
+    cellFormat2.setFont(head2Bold);
     
     cellFormat4 = new WritableCellFormat(dp2);
-    cellFormat4.setBackground(Colour.PERIWINKLE);
+    cellFormat4.setBackground(myColour);
     cellFormat4.setBorder(Border.ALL, BorderLineStyle.THIN);
-    cellFormat4.setFont(head2Bold);
+    cellFormat4.setFont(head3Bold);
     
     cellFormat5 = new WritableCellFormat();
     //cellFormat5.setBackground(Colour.PERIWINKLE);
@@ -167,6 +179,28 @@ public class WriteExcel {
 	    Label label;
 	    sheet.setColumnView(column, widthInChars);
 	    label = new Label(column, row, s, head1);
+	    sheet.addCell(label);
+	  }
+
+  public static void addCaptionNew1(WritableSheet sheet, int column, int row, String s,int widthInChars, int colorType)
+	      throws RowsExceededException, WriteException {
+	    Label label;
+	    sheet.setColumnView(column, widthInChars);
+	    WritableCellFormat headCopy = new WritableCellFormat(head2); // clone format
+	    
+	    switch(colorType)
+	    {
+	    case 1: headCopy.setBackground(Colour.GREY_40_PERCENT);
+	    		break;
+	    case 2: headCopy.setBackground(Colour.SEA_GREEN);
+	    		break;
+	    case 3: headCopy.setBackground(Colour.AQUA);
+	    		break;
+	    case 4: headCopy.setBackground(Colour.GRAY_25);
+	    		break;
+	    }
+	    
+	    label = new Label(column, row, s, headCopy);
 	    sheet.addCell(label);
 	  }
 

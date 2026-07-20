@@ -37,15 +37,23 @@ public class EsicList  extends WriteExcel
    SimpleDateFormat sdf;
    String inputFile;
     
-   private String  drvnm,flname,cmp_name,monthname; 
+   private String  drvnm,flname,cmp_name,monthname,address; 
    private int depo_code, cmp_code, fyear, mnth_code,btnno,repno,opt;
-   private double totadv,totloan,atten_days,extra_hrs,arrear_days,sterlite_days,absent_days,btotal,bgtotal;
-   private double basic,emppf,emppf1,eps,epf,edli,net,epfc,epsc,tot;
+   private double totadv,totloan,atten_days,extra_hrs,arrear_days,sterlite_days,absent_days,btotal,bgtotal,ncp_days;
+   private double basic,emppf,emppf1,eps,epf,edli,net,epfc,epsc,tot,epswages,edlwages;
    ArrayList<?> esicList;
    SheetSettings settings; 
    boolean print=false;
-
-  public EsicList(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt) 
+   int size=0;
+private int tot4;
+private int ntot4;
+private int tot5;
+private int tot6;
+private int tot7;
+private int ltot9;
+private int ltot10;
+private int ltot11;
+  public EsicList(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt,String address) 
   
   {
     try 
@@ -62,14 +70,21 @@ public class EsicList  extends WriteExcel
     	this.btnno=btnno;
     	this.repno=repno;
     	this.opt=opt;
+    	this.address=address;
     	sdf = new SimpleDateFormat("dd/MM/yyyy");
     	
     	
     	flname="ESICList-"+cmp_name.substring(0, 6)+"-"+monthname;
-    	if(repno==2 && opt==1)
+    	if(repno==1 && opt==2)
+    		flname="EsicArrearList-"+cmp_name.substring(0, 6)+"-"+monthname;
+    	else if(repno==1 && opt==3)
+    		flname="ConsolidatedEsicList-"+cmp_name.substring(0, 6)+"-"+monthname;
+    	else if(repno==2 && opt==1)
     		flname="PFList-"+cmp_name.substring(0, 6)+"-"+monthname;
     	else if(repno==2 && opt==2)
     		flname="ArrearList-"+cmp_name.substring(0, 6)+"-"+monthname;
+    	else if(repno==2 && opt==3)
+    		flname="ConsolidatedList-"+cmp_name.substring(0, 6)+"-"+monthname;
     	else if(repno==3)
     		flname="LoanList-"+cmp_name.substring(0, 6)+"-"+monthname;
     	else if(repno==4)
@@ -104,6 +119,8 @@ public class EsicList  extends WriteExcel
     		flname="SalaryDetail-"+cmp_name.substring(0, 6)+"-"+(fyear+1);
 
 
+		if(repno<=2 && btnno==1) // PF Upload CSV
+			flname= "Upload"+flname;
 
 
         jbInit();
@@ -136,19 +153,30 @@ public class EsicList  extends WriteExcel
 	    try 
 	    {
 	    	PayrollDAO pdao = new PayrollDAO();
+	    	
+	    	size=monthname.length()-5;
+	    	System.out.println("VALUE OF OPT "+opt+" repno "+repno+"  "+ monthname);
 	    	if(repno==19)
-	    		esicList=pdao.getSalaryDetail(depo_code, cmp_code, fyear, repno,mnth_code);
-	    	else if(repno==16)
+	    	{
+	    		
+	    		esicList= (ArrayList<?>) pdao.getSalaryRegisterNew(depo_code, cmp_code, fyear, mnth_code,opt==1?1901:1902,0,0);
+//    		esicList=pdao.getSalaryDetail(depo_code, cmp_code, fyear, repno,mnth_code,opt);
+	    	}
+    		else if(repno==16)
 	    		esicList=pdao.getBonusRegister(depo_code, cmp_code, fyear,repno);
-	    	else if(repno==10 || repno==17)
+	    	else if((repno==10 || repno==17) && mnth_code > 202505)
+	    		esicList= (ArrayList<?>) pdao.getSalaryRegisterNew(depo_code, cmp_code, fyear, mnth_code,repno,0,0);
+	    	else if((repno==10 || repno==17))
 	    		esicList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,repno);
 	    	else if(repno==13 || repno==14)
 	    		esicList=pdao.getLTAList(depo_code, cmp_code, fyear, repno);
 	    	else if(repno==18)
 	    		esicList=pdao.getIncrementList(depo_code, cmp_code, fyear, repno,mnth_code);
+	    	else if(mnth_code>202505 && repno==1 || repno==2)
+	    		esicList= pdao.getSalaryRegisterNew(depo_code, cmp_code, fyear, mnth_code,repno,0,0);
 	    	else
-	    		esicList=pdao.getEsicList(depo_code, cmp_code, fyear, mnth_code,repno);
-	    	
+	    		esicList=pdao.getEsicList(depo_code, cmp_code, fyear, mnth_code,repno,opt);
+	    		
 	    	createExcel();
 
 	    } catch (Exception ex) {
@@ -283,6 +311,8 @@ public void createHeader(WritableSheet sheet)
 			 settings.setVerticalFreeze(1);
 		 else if(repno==2)
 			 settings.setVerticalFreeze(1);
+		 else if(repno==19)
+			 settings.setVerticalFreeze(5);
 		 else
 			 settings.setVerticalFreeze(4);
 
@@ -315,15 +345,15 @@ public void createHeader1(WritableSheet sheet)
 		   addCaption(sheet, 0, 0, cmp_name,40);
 		   
 		   sheet.mergeCells(0, 1, 9, 1);
-		   addCaption1(sheet, 0, 1, "  ESIC LIST FOR THE MONTH OF "+monthname,40);
+		   addCaption1(sheet, 0, 1, "  ESIC "+(opt==2?"(Arrear)":opt==3?"Consolidated":"")+" LIST FOR THE MONTH OF "+monthname,40);
 
 		   addCaption2(sheet, 0, 3, "Sno",10);
 		   addCaption2(sheet, 1, 3, "Employee Code",10);
-		   addCaption2(sheet, 2, 3, "ESIC Number",10);
+		   addCaption2(sheet, 2, 3, "ESIC Number",12);
 		   addCaption2(sheet, 3, 3, "Paid Days ",20);
-		   addCaption2(sheet, 4, 3, "Gross Wages",20);
+		   addCaption2(sheet, 4, 3, "Basic Wages",20);
 		   addCaption2(sheet, 5, 3, "IP Name",30);
-		   addCaption2(sheet, 6, 3, "Total Wages",20);
+		   addCaption2(sheet, 6, 3, "Gross Wages",20);
 		   if(mnth_code>201906)
 		   {
 			   addCaption2(sheet, 7, 3, "Employee Share 0.75%",15);
@@ -369,35 +399,85 @@ public void createHeader2(WritableSheet sheet)  throws WriteException {
 			   addCaption2(sheet, 0, 0, "EMP CODE",10);
 			   addCaption2(sheet, 1, 0, "PF NO",10);
 			   addCaption2(sheet, 2, 0, "UAN",15);
-			   addCaption2(sheet, 3, 0, "MEMBER NAME ",30);
-			   addCaption2(sheet, 4, 0, "GROSS WAGES",15);
-			   addCaption2(sheet, 5, 0, "EPF WAGES",15);
-			   addCaption2(sheet, 6, 0, "EPS WAGES",15);
-			   addCaption2(sheet, 7, 0, "EDLI WAGES",15);
-			   addCaption2(sheet, 8, 0, "EPF CONTRIBUTUION REMITTED",15);
-			   addCaption2(sheet, 9, 0, "EPS CONTRIBUTUION REMITTED",15);
-			   addCaption2(sheet, 10, 0, "EPF EPS DIFF REMITTED",15);
-			   addCaption2(sheet, 11, 0, "NCP DAYS",15);
-			   addCaption2(sheet, 12, 0, "REFUND OF ADVANCES",15);
+			   addCaption2(sheet, 3, 0, "AADHAR",15);
+			   addCaption2(sheet, 4, 0, "PAN",15);
+
+			   addCaption2(sheet, 5, 0, "MEMBER NAME ",30);
+			   addCaption2(sheet, 6, 0, "GROSS WAGES",15);
+			   addCaption2(sheet, 7, 0, "EPF WAGES",15);
+			   addCaption2(sheet, 8, 0, "EPS WAGES",15);
+			   addCaption2(sheet, 9, 0, "EDLI WAGES",15);
+//			   addCaption2(sheet, 10, 0, "EPF CONTRIBUTUION REMITTED",15);
+//			   addCaption2(sheet, 11, 0, "EPS CONTRIBUTUION REMITTED",15);
+//			   addCaption2(sheet, 12, 0, "EPF EPS DIFF REMITTED",15);
+
+			   addCaption2(sheet, 10, 0, "EPF EE SHARE 12 % CONTRIBUTION REMITTED",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 11, 0, "EPS SHARE 8.33% CONTRIBUTUION REMITTED",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 12, 0, "EPF ER SHARE 3.67%  DIFF REMITTED",15); // heading change by yashpal on 13/07/2024
+
+			   addCaption2(sheet, 13, 0, "NCP DAYS",15);
+			   addCaption2(sheet, 14, 0, "REFUND OF ADVANCES",15);
 		   }
 		   else if(opt==2) // Arrear Radio Button (excel)
 		   {
 			   addCaption2(sheet, 0, 0, "EMP CODE",10);
 			   addCaption2(sheet, 1, 0, "PF NO",10);
 			   addCaption2(sheet, 2, 0, "UAN",15);
-			   addCaption2(sheet, 3, 0, "PAN",15);
-			   addCaption2(sheet, 4, 0, "AADHAR",15);
+			   addCaption2(sheet, 3, 0, "AADHAR",15);
+			   addCaption2(sheet, 4, 0, "PAN",15);
+
 			   addCaption2(sheet, 5, 0, "MEMBER NAME ",30);
-			   addCaption2(sheet, 6, 0, "ARREAR EPF WAGES",15);
+
+			   addCaption2(sheet, 6, 0, "ARREAR GROSS WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 7, 0, "ARREAR EPF WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 8, 0, "ARREAR EPS WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 9, 0, "ARREAR EDLI WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 10, 0, "ARREAR EPF EE SHARE 12%",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 11, 0, "ARREAR EPS  SHARE 8.33%",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 12, 0, "ARREAR EPF ER  SHARE 3.67%",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 13, 0, "NCP DAYS",15);
+			   addCaption2(sheet, 14, 0, "ARREAR DAYS",15);
+			   addCaption2(sheet, 15, 0, "PRESENT DAYS",15);
+
+			   
+/*			   addCaption2(sheet, 6, 0, "ARREAR EPF WAGES",15);
 			   addCaption2(sheet, 7, 0, "ARREAR EPS WAGES",15);
 			   addCaption2(sheet, 8, 0, "ARREAR EDLI WAGES",15);
 			   addCaption2(sheet, 9, 0, "ARREAR  WAGES",15);
 			   addCaption2(sheet, 10, 0, "ARREAR EPF EE SHARE",15);
 			   addCaption2(sheet, 11, 0, "ARREAR EPF ER SHARE",15);
-			   addCaption2(sheet, 12, 0, "ARREAR EPS SHARE",15);
+			   addCaption2(sheet, 12, 0, "ARREAR EPS SHARE",15);  
 			   addCaption2(sheet, 13, 0, "ARREAR DAYS",15);
 			   addCaption2(sheet, 14, 0, "PRESENT DAYS",15);
-			   addCaption2(sheet, 15, 0, "NCP DAYS",15);
+			   addCaption2(sheet, 15, 0, "NCP DAYS",15);*/
+			   
+		   }
+		   else if(opt==3) // Consolidated Radio Button (excel)
+		   {
+			   addCaption2(sheet, 0, 0, "EMP CODE",10);
+			   addCaption2(sheet, 1, 0, "PF NO",10);
+			   addCaption2(sheet, 2, 0, "UAN",15);
+			   addCaption2(sheet, 3, 0, "AADHAR",15);
+			   addCaption2(sheet, 4, 0, "PAN",15);
+
+			   addCaption2(sheet, 5, 0, "MEMBER NAME ",30);
+
+			   addCaption2(sheet, 6, 0, "GROSS WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 7, 0, "EPF WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 8, 0, "EPS WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 9, 0, "EDLI WAGES",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 10, 0, "EPF EE SHARE 12 % CONTRIBUTION REMITTED",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 11, 0, "EPS SHARE 8.33% CONTRIBUTUION REMITTED",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 12, 0, "EPF ER  SHARE 3.67% DIFF REMITTED",15); // heading change by yashpal on 13/07/2024
+			   addCaption2(sheet, 13, 0, "NCP DAYS",15);
+
+			   addCaption2(sheet, 14, 0, "REDFUND OF ADVANCES",15);
+			   addCaption2(sheet, 15, 0, "ARREAR NCP DAYS",15);
+			   
+			   addCaption2(sheet, 16, 0, "ARREAR DAYS",15);
+			   addCaption2(sheet, 17, 0, "PRESENT DAYS",15);
+
+			   
 			   
 		   }
 		   r=1;
@@ -825,12 +905,149 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	   sheet.mergeCells(0, 1, 4, 1);
 	   addCaption1(sheet, 0, 1, " Salary Detail Register FOR THE YEAR "+fyear+"-"+(fyear+1),40);
 	   
-	   sheet.mergeCells(8, 3, 13, 3);
-	   addCaption1(sheet, 8, 3, "Acual Salary", 45);
+	   sheet.mergeCells(2, 3, 16, 3);
+//	   addCaption1(sheet, 2, 3, "<--------------------------------------------------------------------------------------------------------------------------------------------------- Basic Data ------------------------------------------------------------------------------------------------------------------------------------- >", 45);
+	   addCaptionNew1(sheet, 2, 3, "B A S I C   D A T A", 45,1);
 
-	   sheet.mergeCells(15, 3, 20, 3);
-	   addCaption1(sheet, 15, 3, "Salary Got", 45);
+	   
+	   sheet.mergeCells(17, 3, 29, 3);
+//	   addCaption1(sheet, 17, 3, "<-------------------------------------------------------------------------------- Basic Salary ------------------------------------------------------------------ >", 45);
+	   addCaptionNew1(sheet, 17, 3, "B A S I C   S A L A R Y", 45,2);
 
+	   sheet.mergeCells(30, 3, 65, 3);
+//	   addCaption1(sheet, 30, 3, "<-------------------------------------------------------------------------------------------------------------------- Earned Salary --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- >", 45);
+	   addCaptionNew1(sheet, 30, 3, "E A R N E D    S A L A R Y", 45,3);
+
+	   sheet.mergeCells(69, 3, 89, 3);
+//	   addCaption1(sheet, 69, 3, "<-------------------------------------------------------------------------------------------------------- Total Deduction -------------------------------------------------------------------------------------------- >", 45);
+	   addCaptionNew1(sheet, 69, 3, "T O T A L    D E D U C T I O N ", 45,4);
+
+	   
+	   addCaption2(sheet, 0, 4, "Month",16);
+	   addCaption2(sheet, 1, 4, "Year",10);
+	   addCaptionNew1(sheet, 2, 4, "Employee Code",10,1);
+	   addCaption2(sheet, 3, 4, "Employee Name",30);
+	   addCaption2(sheet, 4, 4, "Designation",15);
+	   addCaption2(sheet, 5, 4, "PF No.",10);
+	   addCaption2(sheet, 6, 4, "Esic No.",15);
+	   addCaption2(sheet, 7, 4, "Bank Name ",30);
+	   addCaption2(sheet, 8, 4, "Bank A/c No.",15);
+	   addCaption2(sheet, 9, 4, "Present Days",15);
+	   addCaption2(sheet, 10, 4, "Arrear Days",15);
+	   addCaption2(sheet, 11, 4, "Comm.Hrs",15);
+	   addCaption2(sheet, 12, 4, "Sterile Days",15);
+	   addCaption2(sheet, 13, 4, "Opt1 Days",15);
+	   addCaption2(sheet, 14, 4, "Opt2 Days",15);
+	   addCaption2(sheet, 15, 4, "Absent Days",15);
+	   addCaptionNew1(sheet, 16, 4, "UAN No.",25,1);
+
+	   addCaptionNew1(sheet, 17, 4, "Basic ",20,2);
+	   addCaption2(sheet, 18, 4, "DA",20);
+	   addCaption2(sheet, 19, 4, "HRA",20);
+	   addCaption2(sheet, 20, 4, "INC",20);
+	   addCaption2(sheet, 21, 4, "MEDICAL",20);
+	   addCaption2(sheet, 22, 4, "Food Allow",20);
+	   addCaption2(sheet, 23, 4, "LTA",20);
+	   addCaption2(sheet, 24, 4, "Spl.Inc",20);
+	   addCaption2(sheet, 25, 4, "Comm.Rate",20);
+	   addCaption2(sheet, 26, 4, "Sterile Rate",20);
+	   addCaption2(sheet, 27, 4, "Opt1 Allow",20);
+	   addCaption2(sheet, 28, 4, "Opt2 Allow",20);
+	   addCaptionNew1(sheet, 29, 4, "Total",20,2);
+	   // earned salary 	      
+	   addCaptionNew1(sheet, 30, 4, "Basic ",20,3);
+	   addCaption2(sheet, 31, 4, "Basic Arear1",20);
+	   addCaption2(sheet, 32, 4, "Basic Arear2",20);
+	   addCaption2(sheet, 33, 4, "DA",20);
+	   addCaption2(sheet, 34, 4, "DA Arear1",20);
+	   addCaption2(sheet, 35, 4, "DA Arear2",20);
+	   addCaption2(sheet, 36, 4, "HRA",20);
+	   addCaption2(sheet, 37, 4, "HRA Arear1",20);
+	   addCaption2(sheet, 38, 4, "HRA Arear2",20);
+	   addCaption2(sheet, 39, 4, "INC",20);
+	   addCaption2(sheet, 40, 4, "INC Arear1",20);
+	   addCaption2(sheet, 41, 4, "INC Arear2",20);
+	   addCaption2(sheet, 42, 4, "Medical",20);
+	   addCaption2(sheet, 43, 4, "Medical Arear1",20);
+	   addCaption2(sheet, 44, 4, "Medical Arear2",20);
+	   addCaption2(sheet, 45, 4, "Food Allow.",20);
+	   addCaption2(sheet, 46, 4, "Food Allow. Arear1",20);
+	   addCaption2(sheet, 47, 4, "Food Allow. Arear2",20);
+	   addCaption2(sheet, 48, 4, "LTA",20);
+	   addCaption2(sheet, 49, 4, "LTA Arear1",20);
+	   addCaption2(sheet, 50, 4, "LTA Arear2",20);
+	   addCaption2(sheet, 51, 4, "Spl.Incen",20);
+	   addCaption2(sheet, 52, 4, "Spl.Incen Arear1",20);
+	   addCaption2(sheet, 53, 4, "Spl.Incen Arear2",20);
+	   addCaption2(sheet, 54, 4, "Comm.Rate",20);
+	   addCaption2(sheet, 55, 4, "Comm.Rate Arear1",20);
+	   addCaption2(sheet, 56, 4, "Comm.Rate Arear2",20);
+	   addCaption2(sheet, 57, 4, "Sterile Rate",20);
+	   addCaption2(sheet, 58, 4, "Sterile Rate Arear1",20);
+	   addCaption2(sheet, 59, 4, "Sterile Rate Arear2",20);
+	   addCaption2(sheet, 60, 4, "Opt1 Allow",20);
+	   addCaption2(sheet, 61, 4, "Opt1 Allow Arear1",20);
+	   addCaption2(sheet, 62, 4, "Opt1 Allow Arear2",20);
+	   addCaption2(sheet, 63, 4, "Opt2 Allow",20);
+	   addCaption2(sheet, 64, 4, "Opt2 Allow Arear1",20);
+	   addCaptionNew1(sheet, 65, 4, "Opt2 Allow Arear2",20,3);
+	   // 
+	   
+	   addCaption2(sheet, 66, 4, "Total Salary",20);
+	   addCaption2(sheet, 67, 4, "Arear Salary",20);
+	   addCaption2(sheet, 68, 4, "Total Salary",20);
+	   
+	   // deduction
+	   addCaptionNew1(sheet, 69, 4, "PF",20,4);
+	   addCaption2(sheet, 70, 4, "PF Arear1",20);
+	   addCaption2(sheet, 71, 4, "PF Arear2",20);
+	   addCaption2(sheet, 72, 4, "Esic",20);
+	   addCaption2(sheet, 73, 4, "Esic Arear1",20);
+	   addCaption2(sheet, 74, 4, "Esic Arear2",20);
+	   addCaption2(sheet, 75, 4, "P.Tax",20);
+	   addCaption2(sheet, 76, 4, "P.Tax Arear1",20);
+	   addCaption2(sheet, 77, 4, "P.Tax Arear2",20);
+	   addCaption2(sheet, 78, 4, "Advance",20);
+	   addCaption2(sheet, 79, 4, "Advance Arear1",20);
+	   addCaption2(sheet, 80, 4, "Advance Arear2",20);
+	   addCaption2(sheet, 81, 4, "Loan",20);
+	   addCaption2(sheet, 82, 4, "Loan Arear1",20);
+	   addCaption2(sheet, 83, 4, "Loan Arear2",20);
+	   addCaption2(sheet, 84, 4, "Other Ded.",20);
+	   addCaption2(sheet, 85, 4, "Other Ded. Arear1",20);
+	   addCaption2(sheet, 86, 4, "Other Ded. Arear2",20);
+	   addCaption2(sheet, 87, 4, "Deduction",20);
+	   addCaption2(sheet, 88, 4, "Arears Deduction",20);
+	   addCaptionNew1(sheet, 89, 4, "Total Deduction",20,4);
+	   //
+	   addCaption2(sheet, 90, 4, "Net Payable Salary",20);
+
+	   settings.setHorizontalFreeze(5);
+//	   settings.setVerticalFreeze(7);
+
+		r=5;
+    
+	}
+
+	public void createHeader19Old(WritableSheet sheet)  throws WriteException 
+	{
+
+		   
+		sheet.mergeCells(0, 0, 4, 0);
+		   // Write a few headers
+	   addCaption(sheet, 0, 0, cmp_name,40);
+	   
+	   sheet.mergeCells(0, 1, 4, 1);
+	   addCaption1(sheet, 0, 1, " Salary Detail Register FOR THE YEAR "+fyear+"-"+(fyear+1),40);
+	   
+	   sheet.mergeCells(16, 3, 21, 3);
+	   addCaption1(sheet, 16, 3, "<-------------------------------------------------------------------------------- Acual Salary ------------------------------------------------------------------ >", 45);
+
+	   sheet.mergeCells(22, 3, 35, 3);
+	   addCaption1(sheet, 22, 3, "<-------------------------------------------------------------------------------------------------------------------- Salary Got --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- >", 45);
+
+	   sheet.mergeCells(36, 3, 43, 3);
+	   addCaption1(sheet, 36, 3, "<-------------------------------------------------------------------------------------------------------- Total Deduction -------------------------------------------------------------------------------------------- >", 45);
 	   
 	   addCaption2(sheet, 0, 4, "Month",10);
 	   addCaption2(sheet, 1, 4, "Year",10);
@@ -840,36 +1057,52 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	   addCaption2(sheet, 5, 4, "Esic No.",10);
 	   addCaption2(sheet, 6, 4, "Employee Name",30);
 	   addCaption2(sheet, 7, 4, "Category/Grade",30);
-	   addCaption2(sheet, 8, 4, "Basic ",20);
-	   addCaption2(sheet, 9, 4, "DA",20);
-	   addCaption2(sheet, 10, 4, "HRA",20);
-	   addCaption2(sheet, 11, 4, "A.HRA",20);
-	   addCaption2(sheet, 12, 4, "INC",20);
-	   addCaption2(sheet, 13, 4, "Total",20);
-	   addCaption2(sheet, 14, 4, "Present Days",20);
-	   addCaption2(sheet, 15, 4, "Basic ",20);
-	   addCaption2(sheet, 16, 4, "DA",20);
-	   addCaption2(sheet, 17, 4, "HRA",20);
-	   addCaption2(sheet, 18, 4, "A.HRA",20);
-	   addCaption2(sheet, 19, 4, "INC",20);
-	   addCaption2(sheet, 20, 4, "Total",20);
-	   addCaption2(sheet, 21, 4, "Arrear Days",20);
-	   addCaption2(sheet, 22, 4, "Arrear Amount",20);
-	   addCaption2(sheet, 23, 4, "OT Rates",20);
-	   addCaption2(sheet, 24, 4, "OT Hours",20);
-	   addCaption2(sheet, 25, 4, "OT Value",20);
-	   addCaption2(sheet, 26, 4, "Total Salary",20);
-	   addCaption2(sheet, 27, 4, "PF Ded",20);
-	   addCaption2(sheet, 28, 4, "ESIC Ded",20);
-	   addCaption2(sheet, 29, 4, "Total Ded",20);
-	   addCaption2(sheet, 30, 4, "Net Payable Salary",20);
+	   addCaption2(sheet, 8, 4, "Present Days",20);
+	   addCaption2(sheet, 9, 4, "PL",20);
+	   addCaption2(sheet, 10, 4, "CL",20);
+	   addCaption2(sheet, 11, 4, "Arrear Days",20);
+	   addCaption2(sheet, 12, 4, "P.H.",20);
+	   addCaption2(sheet, 13, 4, "OFF",20);
+	   addCaption2(sheet, 14, 4, "ABSENT",20);
+	   addCaption2(sheet, 15, 4, "OT Hours",20);
+	   addCaption2(sheet, 16, 4, "Basic ",20);
+	   addCaption2(sheet, 17, 4, "DA",20);
+	   addCaption2(sheet, 18, 4, "HRA",20);
+	   addCaption2(sheet, 19, 4, "A.HRA",20);
+	   addCaption2(sheet, 20, 4, "INC",20);
+	   addCaption2(sheet, 21, 4, "Total",20);
+	   addCaption2(sheet, 22, 4, "Basic ",20);
+	   addCaption2(sheet, 23, 4, "DA",20);
+	   addCaption2(sheet, 24, 4, "HRA",20);
+	   addCaption2(sheet, 25, 4, "A.HRA",20);
+	   addCaption2(sheet, 26, 4, "INC",20);
+	   addCaption2(sheet, 27, 4, "Spl.Inc",20);
+	   addCaption2(sheet, 28, 4, "Food Allow",20);
+	   
+	   addCaption2(sheet, 29, 4, "OT Value/Comm off",20);
+	   addCaption2(sheet, 30, 4, "Opt1 Allow",20);
+	   addCaption2(sheet, 31, 4, "Opt2 Allow",20);
+	   addCaption2(sheet, 32, 4, "Medical",20);
+	   addCaption2(sheet, 33, 4, "LTA",20);
+	   addCaption2(sheet, 34, 4, "Incl",20);
+
+	   addCaption2(sheet, 35, 4, "Total Salary",20);
+	   addCaption2(sheet, 36, 4, "PF Ded",20);
+	   addCaption2(sheet, 37, 4, "ESIC Ded",20);
+	   addCaption2(sheet, 38, 4, "P.TAX",20);
+	   addCaption2(sheet, 39, 4, "Advance",20);
+	   addCaption2(sheet, 40, 4, "Loan",20);
+	   addCaption2(sheet, 41, 4, "TDS",20);
+	   addCaption2(sheet, 42, 4, "Other Ded",20);
+
+	   addCaption2(sheet, 43, 4, "Total Ded",20);
+	   addCaption2(sheet, 44, 4, "Net Payable Salary",20);
 
 
 		r=5;
     
 	}
 
-	
 	public void createContent(WritableSheet sheet) throws WriteException,RowsExceededException
 	{
 	
@@ -891,6 +1124,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 		
 		int heightInPoints = 18*20;
 		 
+		System.out.println("SIZE OF THE DATA IS "+size);
 		for (i=0;i<size;i++)
 		{
 	
@@ -937,13 +1171,13 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 				case 10:
 						if(bkcode!=emp.getBank_code())
 						{
-							addLabel(sheet, 0, r, " ",1);
-							addLabel(sheet, 1, r, " ",1);
-							addLabel(sheet, 2, r, " ",1);
-							addLabel(sheet, 3, r, " ",1);
-							addLabel(sheet, 4, r, " ",1);
-							addLabel(sheet, 5, r, "Total ",1);
-							addDouble(sheet, 6, r, btotal,1);
+							addLabel(sheet, 0, r, " ",3);
+							addLabel(sheet, 1, r, " ",3);
+							addLabel(sheet, 2, r, " ",3);
+							addLabel(sheet, 3, r, " ",3);
+							addLabel(sheet, 4, r, " ",3);
+							addLabel(sheet, 5, r, "Total ",3);
+							addDouble(sheet, 6, r, btotal,3);
 							btotal=0.00;
 							r++;
 
@@ -969,13 +1203,13 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 				case 16:
 					if(bkcode!=emp.getBank_code())
 					{
-						addLabel(sheet, 0, r, " ",1);
-						addLabel(sheet, 1, r, " ",1);
-						addLabel(sheet, 2, r, " ",1);
-						addLabel(sheet, 3, r, " ",1);
-						addLabel(sheet, 4, r, " ",1);
-						addLabel(sheet, 5, r, "Total ",1);
-						addDouble(sheet, 6, r, btotal,1);
+						addLabel(sheet, 0, r, " ",3);
+						addLabel(sheet, 1, r, " ",3);
+						addLabel(sheet, 2, r, " ",3);
+						addLabel(sheet, 3, r, " ",3);
+						addLabel(sheet, 4, r, " ",3);
+						addLabel(sheet, 5, r, "Total ",3);
+						addDouble(sheet, 6, r, btotal,3);
 						btotal=0.00;
 						r++;
 
@@ -1014,124 +1248,146 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 		
 		  if(repno==1 && btnno==2)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "",1);
-			  addDouble(sheet, 3, r, atten_days,1);
-			  addLabel(sheet, 4, r, "",1);
-			  addLabel(sheet, 5, r, "Total",1);
-			  addDouble(sheet, 6, r, basic,1);
-			  addDouble(sheet, 7, r, emppf,1);
-			  addDouble(sheet, 8, r, emppf1,1);
-			  addDouble(sheet, 9, r, (emppf+emppf1),1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "",3);
+			  addDouble(sheet, 3, r, atten_days,3);
+			  addLabel(sheet, 4, r, "",3);
+			  addLabel(sheet, 5, r, "Total",3);
+			  addDouble(sheet, 6, r, basic,3);
+			  addDouble(sheet, 7, r, emppf,3);
+			  addDouble(sheet, 8, r, emppf1,3);
+			  System.out.println("emppf "+emppf+" emppf1 "+emppf1+" total "+emppf+emppf1);
+			  addDouble(sheet, 9, r, (emppf+emppf1),3);
 		  }
 		  else if(repno==2 && btnno==22)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "",1);
-			  addLabel(sheet, 3, r, "Total",1);
-			  addDouble(sheet, 4, r, atten_days,1);
-			  addDouble(sheet, 5, r, basic,1);
-			  addDouble(sheet, 6, r, emppf,1);
-			  addDouble(sheet, 7, r, emppf1,1);
-			  addDouble(sheet, 8, r, (emppf+emppf1),1);
-			  addDouble(sheet, 9, r, eps,1);
-			  addDouble(sheet, 10, r, (emppf+emppf1+eps),1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "",3);
+			  addLabel(sheet, 3, r, "Total",3);
+			  addDouble(sheet, 4, r, atten_days,3);
+			  addDouble(sheet, 5, r, basic,3);
+			  addDouble(sheet, 6, r, emppf,3);
+			  addDouble(sheet, 7, r, emppf1,3);
+			  addDouble(sheet, 8, r, (emppf+emppf1),3);
+			  addDouble(sheet, 9, r, eps,3);
+			  addDouble(sheet, 10, r, (emppf+emppf1+eps),3);
+		  }
+		  else if(repno==2 && btnno==2) //add total in PF list on 13/07/2024 by Yashpal
+		  {
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "",3);
+			  addLabel(sheet, 3, r, "",3);
+			  addLabel(sheet, 4, r, "",3);
+			  addLabel(sheet, 5, r, "Total",3);
+			  addDouble(sheet, 6, r, net,3);
+			  addDouble(sheet, 7, r, basic,3);
+			  addDouble(sheet, 8, r, epswages,3);
+			  addDouble(sheet, 9, r, edlwages,3);
+			  addDouble(sheet, 10, r, epfc,3);
+			  addDouble(sheet, 11, r, epsc,3);
+			  addDouble(sheet, 12, r, (epfc-epsc),3);
+			  addDouble(sheet, 13, r, absent_days,3);
+			  addLabel(sheet, 14, r, "",3);
+			  if(opt==2)
+				  addLabel(sheet, 15, r, "",3);
+
 		  }
 		  else if(repno==3 || repno==12)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "Total",1);
-			  addDouble(sheet, 3, r, totadv,1);
-			  addDouble(sheet, 4, r, totloan,1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "Total",3);
+			  addDouble(sheet, 3, r, totadv,3);
+			  addDouble(sheet, 4, r, totloan,3);
 		  }
 		  else if(repno==4)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "Total",1);
-			  addDouble(sheet, 3, r, sterlite_days,1);
-			  addLabel(sheet, 4, r, "",1);
-			  addDouble(sheet, 5, r, totadv,1);
-			  addLabel(sheet, 6, r, "",1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "Total",3);
+			  addDouble(sheet, 3, r, sterlite_days,3);
+			  addLabel(sheet, 4, r, "",3);
+			  addDouble(sheet, 5, r, totadv,3);
+			  addLabel(sheet, 6, r, "",3);
 		  }
 		  else if(repno==6)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "Total",1);
-			  addDouble(sheet, 3, r, extra_hrs,1);
-			  addLabel(sheet, 4, r, "",1);
-			  addDouble(sheet, 5, r, totadv,1);
-			  addLabel(sheet, 6, r, "",1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "Total",3);
+			  addDouble(sheet, 3, r, extra_hrs,3);
+			  addLabel(sheet, 4, r, "",3);
+			  addDouble(sheet, 5, r, totadv,3);
+			  addLabel(sheet, 6, r, "",3);
 		  }
 		  else if(repno==5)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "Total",1);
-			  addDouble(sheet, 2, r, atten_days,1);
-			  addDouble(sheet, 3, r, extra_hrs,1);
-			  addDouble(sheet, 4, r, arrear_days,1);
-			  addDouble(sheet, 5, r, sterlite_days,1);
-			  addDouble(sheet, 6, r, totadv,1);
-			  addDouble(sheet, 7, r, totloan,1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "Total",3);
+			  addDouble(sheet, 2, r, atten_days,3);
+			  addDouble(sheet, 3, r, extra_hrs,3);
+			  addDouble(sheet, 4, r, arrear_days,3);
+			  addDouble(sheet, 5, r, sterlite_days,3);
+			  addDouble(sheet, 6, r, totadv,3);
+			  addDouble(sheet, 7, r, totloan,3);
 		  }
 		  else if(repno==7 || repno==9)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "Total",1);
-			  addDouble(sheet, 3, r, absent_days,1); // absent/present days total 
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "Total",3);
+			  addDouble(sheet, 3, r, absent_days,3); // absent/present days total 
 		  }
 		  else if(repno==8 || repno==11)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "Total",1);
-			  addDouble(sheet, 3, r, totadv,1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "Total",3);
+			  addDouble(sheet, 3, r, totadv,3);
 		  }
 		  else if(repno==10 || repno==16)
 		  {
-			  	addLabel(sheet, 0, r, " ",1);
-				addLabel(sheet, 1, r, " ",1);
-				addLabel(sheet, 2, r, " ",1);
-				addLabel(sheet, 3, r, " ",1);
-				addLabel(sheet, 4, r, " ",1);
-				addLabel(sheet, 5, r, "Total ",1);
-				addDouble(sheet, 6, r, btotal,1);
+			  	addLabel(sheet, 0, r, " ",3);
+				addLabel(sheet, 1, r, " ",3);
+				addLabel(sheet, 2, r, " ",3);
+				addLabel(sheet, 3, r, " ",3);
+				addLabel(sheet, 4, r, " ",3);
+				addLabel(sheet, 5, r, "Total ",3);
+				addDouble(sheet, 6, r, btotal,3);
 				r++;
-			  	addLabel(sheet, 0, r, " ",1);
-				addLabel(sheet, 1, r, " ",1);
-				addLabel(sheet, 2, r, " ",1);
-				addLabel(sheet, 3, r, " ",1);
-				addLabel(sheet, 4, r, " ",1);
-				addLabel(sheet, 5, r, "Grand Total ",1);
-				addDouble(sheet, 6, r, bgtotal,1);
+			  	addLabel(sheet, 0, r, " ",3);
+				addLabel(sheet, 1, r, " ",3);
+				addLabel(sheet, 2, r, " ",3);
+				addLabel(sheet, 3, r, " ",3);
+				addLabel(sheet, 4, r, " ",3);
+				addLabel(sheet, 5, r, "Grand Total ",3);
+				addDouble(sheet, 6, r, bgtotal,3);
 				r++;
 		  }
 		  else if(repno==13 )
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "",1);
-			  addLabel(sheet, 3, r, "Total",1);
-			  addDouble(sheet, 4, r, totadv,1);
-			  addDouble(sheet, 5, r, totloan,1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "",3);
+			  addLabel(sheet, 3, r, "Total",3);
+			  addDouble(sheet, 4, r, totadv,3);
+			  addDouble(sheet, 5, r, totloan,3);
 		  }
 		  else if(repno==15)
 		  {
-			  addLabel(sheet, 0, r, "",1);
-			  addLabel(sheet, 1, r, "",1);
-			  addLabel(sheet, 2, r, "Total",1);
-			  addDouble(sheet, 3, r, sterlite_days,1);
-			  addDouble(sheet, 4, r, arrear_days,1);
-			  addLabel(sheet, 5, r, "",1);
-			  addLabel(sheet, 6, r, "",1);
-			  addDouble(sheet, 7, r, totadv,1);
-			  addDouble(sheet, 8, r, totloan,1);
-			  addLabel(sheet, 9, r, "",1);
+			  addLabel(sheet, 0, r, "",3);
+			  addLabel(sheet, 1, r, "",3);
+			  addLabel(sheet, 2, r, "Total",3);
+			  addDouble(sheet, 3, r, sterlite_days,3);
+			  addDouble(sheet, 4, r, arrear_days,3);
+			  addLabel(sheet, 5, r, "",3);
+			  addLabel(sheet, 6, r, "",3);
+			  addDouble(sheet, 7, r, totadv,3);
+			  addDouble(sheet, 8, r, totloan,3);
+			  addLabel(sheet, 9, r, "",3);
 		  }
 
 		  
@@ -1142,10 +1398,10 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	
 		
 			int dash=0;
-			if(btnno==1)
+			if(btnno==1) // UPLOAD
 			{
 				
-				if(emp.getDiffdays()==0 || (emp.getDiffdays()> -31 && emp.getDiffdays()< 0))
+				if(emp.getDiffdays()==0 || (emp.getDiffdays()> -31 && emp.getDiffdays()< 0) && emp.getDash()==0)
 				{
 					if(opt==1)
 					{
@@ -1153,8 +1409,11 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 						addLabel(sheet, 1, r, String.valueOf(emp.getEsic_no()),dash);
 						addLabel(sheet, 2, r, emp.getEmp_name(),dash);
 						addLabel(sheet, 3, r, String.valueOf((int) emp.getAtten_days()),dash);
-						addLabel(sheet, 4, r, String.valueOf(emp.getNet_value()),dash);
-						//addLabel(sheet, 4, r, String.valueOf(emp.getCreated_by()),dash);
+						addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+						if(emp.getEsis_value()==0 && emp.getArear1_esic_value()>0 && mnth_code==202507)
+							addLabel(sheet, 4, r, String.valueOf((int) (emp.getArrear1_earning()+emp.getArrear2_earning())),dash); // less arrear_basic_value on 24/06/2024
+						else
+							addLabel(sheet, 4, r, String.valueOf((int) (emp.getBasic_earning()+emp.getArrear2_earning())),dash); // less arrear_basic_value on 17/08/2024 BY YASHPAL
 						if(emp.getCreated_date()!=null)
 							addLabel(sheet, 5, r, "2",dash);
 						else if(emp.getAtten_days()==0)
@@ -1172,9 +1431,10 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 					{
 						addLabel(sheet, 0, r, String.valueOf(emp.getEmp_code()),dash);
 						addLabel(sheet, 1, r, String.valueOf(emp.getEsic_no()),dash);
-						addLabel(sheet, 2, r, emp.getEmp_name(),dash);
-						addLabel(sheet, 3, r, String.valueOf((int) emp.getAtten_days()),dash);
-						addLabel(sheet, 4, r, String.valueOf(emp.getNet_value()),dash);
+						addLabel(sheet, 2, r, ""+emp.getEmp_name(),dash);
+						addLabel(sheet, 3, r, String.valueOf((int) emp.getArrear_days()+emp.getPrev_days()),dash);
+						addLabel(sheet, 4, r, String.valueOf((int) (emp.getArrear1_earning()+emp.getPrevious_arrear_basic())),dash);  // CHANGED ON 17/08/2024 BY YASHPAL
+
 						//addLabel(sheet, 4, r, String.valueOf(emp.getCreated_by()),dash);
 						if(emp.getCreated_date()!=null)
 							addLabel(sheet, 5, r, "2",dash);
@@ -1192,48 +1452,82 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 
 				}
 			}
-			else if(btnno==2)
+			else if(btnno==2 && emp.getDash()==0) // EXCEL
 			{
 	
 				if(opt==1)
 				{
-					addNumber(sheet, 0, r, emp.getSerialno(),dash);
-					addNumber(sheet, 1, r, emp.getEmp_code(),dash);
-					addLong(sheet, 2, r, emp.getEsic_no(),dash);
-					addNumber(sheet, 3, r, ((int) emp.getAtten_days()),dash);
-					addDouble(sheet, 4, r, emp.getGross(),dash);
-					addLabel(sheet, 5, r, emp.getEmp_name(),dash);
-					addDouble(sheet, 6, r, emp.getNet_value(),dash);
-					addDouble(sheet, 7, r, emp.getEsis_value(),dash);
-					addDouble(sheet, 8, r, emp.getEmployer_esis_value(),dash);
-					addDouble(sheet, 9, r, (emp.getEsis_value()+emp.getEmployer_esis_value()),dash);
-					r++;
-					atten_days+=(int) emp.getAtten_days();
-					basic+=(opt==1?emp.getNet_value():emp.getArrear_basic_value());
-					emppf+=emp.getEsis_value();
-					emppf1+=emp.getEmployer_esis_value();
+						addNumber(sheet, 0, r, emp.getSerialno(),dash);
+						addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+						addLong(sheet, 2, r, emp.getEsic_no(),dash);
+						addNumber(sheet, 3, r, ((int) emp.getAtten_days()),dash);
+						addDouble(sheet, 4, r, emp.getBasic_total(),dash);
+						addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+						if(emp.getEsis_value()==0 && emp.getArear1_esic_value()>0 && mnth_code==202507)
+						{
+							System.out.println(emp.getEmp_code()+" iske andar hai kya");
+							addDouble(sheet, 6, r, emp.getArrear1_earning()+emp.getArrear2_earning(),dash); // less arrear_basic_value on 24/06/2024
+							addDouble(sheet, 7, r, emp.getArear1_esic_value()+emp.getArrear2_esis_value(),dash);
+//							emppf+=emp.getArear1_esic_value()+emp.getArrear2_esis_value();
+							double tot=(int) Math.ceil(((emp.getArrear1_earning()+emp.getArrear2_earning())*3.25)/100); 
+							emp.setEmployer_esis_value(tot);
+						}
+						else
+						{
+							addDouble(sheet, 6, r, emp.getBasic_earning()+emp.getArrear2_earning(),dash); // less arrear_basic_value on 24/06/2024
+							addDouble(sheet, 7, r, emp.getBasic_esis_value()+emp.getArrear2_esis_value(),dash);
+							emppf+=emp.getBasic_esis_value()+emp.getArrear2_esis_value();
+						}
+						addDouble(sheet, 8, r, emp.getEmployer_esis_value()+emp.getArrear2_employer_esis_value(),dash);
+						addDouble(sheet, 9, r, (emp.getBasic_esis_value()+emp.getEmployer_esis_value()+emp.getArrear2_esis_value()+emp.getArrear2_employer_esis_value()),dash);
+						r++;
+						atten_days+=(int) emp.getAtten_days();
+						basic+=emp.getBasic_earning()+emp.getArrear2_earning();
+						
+						emppf1+=emp.getEmployer_esis_value()+emp.getArrear2_employer_esis_value();
+
 				}
 				else if(opt==2 && emp.getArrear_days()>0)
 				{
+					
 					addNumber(sheet, 0, r, emp.getSerialno(),dash);
 					addNumber(sheet, 1, r, emp.getEmp_code(),dash);
 					addLong(sheet, 2, r, emp.getEsic_no(),dash);
-					addNumber(sheet, 3, r, ((int) emp.getArrear_days()),dash);
-					addDouble(sheet, 4, r, emp.getGross(),dash);
+					addNumber(sheet, 3, r, ((int) (emp.getArrear_days()+emp.getPrev_days())),dash);
+					addDouble(sheet, 4, r, emp.getBasic_total(),dash);
 					addLabel(sheet, 5, r, emp.getEmp_name(),dash);
-					addDouble(sheet, 6, r, emp.getArrear_basic_value(),dash);
-
-					addDouble(sheet, 7, r, emp.getEsis_value(),dash);
-					addDouble(sheet, 8, r, emp.getEmployer_esis_value(),dash);
-					addDouble(sheet, 9, r, (emp.getEsis_value()+emp.getEmployer_esis_value()),dash);
+					addDouble(sheet, 6, r, emp.getArrear1_earning(),dash);
+					addDouble(sheet, 7, r, emp.getArrear1_esis_value(),dash);
+					addDouble(sheet, 8, r, emp.getArrear1_employer_esis_value(),dash);
+					addDouble(sheet, 9, r, (emp.getArrear1_esis_value()+emp.getArrear1_employer_esis_value()),dash);
 					r++;
-					atten_days+=(int) emp.getArrear_days();
-					basic+=(opt==1?emp.getNet_value():emp.getArrear_basic_value());
-					emppf+=emp.getEsis_value();
-					emppf1+=emp.getEmployer_esis_value();
+					atten_days+=(int) emp.getArrear_days()+emp.getPrev_days();
+					basic+=emp.getArrear1_earning();
+					emppf+=emp.getArrear1_esis_value();
+					emppf1+=emp.getArrear1_employer_esis_value();
 				}
-				
-//				atten_days+=emp.getAtten_days();
+				else if(opt==3)  // Consolidated new option (17/08/2024 by Yashpal)
+				{
+						  
+						  addNumber(sheet, 0, r, emp.getSerialno(),dash);
+						addNumber(sheet, 1, r, emp.getEmp_code(),dash);
+						addLong(sheet, 2, r, emp.getEsic_no(),dash);
+						addNumber(sheet, 3, r, ((int) emp.getAtten_days()),dash);
+						addDouble(sheet, 4, r, emp.getBasic_total(),dash);
+						addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+						addDouble(sheet, 6, r, (emp.getBasic_earning()+emp.getArrear1_earning()+emp.getArrear2_earning()),dash); // Consolidated value on 17/08/2024
+						addDouble(sheet, 7, r, (emp.getBasic_esis_value()+emp.getArrear1_esis_value()+emp.getArrear2_esis_value()),dash);
+
+						addDouble(sheet, 8, r, (emp.getEmployer_esis_value()+emp.getArrear1_employer_esis_value()+emp.getArrear2_employer_esis_value()),dash);
+						addDouble(sheet, 9, r, (emp.getBasic_esis_value()+emp.getArrear1_esis_value()+emp.getArrear2_esis_value()+emp.getEmployer_esis_value()+emp.getArrear1_employer_esis_value()+emp.getArrear2_employer_esis_value()),dash);
+						r++;
+						atten_days+=(int) emp.getAtten_days();
+						basic+=(emp.getBasic_earning()+emp.getArrear1_earning()+emp.getArrear2_earning());
+						emppf+=(emp.getBasic_esis_value()+emp.getArrear1_esis_value()+emp.getArrear2_esis_value());
+						emppf1+=(emp.getEmployer_esis_value()+emp.getArrear1_employer_esis_value()+emp.getArrear2_employer_esis_value());
+
+				}
+
 			}
 	
 			
@@ -1252,51 +1546,19 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 			double epscontri=0.00;
 			double basicValue=0.00;
 			double netValue=0.00;
+			
+			double epfcontriArrear=0.00;
+			double epscontriArrear=0.00;
+			double basicValueArrear=0.00;
+			double netValueArrear=0.00;
+			boolean check=true;
 		
 			
-/*				addLabel(sheet, 0, r, String.valueOf(emp.getPf_no()),dash);
-				addLabel(sheet, 1, r, String.valueOf(emp.getGross()),dash);
-				addLabel(sheet, 2, r, String.valueOf(emp.getPf_value()),dash);
-				addLabel(sheet, 3, r, String.valueOf(0.00),dash);
-				addLabel(sheet, 4, r, String.valueOf(emp.getAtten_days()),dash);
-				if(emp.getCreated_date()!=null)
-					addLabel(sheet, 5, r, sdf.format(emp.getCreated_date()),dash);
-				else
-					addLabel(sheet, 5, r, "",dash);
-				addLabel(sheet, 6, r, String.valueOf(emp.getCreated_by()),dash); // reason for leaving
-				addLabel(sheet, 7, r, String.valueOf(0.00),dash);
-				addLabel(sheet, 8, r, String.valueOf(0.00),dash);
-				addLabel(sheet, 9, r, String.valueOf(0.00),dash);
-				addLabel(sheet, 10, r, String.valueOf(0.00),dash);
-*/				
-			
-			if(emp.getAtten_days()>0) // UPLOAD BUTTON
+			if(emp.getAtten_days()>0 && emp.getDash()==0) // UPLOAD BUTTON
 			{
 						if(opt==1)
 						{
-							basicValue=emp.getBasic_value()-emp.getArrear_basic_value();
-							netValue=emp.getNet_value()-emp.getArrear_net_value();
 							
-							if(emp.getBasicpf_value()>15000 && basicValue>0) //change on 04/03/2022 by Yashpal
-//							if(emp.getGross()>15000 && basicValue>0)   //change on 06/04/2022 by Yashpal
-							{
-								epfcontri=roundTwoDecimals(15000*12/100);
-								epscontri=roundTwoDecimals(15000*8.33/100);
-							}
-							else
-							{
-								epfcontri=roundTwoDecimals(basicValue*12/100);
-								epscontri=roundTwoDecimals(basicValue*8.33/100);
-							}
-		
-							if(emp.getMnth_code()>2020044)
-								epfcontri=roundTwoDecimals(basicValue*10/100);
-							
-							//Change on 08/03/2022 by Yashpal (diff will be add in diff column
-							if(emp.getMnth_code()>=202202 && epscontri>1250)
-							{
-								epscontri=1250;
-							}
 							
 							if(btnno==1)
 							{
@@ -1305,24 +1567,13 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 								addLabel(sheet, 1, r, String.valueOf(emp.getAdhar_no()),dash);
 								addLabel(sheet, 2, r, emp.getPan_no(),dash);
 								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
-								addNumber(sheet, 4, r, (int) netValue,dash);
-//								addNumber(sheet, 5, r, (int) basicValue,dash); change on 28/05/2020 by Yashpal
-								
-//								change on 04/03/2022 by Yashpal again change on 06/04/2022			
-								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
-								
-/*								addNumber(sheet, 5, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
-								addNumber(sheet, 6, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
-								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
-*/								//change on 09/03/2022 by Yahpal
-//								addNumber(sheet, 7, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
-
-								
-								addNumber(sheet, 8, r, (int) epfcontri,dash);
-								addNumber(sheet, 9, r, (int) epscontri,dash);
-								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);
+								addNumber(sheet, 4, r, (int) emp.getPf_gross_wages(),dash);
+								addNumber(sheet, 5, r, (int) emp.getEpf_wages(),dash);
+								    addNumber(sheet, 6, r, (int) emp.getEps_wages(),dash);
+								addNumber(sheet, 7, r, (int) emp.getEdl_wages(),dash);
+								addNumber(sheet, 8, r, (int) emp.getEpf_share(),dash);
+								  addNumber(sheet, 9, r, (int) emp.getEps_share(),dash);
+								addNumber(sheet, 10, r, (int) emp.getEpf_er_share(),dash);
 								addNumber(sheet, 11, r, (int) emp.getAbsent_days(),dash);
 								addLabel(sheet, 12, r, String.valueOf(0),dash);
 							}
@@ -1331,152 +1582,154 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 								addNumber(sheet, 0, r, emp.getEmp_code(),dash);
 								addLabel(sheet, 1, r, String.valueOf(emp.getPf_no()),dash);
 								addLabel(sheet, 2, r, String.valueOf(emp.getUan_no()),dash);
-//								addLong(sheet, 2, r, emp.getUan_no(),dash);
-								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
-								addNumber(sheet, 4, r, (int) netValue,dash);
-//								addNumber(sheet, 5, r, (int) basicValue,dash); change on 28/05/2020 by Yashpal
+								addLabel(sheet, 3, r, String.valueOf(emp.getAdhar_no()),dash);
+								addLabel(sheet, 4, r, emp.getPan_no(),dash);
+								addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+								addNumber(sheet, 6, r, (int) emp.getPf_gross_wages(),dash);
+								addNumber(sheet, 7, r, (int) emp.getEpf_wages(),dash);
+								addNumber(sheet, 8, r, (int) emp.getEps_wages(),dash);
+								addNumber(sheet, 9, r, (int) emp.getEdl_wages(),dash);
+								addNumber(sheet, 10, r, (int) emp.getEpf_share(),dash);
+								addNumber(sheet, 11, r, (int) emp.getEps_share(),dash);
+								addNumber(sheet, 12, r, (int) emp.getEpf_er_share(),dash);
+								addNumber(sheet, 13, r, (int) emp.getAbsent_days(),dash);
+								addLabel(sheet, 14, r, String.valueOf(0),dash);
 								
-//								change on 04/03/2022 by Yashpal	and again change on 06/04/2022
-								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
-								
-								//addNumber(sheet, 5, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
-								//addNumber(sheet, 6, r, (int) (emp.getGross()>15000?15000:basicValue),dash);
-								//addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
-//								addNumber(sheet, 7, r, (int) (emp.getGross()>15000?15000:basicValue),dash); // comment on 09/03/200 by Yashpal
+								net+=emp.getPf_gross_wages();
+								basic+=emp.getEpf_wages();
+								epfc+=emp.getEpf_share();
+								epsc+=emp.getEps_share();
+								absent_days+=emp.getAbsent_days();
+								epswages+=emp.getEps_wages();
+								edlwages+=emp.getEdl_wages();
 
-								addNumber(sheet, 8, r, (int) epfcontri,dash);
-								addNumber(sheet, 9, r, (int) epscontri,dash);
-								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);
-								addNumber(sheet, 11, r, (int) emp.getAbsent_days(),dash);
-								addLabel(sheet, 12, r, String.valueOf(0),dash);
+								
+								
+								
 							}
 							r++;
 						}
 						
-						else if(opt==2 && emp.getArrear_days()>=0 && emp.getArrear_basic_value()>0) // arrear button isSelected
+						else if(opt==2 && emp.getArrear_days()>0) // arrear button isSelected
 						{
-							basicValue=emp.getArrear_basic_value();
-							netValue=emp.getArrear_net_value();
-							//YEH LINE ABHI LAGAYO 15/05/2020	
-							//basicValue=emp.getBasic_value()+emp.getArrear_basic_value();
-							//netValue=emp.getNet_value()+emp.getArrear_net_value();
-							
-							if(emp.getBasicpf_value()>15000 && basicValue>0)
-
-							{
-								epfcontri=roundTwoDecimals(15000*12/100);
-								epscontri=roundTwoDecimals(15000*8.33/100);
-							}
-							else
-							{
-								epfcontri=roundTwoDecimals(basicValue*12/100);
-								epscontri=roundTwoDecimals(basicValue*8.33/100);
-							}
-							
 		
-							if(emp.getMnth_code()>2020044)
-								epfcontri=roundTwoDecimals(basicValue*10/100);
 
 		
 							if(btnno==1) // upload button
 							{
-//								addLong(sheet, 0, r, emp.getUan_no(),dash);
 								addLabel(sheet, 0, r, String.valueOf(emp.getUan_no()),dash);
 								addLabel(sheet, 1, r, String.valueOf(emp.getAdhar_no()),dash);
 								addLabel(sheet, 2, r, emp.getPan_no(),dash);
 								addLabel(sheet, 3, r, emp.getEmp_name(),dash);
-//								addNumber(sheet, 4, r, (int) netValue,dash);
-								addNumber(sheet, 4, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 5, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 8, r, (int) epfcontri,dash);
-								addNumber(sheet, 9, r, (int) epscontri,dash);
-								addNumber(sheet, 10, r, (int) (epfcontri-epscontri),dash);					
+								addNumber(sheet, 4, r, (int) emp.getArrear_gross_wages(),dash);
+								addNumber(sheet, 5, r, (int) emp.getArrear_epf_wages(),dash);
+								addNumber(sheet, 6, r, (int) emp.getArrear_eps_wages(),dash);
+								addNumber(sheet, 7, r, (int) emp.getArrear_edl_wages(),dash);
+								addNumber(sheet, 8, r, (int) emp.getArrear_epf_share(),dash);
+								addNumber(sheet, 9, r, (int) emp.getArrear_eps_share(),dash);
+								addNumber(sheet, 10, r, (int) emp.getArrear_epf_er_share(),dash);
 								addNumber(sheet, 11, r, (int) emp.getNcp_days(),dash);
-//								addNumber(sheet, 12, r, (int) emp.getPrev_days(),dash); //comment on 09/03/2022 by YashPal
 								addNumber(sheet, 12, r, 0,dash); //fixed 0 on 09/03/2022 by YashPal
-								
-//								addNumber(sheet, 11, r, (int) emp.getAbsent_days(),dash);
-//								addNumber(sheet, 12, r, (int) emp.getAtten_days(),dash);
 							}
 							else if(btnno==2) //excel button
 							{
 								addNumber(sheet, 0, r, emp.getEmp_code(),dash);
 								addLabel(sheet, 1, r, String.valueOf(emp.getPf_no()),dash);
 								addLabel(sheet, 2, r, String.valueOf(emp.getUan_no()),dash);
-								addLabel(sheet, 3, r, emp.getPan_no(),dash);
-								addLabel(sheet, 4, r, String.valueOf(emp.getAdhar_no()),dash);
-								//addLong(sheet, 2, r, emp.getUan_no(),dash);
+								addLabel(sheet, 3, r, String.valueOf(emp.getAdhar_no()),dash);
+								addLabel(sheet, 4, r, emp.getPan_no(),dash);
 								addLabel(sheet, 5, r, emp.getEmp_name(),dash);
-//								addNumber(sheet, 4, r, (int) netValue,dash);
-								addNumber(sheet, 6, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 7, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 8, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 9, r, (int) (basicValue>15000?15000:basicValue),dash);
-								addNumber(sheet, 10, r, (int) epfcontri,dash);
-								addNumber(sheet, 11, r, (int) epscontri,dash);
-								addNumber(sheet, 12, r, (int) (epfcontri-epscontri),dash);					
-								addNumber(sheet, 13, r, (int) emp.getArrear_days(),dash);
-								addNumber(sheet, 14, r, (int) emp.getPrev_days(),dash);
+								addNumber(sheet, 6, r, (int) emp.getArrear_gross_wages(),dash);
+								addNumber(sheet, 7, r, (int) emp.getArrear_epf_wages(),dash);
+								addNumber(sheet, 8, r, (int) emp.getArrear_eps_wages(),dash);
+								addNumber(sheet, 9, r, (int) emp.getArrear_edl_wages(),dash);
+								addNumber(sheet, 10, r, (int) emp.getArrear_epf_share(),dash);
+								addNumber(sheet, 11, r, (int) emp.getArrear_eps_share(),dash);
+								addNumber(sheet, 12, r, (int) emp.getArrear_epf_er_share(),dash);
+								addNumber(sheet, 13, r, (int) emp.getNcp_days(),dash);
+								addNumber(sheet, 14, r, (int) emp.getArrear_days(),dash);
+								addNumber(sheet, 15, r, (int) emp.getPrev_days(),dash);
 								
+								net+=emp.getArrear_gross_wages();
+								basic+=emp.getArrear_epf_wages();
+								epfc+=emp.getArrear_epf_share();
+								epsc+=emp.getArrear_eps_share();
+								absent_days+=emp.getNcp_days();
+								epswages+=emp.getArrear_eps_wages();
+								edlwages+=emp.getArrear_edl_wages();
+
+							}
+						 	r++;
+		
+						}
+
+//=============================================================================
+// Consolidated option value is 3 						
+//=============================================================================
+						else if(opt==3 ) // Consolidated button isSelected
+						{
+
+							if(btnno==2) //excel button
+							{
+								addNumber(sheet, 0, r, emp.getEmp_code(),dash);
+								addLabel(sheet, 1, r, String.valueOf(emp.getPf_no()),dash);
+								addLabel(sheet, 2, r, String.valueOf(emp.getUan_no()),dash);
+								addLabel(sheet, 3, r, String.valueOf(emp.getAdhar_no()),dash);
+								addLabel(sheet, 4, r, emp.getPan_no(),dash);
+								addLabel(sheet, 5, r, emp.getEmp_name(),dash);
+								addNumber(sheet, 6, r, (int) (emp.getPf_gross_wages()+emp.getArrear_gross_wages()),dash);
+								addNumber(sheet, 7, r, (int) (emp.getEpf_wages()+emp.getArrear_epf_wages()),dash);
+								if((emp.getEpf_wages()+emp.getArrear_epf_wages())>150000)
+								{
+									addNumber(sheet, 8, r, (int) (emp.getEps_wages()),dash);
+									addNumber(sheet, 9, r, (int) (emp.getEdl_wages()),dash);
+									addNumber(sheet, 11, r, (int) (emp.getEps_share()),dash);
+									addNumber(sheet, 12, r, (int) (emp.getEpf_share()+emp.getArrear_epf_share()-emp.getEps_share()),dash);
+									
+									epsc+=emp.getEps_share();
+									epswages+=emp.getEps_wages();
+									edlwages+=emp.getEdl_wages();
+								}
+								else
+								{
+									addNumber(sheet, 8, r, (int) (emp.getEps_wages()+emp.getArrear_eps_wages()),dash);
+									addNumber(sheet, 9, r, (int) (emp.getEdl_wages()+emp.getArrear_edl_wages()),dash);
+									addNumber(sheet, 11, r, (int) (emp.getEps_share()+emp.getArrear_eps_share()),dash);
+									addNumber(sheet, 12, r, (int) (emp.getEpf_er_share()+emp.getArrear_epf_er_share()),dash);
+								
+									epsc+=emp.getEps_share()+emp.getArrear_eps_share();
+									epswages+=emp.getEps_wages()+emp.getArrear_eps_wages();
+									edlwages+=emp.getEdl_wages()+emp.getArrear_edl_wages();
+
+								}
+								addNumber(sheet, 10, r, (int) (emp.getEpf_share()+emp.getArrear_epf_share()),dash);
+//								addNumber(sheet, 10, r, (int) (emp.getPf_value()+emp.getArear1_pf_value()+emp.getArear2_pf_value()),dash);
+								addNumber(sheet, 13, r, (int) emp.getAbsent_days(),dash);
+								addLabel(sheet, 14, r, String.valueOf(0),dash);
+
 								addNumber(sheet, 15, r, (int) emp.getNcp_days(),dash);
-//								addNumber(sheet, 15, r, 0,dash); //fixed 0 on 09/03/2022 by YashPal
+								addNumber(sheet, 16, r, (int) emp.getArrear_days(),dash);
+								addNumber(sheet, 17, r, (int) emp.getPrev_days(),dash);
 								
-//								addNumber(sheet, 14, r, (int) emp.getAtten_days(),dash);
-//								addNumber(sheet, 15, r, (int) emp.getAbsent_days(),dash);
+								net+=emp.getPf_gross_wages()+emp.getArrear_gross_wages();
+								basic+=emp.getEpf_wages()+emp.getArrear_epf_wages();
+								epfc+=emp.getEpf_share()+emp.getArrear_epf_share();
+								absent_days+=emp.getAbsent_days();
+								ncp_days+=emp.getNcp_days();
+
 							}
 						 	r++;
 		
 						}
 						
-						net+= (int) netValue;
-						basic+=(int) basicValue;
-						epf+=(int) basicValue;
+		
 						
-//						change on 04/03/2022 by Yashpal
-/*						eps+=(int) (basicValue>15000?15000:basicValue);
-						epf+=(int) (basicValue>15000?15000:basicValue);
-*/						
-						eps+=(int) (emp.getGross()>15000?15000:basicValue);
-						epf+=(int) (emp.getGross()>15000?15000:basicValue);
-
-						epfc+=epf;
-						epsc+=eps;
-
+//=============================================================================						
+						
 						 
 
 			}	
 						
-						
-			 
-			/*else if(btnno==2) // EXCEL BUTTON
-			{
-	
-				addNumber(sheet, 0, r, emp.getSerialno(),dash);
-				addNumber(sheet, 1, r, emp.getPf_no(),dash);
-				addLong(sheet, 2, r, emp.getUan_no(),dash);
-				addDouble(sheet, 3, r, emp.getBasic(),dash);
-				addLabel(sheet, 4, r, emp.getEmp_name(),dash);
-				addNumber(sheet, 5, r, ((int) emp.getAtten_days()),dash);
-				addDouble(sheet, 6, r, emp.getBasic_value(),dash);
-				addDouble(sheet, 7, r, emp.getEmployee_pf(),dash);
-				addDouble(sheet, 8, r, emp.getEmployer_pf(),dash);
-				addDouble(sheet, 9, r, (emp.getEmployee_pf()+emp.getEmployer_pf()),dash);
-				addDouble(sheet, 10, r, emp.getEps_pf(),dash);
-				addDouble(sheet, 11, r, (emp.getEmployee_pf()+emp.getEmployer_pf()+emp.getEps_pf()),dash);
-				
-				atten_days+=emp.getAtten_days();
-				basic+=emp.getBasic_value();
-				emppf+=emp.getEmployee_pf();
-				emppf1+=emp.getEmployer_pf();
-				eps+=emp.getEps_pf();
-				r++;
-			}
-	*/
-			 
 		 
 	}
 
@@ -1682,11 +1935,11 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	
 		
 			int dash=0;
-			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getFood_value();
-//			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getIncentive_value()+emp.getOt_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getSpl_incen_value()+emp.getMisc_value()+emp.getLta_value()+emp.getMedical_value()+emp.getStair_value();
-			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt()+emp.getProf_tax();;
+/*			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getFood_value();
+			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt()+emp.getProf_tax()+emp.getLoan();;
 			double net = totearn-totded;
-			
+*/
+			net=emp.getNet_value();
 			if(net>0)
 			{
 				addNumber(sheet, 0, r, emp.getSerialno(),dash);
@@ -1936,11 +2189,170 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	 */
 	public void createReport19(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
 	{
-	
+
+			
+		
+			int dash=0;
+			if(emp.getEmp_name().contains("Grand"))
+				dash=3;
+			{
+			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getFood_value();
+			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt()+emp.getProf_tax()+emp.getLoan();
+			double net = totearn-totded;
+			if(opt==1 || monthname.startsWith("April"))
+				addLabel(sheet, 0, r, emp.getMonname(),dash);
+			else
+				addLabel(sheet, 0, r, "Upto "+monthname.substring(0, size),dash);
+				addNumber(sheet, 1, r, emp.getFin_year(),dash);
+
+				addNumber(sheet, 2, r, emp.getEmp_code(),dash);
+				addLabel(sheet, 3, r, emp.getEmp_name(),dash);
+				addLabel(sheet, 4, r, emp.getDesignation(),dash);
+				addNumber(sheet, 5, r, emp.getPf_no(),dash);
+				addLong(sheet, 6, r, emp.getEsic_no(),dash);
+				addLabel(sheet, 7, r, emp.getBank(),dash);
+				addLabel(sheet, 8, r, emp.getBank_accno(),dash);
+				addDouble(sheet,9, r, emp.getAtten_days(),dash);
+				addLabel(sheet, 10, r, String.valueOf(emp.getArrear_days()),dash);
+				addLabel(sheet, 11, r, String.valueOf(emp.getExtra_hrs()),dash);
+				addLabel(sheet, 12, r, String.valueOf(emp.getStair_days()),dash);
+				addLabel(sheet, 13, r, String.valueOf(emp.getMachine1_days()),dash);
+				addLabel(sheet, 14, r, String.valueOf(emp.getMachine2_days()),dash);
+				addLabel(sheet, 15, r, String.valueOf(emp.getAbsent_days()),dash);
+				addLabel(sheet, 16, r, String.valueOf(emp.getUan_no()),dash);
+
+
+				 addDouble(sheet, 17, r, emp.getBasic(),dash);
+				 addDouble(sheet, 18, r, emp.getDa(),dash);
+				 addDouble(sheet, 19, r, emp.getHra(),dash);
+				 addDouble(sheet, 20, r, emp.getIncentive(),dash);
+				 addDouble(sheet, 21, r, emp.getMedical(),dash);
+				 addDouble(sheet, 22, r, emp.getFood_alw(),dash);
+				 addDouble(sheet, 23, r, emp.getLta(),dash);
+				 addDouble(sheet, 24, r, emp.getSpl_incentive(),dash);
+				 addDouble(sheet, 25, r, emp.getOt_rate(),dash);
+				 addDouble(sheet, 26, r, emp.getStair_alw(),dash);
+				 addDouble(sheet, 27, r, emp.getMachine1_rate(),dash);
+				 addDouble(sheet, 28, r, emp.getMachine2_rate(),dash);
+				 tot4=0;
+				   tot4+=(int) ((emp.getBasic()+emp.getDa()+emp.getHra()+emp.getIncentive()+emp.getMedical())+0.50);
+				   if(emp.getEmp_code()==24)
+					   System.out.println("total value is "+tot4+" ntot4 "+ntot4);
+				   if(dash==0)
+					   ntot4+=tot4;
+				   if(dash==3)
+					   tot4=ntot4;
+				   addNumber(sheet, 29, r,tot4,dash);
+
+
+				   // earned salary 
+				   addDouble(sheet, 30, r, emp.getBasic_value(),dash);
+				   addDouble(sheet, 31, r, emp.getArear_basic_value(),dash);
+				   addDouble(sheet, 32, r, emp.getArear2_basic_value(),dash);
+				   addDouble(sheet, 33, r, emp.getDa_value(),dash);
+				   addDouble(sheet, 34, r, emp.getArear_da_value(),dash);
+				   addDouble(sheet, 35, r, emp.getArear2_da_value(),dash);
+				   addDouble(sheet, 36, r, emp.getHra_value(),dash);
+				   addDouble(sheet, 37, r, emp.getArear_hra_value(),dash);
+				   addDouble(sheet, 38, r, emp.getArear2_hra_value(),dash);
+				   addDouble(sheet, 39, r, emp.getIncentive_value(),dash);
+				   addDouble(sheet, 40, r, emp.getArear_incentive_value(),dash);
+				   addDouble(sheet, 41, r, emp.getArear2_incentive_value(),dash);
+				   addDouble(sheet, 42, r, emp.getMedical_value(),dash);
+				   addDouble(sheet, 43, r, emp.getArear_medical_value(),dash);
+				   addDouble(sheet, 44, r, 0.00,dash);
+				   addDouble(sheet, 45, r, emp.getFood_value(),dash);
+				   addDouble(sheet, 46, r, 0.00,dash);
+				   addDouble(sheet, 47, r, 0.00,dash);
+				   addDouble(sheet, 48, r, emp.getLta_value(),dash);
+				   addDouble(sheet, 49, r, 0.00,dash);
+				   addDouble(sheet, 50, r, 0.00,dash);
+				   addDouble(sheet, 51, r, emp.getSpl_incen_value(),dash);
+				   addDouble(sheet, 52, r, 0.00,dash);
+				   addDouble(sheet, 53, r, 0.00,dash);
+				   addDouble(sheet, 54, r, emp.getOt_value(),dash);
+				   addDouble(sheet, 55, r, 0.00,dash);
+				   addDouble(sheet, 56, r, 0.00,dash);
+				   addDouble(sheet, 57, r, emp.getStair_value(),dash);
+				   addDouble(sheet, 58, r, 0.00,dash);
+				   addDouble(sheet, 59, r, 0.00,dash);
+				   addDouble(sheet, 60, r, emp.getMachine1_value(),dash);
+				   addDouble(sheet, 61, r, 0.00,dash);
+				   addDouble(sheet, 62, r, 0.00,dash);
+				   addDouble(sheet, 63, r, emp.getMachine2_value(),dash);
+				   addDouble(sheet, 64, r, 0.00,dash);
+				   addDouble(sheet, 65, r, 0.00,dash);
+			   // 
+				   tot5+=(int) ((emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getIncentive_value()+emp.getMedical_value()+emp.getOt_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getStair_value()+emp.getSpl_incen_value())+0.50);
+				   tot6+=(int) ((emp.getArear_basic_value()+emp.getArear_da_value()+emp.getArear_hra_value()+emp.getArear_incentive_value()+emp.getArear_medical_value())+0.50);
+				   tot6+=(int) ((emp.getArear2_basic_value()+emp.getArear2_da_value()+emp.getArear2_hra_value()+emp.getArear2_incentive_value())+0.50);
+
+				   addNumber(sheet, 66, r,tot5,dash);
+				   addNumber(sheet, 67, r,tot6,dash);
+				   addNumber(sheet, 68, r,(tot5+tot6),dash);
+
+				   
+			   // deduction
+				   addDouble(sheet, 69, r, emp.getPf_value(),dash);
+				   addDouble(sheet, 70, r, emp.getArear1_pf_value(),dash);
+				   addDouble(sheet, 71, r, emp.getArear2_pf_value(),dash);
+				   
+				   addDouble(sheet, 72, r, emp.getEsis_value(),dash);
+				   addDouble(sheet, 73, r, emp.getArear1_esic_value(),dash);
+				   addDouble(sheet, 74, r, emp.getArear2_esic_value(),dash);
+
+				   addDouble(sheet, 75, r, emp.getProf_tax(),dash);
+				   addDouble(sheet, 76, r, 0.00,dash);
+				   addDouble(sheet, 77, r, emp.getArear2_prof_value(),dash);
+
+				   addDouble(sheet, 78, r, emp.getAdvance(),dash);
+				   addDouble(sheet, 79, r, 0.00,dash);
+				   addDouble(sheet, 80, r, 0.00,dash);
+				   
+				   addDouble(sheet, 81, r, emp.getLoan(),dash);
+				   addDouble(sheet, 82, r, 0.00,dash);
+				   addDouble(sheet, 83, r, 0.00,dash);
+				   
+				   addDouble(sheet, 84, r, 0.00,dash);   
+				   addDouble(sheet, 85, r, 0.00,dash);
+				   addDouble(sheet, 86, r, 0.00,dash);
+
+				   
+				   ltot9+=(int) ((emp.getPf_value()+emp.getEsis_value()+emp.getProf_tax()+emp.getLoan()+emp.getAdvance())+0.50);   
+				   ltot10+=(int) ((emp.getArear1_pf_value()+emp.getArear1_esic_value())+0.50);   
+				   ltot10+=(int)((emp.getArear2_pf_value()+emp.getArear2_esic_value()+emp.getArear2_prof_value())+0.50);   
+
+				   
+				   addNumber(sheet, 87, r,ltot9,dash);
+				   addNumber(sheet, 88, r,ltot10,dash);
+				   addNumber(sheet, 89, r,(ltot9+ltot10),dash);
+			   //
+				   addDouble(sheet, 90, r, emp.getNet_value(),dash);
+
+				   tot4=0;
+				   tot5=0;
+				   tot6=0;
+				   ltot9=0;
+				   ltot10=0;
+				r++;
+				
+			}
+		 
+	}
+	public void createReport19Old(WritableSheet sheet,EmptranDto emp) throws WriteException,RowsExceededException
+	{
+
+			
 		
 			int dash=0;
 			{
+			double totearn=emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getOt_value()+emp.getLta_value()+emp.getMedical_value()+emp.getMisc_value()+emp.getStair_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getFood_value();
+			double totded=emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getCoupon_amt()+emp.getProf_tax()+emp.getLoan();
+			double net = totearn-totded;
+			if(opt==1 || monthname.startsWith("April"))
 				addLabel(sheet, 0, r, emp.getMonname(),dash);
+			else
+				addLabel(sheet, 0, r, "Upto "+monthname.substring(0, size),dash);
 				addNumber(sheet, 1, r, emp.getFin_year(),dash);
 				addNumber(sheet, 2, r, emp.getEmp_code(),dash);
 				addNumber(sheet, 3, r, emp.getPf_no(),dash);
@@ -1948,29 +2360,55 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 				addLong(sheet, 5, r, emp.getEsic_no(),dash);
 				addLabel(sheet, 6, r, emp.getEmp_name(),dash);
 				addLabel(sheet, 7, r, emp.getDesignation(),dash);
-				addDouble(sheet, 8, r, emp.getBasic(),dash);
-				addDouble(sheet, 9, r, emp.getDa(),dash);
-				addDouble(sheet,10, r, emp.getHra(),dash);
-				addDouble(sheet,11, r, emp.getAdd_hra(),dash);
-				addDouble(sheet,12, r, emp.getIncentive(),dash);
-				addDouble(sheet,13, r, emp.getGross(),dash);
-				addDouble(sheet,14, r, emp.getAtten_days(),dash);
-				addDouble(sheet,15, r, emp.getBasic_value(),dash);
-				addDouble(sheet,16, r, emp.getDa_value(),dash);
-				addDouble(sheet,17, r, emp.getHra_value(),dash);
-				addDouble(sheet,18, r, emp.getAdd_hra_value(),dash);
-				addDouble(sheet,19, r, emp.getIncentive_value(),dash);
-				addDouble(sheet,20, r, emp.getMisc_value(),dash);
-				addDouble(sheet,21, r, emp.getArrear_days(),dash);
-				addDouble(sheet,22, r, emp.getArrear_amt(),dash);
-				addDouble(sheet,23, r, emp.getOt_rate(),dash);
-				addDouble(sheet,24, r, emp.getExtra_hrs(),dash);
-				addDouble(sheet,25, r, emp.getOt_value(),dash);
-				addDouble(sheet,26, r, emp.getMisc_value()+emp.getOt_value(),dash);
-				addDouble(sheet,27, r, emp.getPf_value(),dash);
-				addDouble(sheet,28, r, emp.getEsis_value(),dash);
-				addDouble(sheet,29, r, (emp.getPf_value()+emp.getEsis_value()),dash);
-				addDouble(sheet,30, r, emp.getNet_value(),dash);
+				addDouble(sheet,8, r, emp.getAtten_days(),dash);
+				addDouble(sheet,9, r, 0.00,dash);  // pl
+				addDouble(sheet,10, r, 0.00,dash);  // cl
+				
+				addDouble(sheet,11, r, emp.getArrear_days(),dash);
+				addDouble(sheet,12, r, 0.00,dash);  // p.h.
+				addDouble(sheet,13, r, emp.getOt_rate(),dash);
+				addDouble(sheet,14, r, emp.getAbsent_days(),dash);  // absemt
+
+				addDouble(sheet,15, r, emp.getExtra_hrs(),dash);
+
+				
+				addDouble(sheet, 16, r, emp.getBasic(),dash);
+				addDouble(sheet, 17, r, emp.getDa(),dash);
+				addDouble(sheet,18, r, emp.getHra(),dash);
+				addDouble(sheet,19, r, emp.getAdd_hra(),dash);
+				addDouble(sheet,20, r, emp.getIncentive(),dash);
+				
+				addDouble(sheet,21, r, emp.getGross(),dash);
+
+				
+
+				
+				addDouble(sheet,22, r, emp.getBasic_value(),dash);
+				addDouble(sheet,23, r, emp.getDa_value(),dash);
+				addDouble(sheet,24, r, emp.getHra_value(),dash);
+				addDouble(sheet,25, r, emp.getAdd_hra_value(),dash);
+				addDouble(sheet,26, r, emp.getIncentive_value(),dash);
+				addDouble(sheet,27, r, (emp.getSpl_incen_value()+emp.getStair_value()),dash);
+				addDouble(sheet,28, r, emp.getFood_value(),dash);
+				addDouble(sheet,29, r, emp.getOt_value(),dash);
+				addDouble(sheet,30, r, emp.getMachine1_value(),dash);
+				addDouble(sheet,31, r, emp.getMachine2_value(),dash);
+				addDouble(sheet,32, r, emp.getMedical_value(),dash);
+				addDouble(sheet,33, r, emp.getLta_value(),dash);
+				addDouble(sheet,34, r, emp.getMisc_value(),dash);
+
+				addDouble(sheet,35, r, (emp.getBasic_value()+emp.getDa_value()+emp.getHra_value()+emp.getAdd_hra_value()+emp.getIncentive_value()+emp.getSpl_incen_value()+emp.getFood_value()+emp.getOt_value()+emp.getMachine1_value()+emp.getMachine2_value()+emp.getMedical_value()+emp.getLta_value()+emp.getStair_value()+emp.getMisc_value()),dash);
+				addDouble(sheet,36, r, emp.getPf_value(),dash);
+				addDouble(sheet,37, r, emp.getEsis_value(),dash);
+				addDouble(sheet,38, r, emp.getProf_tax(),dash);
+				
+				addDouble(sheet,39, r, emp.getAdvance(),dash);
+				addDouble(sheet,40, r, emp.getLoan(),dash);
+				addDouble(sheet,41, r, emp.getTds_value(),dash);
+				addDouble(sheet,42, r, emp.getCoupon_amt(),dash);
+				
+				addDouble(sheet,43, r, (emp.getPf_value()+emp.getEsis_value()+emp.getAdvance()+emp.getProf_tax()+emp.getLoan()+emp.getTds_value()+emp.getCoupon_amt()),dash);
+				addDouble(sheet,44, r, net,dash);
 
 				
 				r++;
@@ -2056,7 +2494,7 @@ public void createHeader3(WritableSheet sheet)  throws WriteException {
 	public double roundTwoDecimals(double d) 
 	{
 	    DecimalFormat twoDForm = new DecimalFormat("0.00");
-	    System.out.println("value of d is "+d); 
+	    
 	    double roundval = Double.valueOf(twoDForm.format(d));
 	    return ((int) (roundval+.50));
 //	    return Double.valueOf(twoDForm.format((int) (d+.50)));

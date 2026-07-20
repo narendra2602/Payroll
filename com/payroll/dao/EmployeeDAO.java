@@ -757,7 +757,78 @@ public class EmployeeDAO
 	}
 
 
-    
+    public int insertLoanRepaymentEntry(EmptranDto edto)
+    {
+  	  
+    	PreparedStatement ps2 = null;
+		 
+		Connection con=null;
+		
+		int i=0;
+		int fyear=edto.getFin_year();
+		int mncode=edto.getMnth_code();
+		
+		try 
+		{
+			con=ConnectionFactory.getConnection();
+
+			String query2="insert into loan values (?,?,?,?,?,?,?,?)";
+			ps2 = con.prepareStatement(query2);
+			
+
+			con.setAutoCommit(false);
+				ps2.setInt(1,edto.getDepo_code());
+				ps2.setInt(2,edto.getCmp_code());
+				ps2.setInt(3,edto.getEmp_code());
+				ps2.setDouble(4,edto.getLoan());
+				ps2.setDouble(5,0.00);
+				ps2.setDouble(6,edto.getAdvance());  // loan repaument
+				
+				if(String.valueOf(mncode).substring(4).equals("13"))
+				{
+					mncode+=88;
+				}
+
+				if(!String.valueOf(mncode).substring(0,4).equals(String.valueOf(fyear)) && String.valueOf(mncode).substring(4).equals("04"))
+				{
+					fyear++;
+				}
+
+				ps2.setInt(7,fyear);
+				ps2.setInt(8,mncode);
+				
+				mncode++;
+				
+		  		i=ps2.executeUpdate();
+				
+			
+
+			con.commit();
+			con.setAutoCommit(true);
+			ps2.close();
+
+		} catch (SQLException ex) {
+			try {
+				con.rollback();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			System.out.println("-------------Exception in SQLEmployeeDAO.insertLoanRepaymentEntry " + ex);
+			i=-1;
+		}
+		finally {
+			try {
+				System.out.println("No. of Records Update/Insert : "+i);
+
+				if(ps2 != null){ps2.close();}
+				if(con != null){con.close();}
+			} catch (SQLException e) {
+				System.out.println("-------------Exception in SQLEmployeeDAO.Connection.close "+e);
+			}
+		}
+		return i;
+	}
+
     public EmptranDto getLoanEntry(int fyear,int depo, int cmp,int emp_code,int mnth_code)
     {
   	  
@@ -776,6 +847,65 @@ public class EmployeeDAO
 			edto = new EmptranDto();
 			
 			String query2="select loan_amt,instl_amt from loan where fin_year=? and depo_code=? and cmp_code=? and emp_code=?  and mnth_code=? ";
+
+			ps2 = con.prepareStatement(query2);
+			ps2.setInt(1, fyear);
+			ps2.setInt(2, depo);
+			ps2.setInt(3, cmp);
+			ps2.setInt(4, emp_code);
+			ps2.setInt(5, mnth_code);
+			rs2= ps2.executeQuery();
+			if(rs2.next())
+			{
+				edto.setLoan(rs2.getDouble(1));
+				edto.setInstamt(rs2.getDouble(2));
+			}
+			
+			con.commit();
+			con.setAutoCommit(true);
+			rs2.close();
+			ps2.close();
+
+		} catch (SQLException ex) {
+			try {
+				con.rollback();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			System.out.println("-------------Exception in SQLEmployeeDAO.insertLoanEntry " + ex);
+			i=-1;
+		}
+		finally {
+			try {
+				System.out.println("No. of Records Update/Insert : "+i);
+
+				if(ps2 != null){ps2.close();}
+				if(rs2 != null){rs2.close();}
+				if(con != null){con.close();}
+			} catch (SQLException e) {
+				System.out.println("-------------Exception in SQLEmployeeDAO.Connection.close "+e);
+			}
+		}
+		return edto;
+	}
+    public EmptranDto getLoanAmount(int fyear,int depo, int cmp,int emp_code,int mnth_code)
+    {
+  	  
+    	PreparedStatement ps2 = null;
+    	ResultSet rs2=null;
+		 
+		Connection con=null;
+		
+		int i=0;
+		EmptranDto edto=null;
+		try 
+		{
+			con=ConnectionFactory.getConnection();
+			con.setAutoCommit(false);
+
+			edto = new EmptranDto();
+			
+			String query2="select loan_amt,sum(repay_amt) from loan where fin_year<=? and depo_code=? and cmp_code=? and emp_code=?  and mnth_code<=? ";
 
 			ps2 = con.prepareStatement(query2);
 			ps2.setInt(1, fyear);

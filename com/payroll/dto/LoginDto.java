@@ -43,6 +43,7 @@ public class LoginDto {
 	private HashMap<?,?> prtmap1;
 	private String divnm;
 	private String brnnm;
+	private String address;
 	
 	private ContractMastDto bdto;
 
@@ -451,6 +452,16 @@ public class LoginDto {
 	}
 	public void setEdate(Date edate) {
 		this.edate = edate;
+	}
+
+
+	public String getAddress() {
+		return address;
+	}
+
+
+	public void setAddress(String address) {
+		this.address = address;
 	}
 	
 	

@@ -51,6 +51,22 @@ public class ConnectionFactory {
         return drvnm;
 	}
 
+	public static String getPdfDrvnm(){
+		ResourceBundle rb=null;
+		String pdfdrvnm=null;
+		try {
+			rb = ResourceBundle.getBundle("Payroll");
+			pdfdrvnm=rb.getString("pdfname");
+			  
+		} 
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
+        return pdfdrvnm;
+	}
+
+	
 	public static String getPrinternm(){
 		ResourceBundle rb=null;
 		String drvnm=null;

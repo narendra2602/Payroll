@@ -150,7 +150,8 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 		
 		fyear = new JComboBox((loginDt.getFyear()));
 		fyear.setActionCommand("Year");
-		fyear.setBounds(492, 232, 154, 22);
+		fyear.setSelectedIndex(0);
+		fyear.setBounds(492, 232, 200, 22);
 		getContentPane().add(fyear);
 	
 		rdbtnPending = new JRadioButton("Pending");
@@ -568,7 +569,7 @@ public class ArrearCalculation extends BaseClass implements ActionListener
 	
 	public void setVisible(boolean b)
 	{
-		 fyear.setSelectedIndex(1);
+		 fyear.setSelectedIndex(0);
 		 fillTable();
 		 super.setVisible(b);
 	}

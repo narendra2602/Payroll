@@ -9,11 +9,18 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import com.itextpdf.text.Document;
+/*import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
+*/
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfWriter;
+
 import com.payroll.dao.PayrollDAO;
 import com.payroll.dto.ContractMastDto;
 import com.payroll.dto.EmptranDto;
@@ -44,12 +51,12 @@ public class SalarySlip extends WritePDF{
 	 
  
 	int depo_code,cmp_code,fyear,mnth_code;
-	String cmp_name,monthname;
+	String cmp_name,monthname,address;
 	EmptranDto vd;
 	PayrollDAO pdao;
 	ContractMastDto cmpdto;
 	
-	public SalarySlip(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt)
+	public SalarySlip(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt,String address)
 		{
 		
 		this.depo_code=depo_code;
@@ -59,6 +66,7 @@ public class SalarySlip extends WritePDF{
 		this.drvnm=drvnm;
 		this.cmp_name=cmp_name;
 		this.monthname=monthname;
+		this.address=address;
 		cmpdto = (ContractMastDto) BaseClass.loginDt.getBdto();
 		String pdfFilename = "";
 		y=747;
@@ -105,7 +113,10 @@ public class SalarySlip extends WritePDF{
 			
 			
 			pdao = new PayrollDAO();
-			salList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,0);
+			if(mnth_code>202505)
+				salList= (ArrayList<?>) pdao.getSalaryRegisterNew(depo_code, cmp_code, fyear, mnth_code,99,0,0);
+			else
+				salList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,0);
 			int lsize=0;
 			sdf = new SimpleDateFormat("dd/MM/yyyy");
 			df = new DecimalFormat("0.00");
@@ -308,13 +319,16 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 
 	try {
 //		rde=0;
- 
-		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
+		double totearn=0;
+		if(mnth_code<202506)
+			totearn=(int) ((vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value())+0.50);
+		else
+			totearn=vd.getBasic_earning()+vd.getArrear1_earning()+vd.getArrear2_earning();
 
 		//double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getIncentive_value()+vd.getOt_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getSpl_incen_value()+vd.getMisc_value()+vd.getLta_value()+vd.getMedical_value();
-		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax();
+		double totded=(int) ((vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax()+vd.getLoan())+0.50);
 		double net = totearn-totded;
-		double totbasic=vd.getBasic()+vd.getDa()+vd.getHra()+vd.getAdd_hra()+vd.getIncentive();
+		double totbasic=(int) ((vd.getBasic()+vd.getDa()+vd.getHra()+vd.getAdd_hra()+vd.getIncentive())+0.50);
 		rde=y;
 		checkLn(doc, cb);
 		 

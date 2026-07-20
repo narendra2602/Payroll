@@ -1334,7 +1334,8 @@ public class EmployeeMaster extends BaseClass implements ActionListener {
 		dojoin.setText(formatDateScreen(empDto.getDojoin(), dojoin));
 		doresign.setText(formatDateScreen(empDto.getDoresign(), doresign));
 
-		gross.setText(formatter.format(empDto.getGross()));
+//		gross.setText(formatter.format(empDto.getGross()));
+		gross.setText(formatter.format(empDto.getGross()-empDto.getFood_allowance()));
 		basic.setText(formatter.format(empDto.getBasic()));
 		da.setText(formatter.format(empDto.getDa()));
 		hra.setText(formatter.format(empDto.getHra()));
@@ -1401,8 +1402,8 @@ public class EmployeeMaster extends BaseClass implements ActionListener {
 				+ setDoubleNumber(hra.getText())
 				+ setDoubleNumber(add_hra.getText())
 				+ setDoubleNumber(incentive.getText())
-				+ setDoubleNumber(spl_incentive.getText())
-				+ setDoubleNumber(food_allowance.getText());
+				+ setDoubleNumber(spl_incentive.getText());
+//				+ setDoubleNumber(food_allowance.getText());
 		gross.setText(formatter.format(grossval));
 
 	}

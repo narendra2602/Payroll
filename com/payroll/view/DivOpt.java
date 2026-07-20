@@ -253,6 +253,8 @@ public class DivOpt extends BaseClass implements ActionListener
 					loginDt.setBrnnm(brn.getCmp_name()+","+brn.getCmp_city());
 				else
 					loginDt.setBrnnm(brn.getCmp_name());
+				
+				loginDt.setAddress(brn.getCmp_add1()+" GSTINo-:"+brn.getCmp_panno());
 				loginDt.setLogin_name(uname);
 				loginDt.setLogin_pass(pass);
 				loginDt.setPack_code(1);

@@ -9,11 +9,18 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import com.itextpdf.text.Document;
+/*import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
+*/
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfWriter;
+
 import com.payroll.dao.PayrollDAO;
 import com.payroll.dto.EmptranDto;
 import com.payroll.util.FigToWord;
@@ -114,6 +121,8 @@ public class SalaryList extends WritePDF{
 //			salList=pdao.getEsicList(depo_code, cmp_code, fyear, mnth_code,10);
 			if(repno==16)
 				salList= (ArrayList<?>) pdao.getBonusRegister(depo_code, cmp_code, fyear, repno);
+			else if(mnth_code>=202506)
+				salList= (ArrayList<?>) pdao.getSalaryRegisterNew(depo_code, cmp_code, fyear, mnth_code,repno,0,0);
 			else if(mnth_code>=201611)
 				salList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,10);
 
@@ -249,10 +258,10 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 //		rde=0;
  
 		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
-		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax();;
+		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax()+vd.getLoan();
 
 		double net = totearn-totded;
-		 
+		net=vd.getNet_value(); 
 		rde=y;
 		checkLn(doc, cb);
 		 

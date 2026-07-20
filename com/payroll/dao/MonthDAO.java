@@ -29,7 +29,7 @@ public class MonthDAO
 
 			String monQ ="select mth,fin_year,fin_desc,mnth_code,frdate,todate,fin_ord,yy from perdmast  where fin_year=? and mnth_code=?";
 
-	 
+			System.out.println("logindt mai mnth code before  "+ldo.getMnth_code());
 			////////////////////////////////////////////////
 			ps = con.prepareStatement(monQ);
 			ps.setInt(1, year);
@@ -48,7 +48,7 @@ public class MonthDAO
 				i=1;
 			}
 			
-			
+			System.out.println("logindt mai mnth code after "+ldo.getMnth_code());
 			rs.close();
 			ps.close();
 			////////////////////////////////////////////////

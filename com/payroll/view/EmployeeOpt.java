@@ -17,21 +17,23 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.border.LineBorder;
 
+import com.payroll.dto.EmployeeMastDto;
 import com.payroll.dto.MonthDto;
 import com.payroll.dto.YearDto;
+import com.payroll.print.SalaryList;
 
-public class ArrearOpt extends BaseClass implements ActionListener 
+public class EmployeeOpt extends BaseClass implements ActionListener 
 {
 	private static final long serialVersionUID = 1L;
 	private JLabel reportName ;
-	private JLabel sdateLeb,smonthLeb,emonthLeb;
+	private JLabel sdateLeb,lblmonth,lbltomonth,lblemployee;
 	private JButton exitButton,excelButton;
  
-	private JComboBox year,smonth,emonth;
-	String ClassNm,repNm;;
-	private JRadioButton paidbtn,pendingbtn;
+	private JComboBox year,smonth,emonth,employee;
+	String ClassNm,repNm;
+
 	 
-	public  ArrearOpt(String nm,String repNm)
+	public  EmployeeOpt(String nm,String repNm)
 	{
 		 
 		ClassNm=nm;
@@ -51,68 +53,68 @@ public class ArrearOpt extends BaseClass implements ActionListener
 		reportName = new JLabel(repNm);
 		reportName.setHorizontalAlignment(SwingConstants.CENTER);
 		reportName.setFont(new Font("Tahoma", Font.BOLD, 14));
-		reportName.setBounds(49, 46, 303, 20);
+		reportName.setBounds(49, 44, 310, 20);
 		getContentPane().add(reportName);
 
 		
-		
-		paidbtn = new JRadioButton("Paid");
-		paidbtn.setSelected(true);
-		paidbtn.setBounds(85, 77, 90, 23);
-		getContentPane().add(paidbtn);
-
-		pendingbtn = new JRadioButton("Pending");
-		pendingbtn.setBounds(209, 77, 90, 23);
-		getContentPane().add(pendingbtn);
-
 		//Group the radio buttons.
 	    ButtonGroup group = new ButtonGroup();
-	    group.add(paidbtn);
-	    group.add(pendingbtn);
-		
+	    
+	    
 		sdateLeb = new JLabel("Financial Year:");
-		sdateLeb.setBounds(45, 114, 150, 20);
+		sdateLeb.setBounds(45, 76, 117, 20);
 		getContentPane().add(sdateLeb);
 
 		year = new JComboBox(loginDt.getFyear());
-		year.setBounds(199, 114, 136, 23);
+		year.setBounds(167, 76, 198, 23);
 		getContentPane().add(year);
 		year.setActionCommand("year");
 		year.setMaximumRowCount(12);
 
-		
-		smonthLeb = new JLabel("Starting Month:");
-		smonthLeb.setBounds(45, 142, 110, 20);
-		getContentPane().add(smonthLeb);
-		
-		smonth = new JComboBox(new Vector(loginDt.getFmonth()));
-		smonth.setBounds(199, 142, 136, 23);
-		getContentPane().add(smonth);
-		smonth.setActionCommand("smonth");
-		smonth.setMaximumRowCount(12);
+
 
 		
-		emonthLeb = new JLabel("Ending Month:");
-		emonthLeb.setBounds(45, 170, 110, 20);
-		getContentPane().add(emonthLeb);
+		lblmonth = new JLabel("From Month:");
+		lblmonth.setBounds(45, 105, 117, 20);
+		getContentPane().add(lblmonth);
+
+		smonth = new JComboBox(new Vector(loginDt.getFmonth()));
+		smonth.setBounds(167, 105, 198, 23);
+		getContentPane().add(smonth);
+		smonth.setActionCommand("month");
+		smonth.setMaximumRowCount(12);
 		
+
+		lbltomonth = new JLabel("To Month:");
+		lbltomonth.setBounds(45, 134, 117, 20);
+		getContentPane().add(lbltomonth);
+
 		emonth = new JComboBox(new Vector(loginDt.getFmonth()));
-		emonth.setBounds(199, 170, 136, 23);
+		emonth.setBounds(167, 134, 198, 23);
 		getContentPane().add(emonth);
 		emonth.setActionCommand("emonth");
 		emonth.setMaximumRowCount(12);
-		emonth.setSelectedIndex(11);
 
+		
+		lblemployee = new JLabel("Employee:");
+		lblemployee.setBounds(45, 163, 117, 20);
+		getContentPane().add(lblemployee);
+
+		employee = new JComboBox(loginDt.getEmpList());
+		employee.setBounds(167, 163, 198, 23);
+		getContentPane().add(employee);
+		year.setActionCommand("year");
+		employee.setMaximumRowCount(12);
 		
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
 		exitButton = new JButton("Exit");
-		exitButton.setBounds(220, 208, 70, 30);
+		exitButton.setBounds(238, 207, 70, 30);
 		getContentPane().add(exitButton);
 
 
 		excelButton = new JButton("Excel");
-		excelButton.setBounds(118, 208, 82, 30);
+		excelButton.setBounds(136, 207, 82, 30);
 		getContentPane().add(excelButton);
 
 		
@@ -124,7 +126,6 @@ public class ArrearOpt extends BaseClass implements ActionListener
 		exitButton.addActionListener(this);
 		excelButton.addActionListener(this);
 		year.addActionListener(this);
-		
 		setAlwaysOnTop(true);
 		
 	}
@@ -132,11 +133,11 @@ public class ArrearOpt extends BaseClass implements ActionListener
 	 public void resetAll()
 	 {
 		 
+		 		
 				 year.setSelectedIndex(0);
 				 smonth.setSelectedIndex(0);
 				 emonth.setSelectedIndex(11);
-
-				 paidbtn.setSelected(true);
+				 employee.setSelectedIndex(0);
 	 }		 
 	 
 
@@ -147,14 +148,14 @@ public class ArrearOpt extends BaseClass implements ActionListener
 			resetAll();
 			dispose();
 		}
-		
+
 		if(e.getActionCommand().equalsIgnoreCase("Year"))
 		{
 			System.out.println("YEAR OPTION IS CHAGNED OR SELECTED ");
 			
 			YearDto yd = (YearDto) year.getSelectedItem();
 			Vector v = (Vector) loginDt.getFmon().get(yd.getYearcode());
-			System.out.println(v.size());
+			System.out.println("**** "+v.size());
 			
 			smonth.removeAllItems();
 			emonth.removeAllItems();
@@ -169,42 +170,29 @@ public class ArrearOpt extends BaseClass implements ActionListener
 			smonth.setSelectedIndex(0);
 			emonth.setSelectedIndex(11);
 		}
-		
-		if(e.getActionCommand().equalsIgnoreCase("Excel") || e.getActionCommand().equalsIgnoreCase("Upload") ||  e.getActionCommand().equalsIgnoreCase("PDF") || e.getActionCommand().equalsIgnoreCase("View"))
+
+				
+		if(e.getActionCommand().equalsIgnoreCase("Excel") || e.getActionCommand().equalsIgnoreCase("Upload") ||  e.getActionCommand().equalsIgnoreCase("PDF") || e.getActionCommand().equalsIgnoreCase("View") || e.getActionCommand().equalsIgnoreCase("Print"))
 		{
 			try
 			{
-				 
-				int repno=1;
-				 
-				if(pendingbtn.isSelected())
-					repno=11;
+				int btnno=1;
+				int repno=20;
+				int opt=1;
 				
-				if(repNm.startsWith("Absent"))
-					repno=1;
-				else if(repNm.startsWith("OT"))
-					repno=2;
-				else if(repNm.startsWith("Sterile"))
-					repno=3;
-				if(repNm.startsWith("Present"))
-					repno=4;
-				if(repNm.startsWith("Bonus"))
-				{
-					if(pendingbtn.isSelected())
-						repno=51;
-					else 
-						repno=5;
-				}
+				if(e.getActionCommand().equalsIgnoreCase("Excel") || e.getActionCommand().equalsIgnoreCase("Print"))
+					btnno=2;
 				
 				
 				YearDto yd = (YearDto) year.getSelectedItem();
-				MonthDto smon = (MonthDto) smonth.getSelectedItem();
-				MonthDto emon = (MonthDto) emonth.getSelectedItem();
-
+				MonthDto mdto = (MonthDto) smonth.getSelectedItem();
+				MonthDto emdto = (MonthDto) emonth.getSelectedItem();
+				EmployeeMastDto edto = (EmployeeMastDto) employee.getSelectedItem();
 				Class<?> clazz = Class.forName(ClassNm);
 				// create an instance
-				Constructor<?> constructor = clazz.getConstructor(Integer.class,Integer.class,Integer.class, String.class,String.class,Integer.class,Integer.class,Integer.class);
-				Object ob = (Object)constructor.newInstance(loginDt.getDepo_code(),loginDt.getCmp_code(),yd.getYearcode(),loginDt.getBrnnm(),loginDt.getDrvnm(),repno,smon.getMnthcode(),emon.getMnthcode());
+				
+					Constructor<?> constructor = clazz.getConstructor(Integer.class,Integer.class,Integer.class,Integer.class, String.class,String.class,String.class,Integer.class,Integer.class,Integer.class,String.class,Integer.class,Integer.class);
+					Object ob = (Object)constructor.newInstance(loginDt.getDepo_code(),loginDt.getCmp_code(),yd.getYearcode(),mdto.getMnthcode(),loginDt.getBrnnm(),loginDt.getDrvnm(),mdto.getMnthname(),btnno,repno,opt,loginDt.getAddress(),emdto.getMnthcode(),edto.getEmp_code());
 				resetAll();
 				dispose();
 			}

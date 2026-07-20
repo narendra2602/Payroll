@@ -9,11 +9,18 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import com.itextpdf.text.Document;
+/*import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
+*/
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfWriter;
+
 import com.payroll.dao.PayrollDAO;
 import com.payroll.dto.EmptranDto;
 import com.payroll.util.WritePDF;
@@ -41,11 +48,11 @@ public class SalaryRegister extends WritePDF{
 	 
  
 	int depo_code,cmp_code,fyear,mnth_code;
-	String cmp_name,monthname;
+	String cmp_name,monthname,address;
 	EmptranDto vd;
 	PayrollDAO pdao;
 	double tot1,tot2,tot3,tot4,tot5,tot6,tot7;
-	public SalaryRegister(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt)
+	public SalaryRegister(Integer depo_code,Integer cmp_code,Integer fyear,Integer mnth_code,String cmp_name,String drvnm,String monthname,Integer btnno,Integer repno,Integer opt,String address)
 		{
 		
 		this.depo_code=depo_code;
@@ -55,27 +62,34 @@ public class SalaryRegister extends WritePDF{
 		this.drvnm=drvnm;
 		this.cmp_name=cmp_name;
 		this.monthname=monthname;
-		
+		this.address=address;
 		String pdfFilename = "";
 		y=670;
 		pg=1;
 		sdf2 = new SimpleDateFormat("dd-MM-yy_HH-mma");
 		pdfFilename="SalaryReg #"+" "+sdf2.format(new Date())+".pdf";
 
-		createPDF(pdfFilename);
-        ///// View Report on screen
-        File file=null;
+		if(this.mnth_code >202505)
+		{
+			SaleReg salreg=new SaleReg(depo_code, cmp_code, fyear, mnth_code, cmp_name, drvnm, monthname, btnno, repno, opt, address);
+		}
+		else
+		{	
+			createPDF(pdfFilename);
 
-        	if (Desktop.isDesktopSupported()) {
-        		file=new File(drvnm+"\\"+ pdfFilename);
-        		try {
-						Desktop.getDesktop().open(file);
-        		} catch (IOException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        	}
-		
+			///// View Report on screen
+			File file=null;
+
+			if (Desktop.isDesktopSupported()) {
+				file=new File(drvnm+"\\"+ pdfFilename);
+				try {
+					Desktop.getDesktop().open(file);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	private void createPDF (String pdfFilename){
@@ -101,7 +115,11 @@ public class SalaryRegister extends WritePDF{
 			
 			
 			pdao = new PayrollDAO();
-			salList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,0);
+			if(mnth_code>202505)
+				salList= (ArrayList<?>) pdao.getSalaryRegisterNew(depo_code, cmp_code, fyear, mnth_code,0,0,0);
+			else
+				salList= (ArrayList<?>) pdao.getSalaryRegister(depo_code, cmp_code, fyear, mnth_code,0);
+				
 			int lsize=0;
 			sdf = new SimpleDateFormat("dd/MM/yyyy");
 			df = new DecimalFormat("0.00");
@@ -213,21 +231,22 @@ public class SalaryRegister extends WritePDF{
 				cb.moveTo(330,710); // vertical line after qty
 				cb.lineTo(330,615);
 
-				cb.moveTo(375,727); // vertical line after qty
-				cb.lineTo(375,615);
+				cb.moveTo(385,727); // vertical line after qty
+				cb.lineTo(385,615);
 				
-				cb.moveTo(410,710); // vertical line after qty
-				cb.lineTo(410,615);
+				cb.moveTo(420,710); // vertical line after qty
+				cb.lineTo(420,615);
 
-				cb.moveTo(450,710); // vertical line after qty
-				cb.lineTo(450,615);
+				cb.moveTo(460,710); // vertical line after qty
+				cb.lineTo(460,615);
 
-				cb.moveTo(490,727); // vertical line after qty
-				cb.lineTo(490,615);
+				cb.moveTo(510,727); // vertical line after qty
+				cb.lineTo(510,615);
 
-				cb.moveTo(540,727); // vertical line after qty
-				cb.lineTo(540,615);
+				cb.moveTo(565,727); // vertical line after qty
+				cb.lineTo(565,615);
 
+				
 			//	cb.moveTo(585,727); // vertical line after qty
 			//	cb.lineTo(585,22);
 
@@ -242,7 +261,7 @@ public class SalaryRegister extends WritePDF{
 
 				createtext4(cb,25,708,"Code");
 				cb.moveTo(210,710);  // horizontal lines 
-				cb.lineTo(490,710);
+				cb.lineTo(510,710);
 				
 				createtext4(cb,50,695,"Designation");
 				createtext4(cb,175,695,"Present");
@@ -250,21 +269,30 @@ public class SalaryRegister extends WritePDF{
 				createtext4(cb,255,695,"Ern Basic");
 				createtext4(cb,295,695,"Add. Hra");
 				createtext4(cb,335,695,"Comm off");
-				createtext4(cb,380,695,"P.F.");
+/*				createtext4(cb,380,695,"P.F.");
 				createtext4(cb,415,695,"Advance");
-//				createtext4(cb,455,695,"Other ded");
 				createtext4(cb,452,695,"Other Ded");
 				createtext4(cb,495,695,"Net");
 				createtext4(cb,545,695,"Receiver");
+*/
+				createtext4(cb,390,695,"P.F.");
+				createtext4(cb,425,695,"Advance");
+				createtext4(cb,462,695,"Other Ded");
+				createtext4(cb,525,695,"Net");
+				createtext4(cb,568,695,"Receiver");
 
 
 				createtext4(cb,50,685,"PF.No.");
 				createtext4(cb,175,685,"P.L.");
 				createtext4(cb,215,685,"D.A. R/T");
 				createtext4(cb,335,685,"Opt1 Allow");
-				createtext4(cb,495,685,"Payable");
+/*				createtext4(cb,495,685,"Payable");
 				createtext4(cb,545,685,"Signature");
+*/
+				createtext4(cb,525,685,"Payable");
+				createtext4(cb,568,685,"Signature");
 
+				
 				createtext4(cb,50,675,"Esis.No.");
 				createtext4(cb,175,675,"C.L.");
 				createtext4(cb,215,675,"Hra 5%");
@@ -278,9 +306,12 @@ public class SalaryRegister extends WritePDF{
 				createtext4(cb,255,665,"Ern D.A.");
 				createtext4(cb,295,665,"Incentive");
 				createtext4(cb,335,665,"Medical");
-				createtext4(cb,380,665,"ESIS");
-				createtext4(cb,415,665,"Loan");
+//				createtext4(cb,380,665,"ESIS");
+//				createtext4(cb,415,665,"Loan");
+				createtext4(cb,390,665,"ESIS");
+				createtext4(cb,425,665,"Loan");
 
+				
 				createtext4(cb,175,655,"P.H.");
 				createtext4(cb,215,655,"Incentive");
 				createtext4(cb,335,655,"LTA");
@@ -297,10 +328,15 @@ public class SalaryRegister extends WritePDF{
 				createtext4(cb,255,635,"Hra 5%");
 				createtext4(cb,295,635,"Food Allw");
 				createtext4(cb,335,635,"Gross Amt");
-				createtext4(cb,380,635,"P.Tax");
+/*				createtext4(cb,380,635,"P.Tax");
 				createtext4(cb,415,635,"TDS");
 				createtext4(cb,455,635,"Total ded");
+*/
+				createtext4(cb,390,635,"P.Tax");
+				createtext4(cb,425,635,"TDS");
+				createtext4(cb,465,635,"Total ded");
 
+				
 				createtext4(cb,175,625,"Extra.Hr");
 				//createtext4(cb,335,625,"Amount");
 
@@ -333,7 +369,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 //		rde=0;
  
 		double totearn=vd.getBasic_value()+vd.getDa_value()+vd.getHra_value()+vd.getAdd_hra_value()+vd.getIncentive_value()+vd.getSpl_incen_value()+vd.getOt_value()+vd.getLta_value()+vd.getMedical_value()+vd.getMisc_value()+vd.getStair_value()+vd.getMachine1_value()+vd.getMachine2_value()+vd.getFood_value();
-		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax();
+		double totded=vd.getPf_value()+vd.getEsis_value()+vd.getAdvance()+vd.getCoupon_amt()+vd.getProf_tax()+vd.getLoan();
 		double net = totearn-totded;
 		double totbasic=vd.getBasic()+vd.getDa()+vd.getHra()+vd.getAdd_hra()+vd.getIncentive()+vd.getSpl_incentive();
 		rde=y;
@@ -347,23 +383,29 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,245,y,df.format(vd.getBasic()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,285,y,df.format(vd.getBasic_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,325,y,df.format(vd.getAdd_hra_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,370,y,df.format(vd.getOt_value()),PdfContentByte.ALIGN_RIGHT);
+/*			createContent3(cb,370,y,df.format(vd.getOt_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,405,y,df.format(vd.getPf_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,440,y,df.format(vd.getAdvance()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,480,y,df.format(vd.getCoupon_amt()),PdfContentByte.ALIGN_RIGHT);
-//			createContent3(cb,480,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
+*/			createContent3(cb,380,y,df.format(vd.getOt_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,415,y,df.format(vd.getPf_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,450,y,df.format(vd.getAdvance()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,503,y,df.format(vd.getCoupon_amt()),PdfContentByte.ALIGN_RIGHT);
+
 			y=y-10;
 
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getDa()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,370,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,370,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,380,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
 
 			y=y-10;
 
 			createContent4(cb,50,y,vd.getDesignation(),PdfContentByte.ALIGN_LEFT);
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getHra()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,370,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,370,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,380,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			createContent4(cb,50,y,String.valueOf(vd.getPf_no()),PdfContentByte.ALIGN_LEFT);
@@ -371,8 +413,13 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,245,y,df.format(vd.getAdd_hra()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,285,y,df.format(vd.getDa_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,325,y,df.format(vd.getIncentive_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,370,y,df.format(vd.getMedical_value()),PdfContentByte.ALIGN_RIGHT);
+/*			createContent3(cb,370,y,df.format(vd.getMedical_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,405,y,df.format(vd.getEsis_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,440,y,df.format(vd.getLoan()),PdfContentByte.ALIGN_RIGHT);
+*/			createContent3(cb,380,y,df.format(vd.getMedical_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,415,y,df.format(vd.getEsis_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,450,y,df.format(vd.getLoan()),PdfContentByte.ALIGN_RIGHT);
+
 			y=y-10;
 
 
@@ -380,7 +427,9 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getIncentive()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,370,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,370,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,380,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
+
 			y=y-10;
 
 			createContent4(cb,50,y,String.valueOf(vd.getUan_no()),PdfContentByte.ALIGN_LEFT);
@@ -388,36 +437,43 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(vd.getOt_rate()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,285,y,df.format(vd.getHra_value()),PdfContentByte.ALIGN_RIGHT);
-//			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,325,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT); // Food Value
-
-			createContent3(cb,370,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
+/*			createContent3(cb,370,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,405,y,df.format(vd.getProf_tax()),PdfContentByte.ALIGN_RIGHT); 
+*/			createContent3(cb,380,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,415,y,df.format(vd.getProf_tax()),PdfContentByte.ALIGN_RIGHT); 
 
+			
 			y=y-10;
 			
 			createContent4(cb,50,y,String.valueOf(vd.getSerialno()),PdfContentByte.ALIGN_LEFT);
 			createContent3(cb,205,y,df.format(vd.getAbsent_days()),PdfContentByte.ALIGN_RIGHT);
 			
-			createContent1(cb,535,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
+//			createContent1(cb,538,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
+			createContent1(cb,562,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
 
 			cb.moveTo(210,y+2);  // horizontal lines 
 			cb.lineTo(250,y+2);
 
 			cb.moveTo(330,y+2);  // horizontal lines 
-			cb.lineTo(375,y+2);
+//			cb.lineTo(375,y+2);
+			cb.lineTo(385,y+2);
 
-			cb.moveTo(449,y+2);  // horizontal lines 
-			cb.lineTo(489,y+2);
+			cb.moveTo(459,y+2);  // horizontal lines 
+//			cb.lineTo(489,y+2);
+			cb.lineTo(510,y+2);
 			y=y-10;
 
 			
 			createtext4(cb,50,y,vd.getBank());
 			createContent3(cb,205,y,df.format(vd.getExtra_hrs()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,245,y,df.format(totbasic),PdfContentByte.ALIGN_RIGHT);
-			createContent1(cb,370,y,df.format(totearn),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,482,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
+/*			createContent1(cb,370,y,df.format(totearn),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,488,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
+*/			createContent1(cb,385,y,df.format(totearn),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,508,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
 
+			
 			y=y-8;
 			createtext4(cb,50,y,vd.getBank_accno());
 			y=y-5;
@@ -434,49 +490,64 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			createContent3(cb,205,y,df.format(vd.getAtten_days()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,290,y,df.format(vd.getBasic_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,330,y,df.format(vd.getAdd_hra_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,375,y,df.format(vd.getOt_value()),PdfContentByte.ALIGN_RIGHT);
+/*			createContent3(cb,375,y,df.format(vd.getOt_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,410,y,df.format(vd.getPf_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,450,y,df.format(vd.getAdvance()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,490,y,df.format(vd.getCoupon_amt()),PdfContentByte.ALIGN_RIGHT);
+*/			createContent3(cb,385,y,df.format(vd.getOt_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,420,y,df.format(vd.getPf_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,460,y,df.format(vd.getAdvance()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,500,y,df.format(vd.getCoupon_amt()),PdfContentByte.ALIGN_RIGHT);
+
+			
 			y=y-10;
 
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,375,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,375,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,385,y,df.format(vd.getMachine1_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,375,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,375,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,385,y,df.format(vd.getMachine2_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			//createContent3(cb,245,y,df.format(vd.getAdd_hra_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,205,y,df.format(vd.getArrear_days()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,290,y,df.format(vd.getDa_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,330,y,df.format(vd.getIncentive_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,375,y,df.format(vd.getMedical_value()),PdfContentByte.ALIGN_RIGHT);
+/*			createContent3(cb,375,y,df.format(vd.getMedical_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,410,y,df.format(vd.getEsis_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,450,y,df.format(vd.getLoan()),PdfContentByte.ALIGN_RIGHT);
+*/			createContent3(cb,385,y,df.format(vd.getMedical_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,420,y,df.format(vd.getEsis_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,460,y,df.format(vd.getLoan()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
-			createContent3(cb,375,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
+//			createContent3(cb,375,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,385,y,df.format(vd.getLta_value()),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 
 			createContent3(cb,165,y,df.format(vd.getAtten_days()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,205,y,"0.00",PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,290,y,df.format(vd.getHra_value()),PdfContentByte.ALIGN_RIGHT);
-			//createContent3(cb,325,y,df.format(vd.getSpl_incen_value()+vd.getStair_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,330,y,df.format(vd.getFood_value()),PdfContentByte.ALIGN_RIGHT); // Food Value
-			createContent3(cb,375,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
+/*			createContent3(cb,375,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
 			createContent3(cb,410,y,df.format(vd.getProf_tax()),PdfContentByte.ALIGN_RIGHT); 
+*/			createContent3(cb,385,y,df.format(vd.getMisc_value()),PdfContentByte.ALIGN_RIGHT);
+			createContent3(cb,420,y,df.format(vd.getProf_tax()),PdfContentByte.ALIGN_RIGHT); 
 			y=y-10;
 
 			createContent3(cb,205,y,df.format(vd.getAbsent_days()),PdfContentByte.ALIGN_RIGHT);
-			createContent1(cb,535,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
+//			createContent1(cb,538,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
+			createContent1(cb,564,y,df.format(net),PdfContentByte.ALIGN_RIGHT);
 
 			cb.moveTo(330,y+2);  // horizontal lines 
-			cb.lineTo(375,y+2);
+			cb.lineTo(385,y+2);
 			
-			cb.moveTo(449,y+2);  // horizontal lines 
-			cb.lineTo(489,y+2);
+			cb.moveTo(459,y+2);  // horizontal lines 
+			cb.lineTo(510,y+2);
 			//cb.moveTo(210,y+2);  // horizontal lines 
 			//cb.lineTo(250,y+2);
 			//y=y-10;
@@ -484,8 +555,10 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 			//createContent3(cb,245,y,df.format(totbasic),PdfContentByte.ALIGN_RIGHT);
 			y=y-10;
 			createContent3(cb,205,y,df.format(vd.getExtra_hrs()),PdfContentByte.ALIGN_RIGHT);
-			createContent1(cb,375,y,df.format(totearn),PdfContentByte.ALIGN_RIGHT);
-			createContent1(cb,487,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
+/*			createContent1(cb,375,y,df.format(totearn),PdfContentByte.ALIGN_RIGHT);
+			createContent1(cb,488,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
+*/			createContent1(cb,385,y,df.format(totearn),PdfContentByte.ALIGN_RIGHT);
+			createContent1(cb,510,y,df.format(totded),PdfContentByte.ALIGN_RIGHT);
 
 			y=y-10;
 			LinePrint(cb, 0, 0);
@@ -554,7 +627,7 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 		cb.moveTo(330,710); // vertical line after qty
 		cb.lineTo(330,y);
 
-		cb.moveTo(375,727); // vertical line after qty
+/*		cb.moveTo(375,727); // vertical line after qty
 		cb.lineTo(375,y);
 		
 		cb.moveTo(410,710); // vertical line after qty
@@ -568,6 +641,23 @@ private void generateDetail1(Document doc, PdfContentByte cb)  {
 
 		cb.moveTo(540,727); // vertical line after qty
 		cb.lineTo(540,y);
+*/
+		cb.moveTo(385,727); // vertical line after qty
+		cb.lineTo(385,y);
+		
+		cb.moveTo(420,710); // vertical line after qty
+		cb.lineTo(420,y);
+
+		cb.moveTo(460,710); // vertical line after qty
+		cb.lineTo(460,y);
+
+		cb.moveTo(510,727); // vertical line after qty
+		cb.lineTo(510,y);
+
+		cb.moveTo(565,727); // vertical line after qty
+		cb.lineTo(565,y);
+
+		
 		//cb.stroke();
 		
 	}

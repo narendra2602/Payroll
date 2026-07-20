@@ -3,7 +3,7 @@ package com.payroll.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import com.itextpdf.text.Document;
+/*import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Paragraph;
@@ -11,6 +11,16 @@ import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
+*/
+
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfWriter;
 
 public class WritePDF 
 {
@@ -38,7 +48,7 @@ public class WritePDF
 		{
 			FontFactory.registerDirectories();
 			
-			com.itextpdf.text.Font lucia = FontFactory.getFont("lucida console", fontSize);
+			com.lowagie.text.Font lucia = FontFactory.getFont("lucida console", fontSize);
 			docWriter = PdfWriter.getInstance(doc , stream);
 			doc.open();
 			

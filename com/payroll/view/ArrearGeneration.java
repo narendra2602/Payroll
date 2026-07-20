@@ -201,7 +201,7 @@ public class ArrearGeneration extends BaseClass implements ActionListener
 				Vector v = pdao.getArrearList(loginDt.getDepo_code(), loginDt.getCmp_code(), yd.getYearcode(), loginDt.getMnth_code(), 1);
 				if(v==null)
 				{
-
+						
 					i = pdao.arrearGeneration(yd.getYearcode(), loginDt.getDepo_code(), loginDt.getCmp_code(), sdt.getMnthcode(),edt.getMnthcode(), loginDt.getMnth_code());
 					if(i>0)
 					{
@@ -219,6 +219,8 @@ public class ArrearGeneration extends BaseClass implements ActionListener
 					int ans=confirmationDialongYes("Arrear");
 					if(ans==1)
 					{
+						System.out.println("generateion mai mnth code "+loginDt.getMnth_code());
+						
 						i = pdao.arrearGeneration(yd.getYearcode(), loginDt.getDepo_code(), loginDt.getCmp_code(), sdt.getMnthcode(),edt.getMnthcode(), loginDt.getMnth_code());
 						//i = pdao.arrearGeneration(yd.getYearcode(), loginDt.getDepo_code(), loginDt.getCmp_code(), sdt.getMnthcode(),edt.getMnthcode(),setDoubleNumber(bonusLimit.getText()),loginDt.getEmpList());
 						if(i>0)

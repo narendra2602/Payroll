@@ -109,10 +109,55 @@ public class EmptranDto
 	
 	private double prev_days;
 	private double ncp_days;
+	private int arear_month;
+	private double arear_basic;
+	private double arear_da;
+	private double arear_hra;
+	private double arear_incentive;
+	private double arear_medical;
+	private double arear_basic_value;
+	private double arear_da_value;
+	private double arear_hra_value;
+	private double arear_incentive_value;
+	private double arear_medical_value;
+	private double arear1_pf_value;
+	private double arear1_esic_value;
 
-	
-	
-	
+	private double arear2_basic_value;
+	private double arear2_da_value;
+	private double arear2_hra_value;
+	private double arear2_incentive_value;
+	private double arear2_pf_value;
+	private double arear2_esic_value;
+	private double arear2_prof_value;
+	private int dash;
+	private double pf_gross_wages;
+	private double epf_wages;
+	private double eps_wages;
+	private double edl_wages;
+	private double epf_share;
+	private double eps_share;
+	private double epf_er_share;
+
+	private double arrear_gross_wages;
+	private double arrear_epf_wages;
+	private double arrear_eps_wages;
+	private double arrear_edl_wages;
+	private double arrear_epf_share;
+	private double arrear_eps_share;
+	private double arrear_epf_er_share;
+	private double basic_total;
+	private double basic_earning;
+    private double basic_esis_value;	
+	private double arrear1_earning;
+	private double arrear2_earning;
+    private double arrear1_esis_value;	
+    private double arrear2_esis_value;	
+    private double arrear1_employer_esis_value;
+    private double arrear2_employer_esis_value;
+    private double previous_arrear_basic;
+    
+    
 	public double getPrev_days() {
 		return prev_days;
 	}
@@ -692,6 +737,276 @@ public class EmptranDto
 	}
 	public void setRemark(String remark) {
 		this.remark = remark;
+	}
+	public int getArear_month() {
+		return arear_month;
+	}
+	public void setArear_month(int arear_month) {
+		this.arear_month = arear_month;
+	}
+	public double getArear_basic() {
+		return arear_basic;
+	}
+	public void setArear_basic(double arear_basic) {
+		this.arear_basic = arear_basic;
+	}
+	public double getArear_da() {
+		return arear_da;
+	}
+	public void setArear_da(double arear_da) {
+		this.arear_da = arear_da;
+	}
+	public double getArear_hra() {
+		return arear_hra;
+	}
+	public void setArear_hra(double arear_hra) {
+		this.arear_hra = arear_hra;
+	}
+	public double getArear_incentive() {
+		return arear_incentive;
+	}
+	public void setArear_incentive(double arear_incentive) {
+		this.arear_incentive = arear_incentive;
+	}
+	public double getArear_medical() {
+		return arear_medical;
+	}
+	public void setArear_medical(double arear_medical) {
+		this.arear_medical = arear_medical;
+	}
+	public double getArear_basic_value() {
+		return arear_basic_value;
+	}
+	public void setArear_basic_value(double arear_basic_value) {
+		this.arear_basic_value = arear_basic_value;
+	}
+	public double getArear_da_value() {
+		return arear_da_value;
+	}
+	public void setArear_da_value(double arear_da_value) {
+		this.arear_da_value = arear_da_value;
+	}
+	public double getArear_hra_value() {
+		return arear_hra_value;
+	}
+	public void setArear_hra_value(double arear_hra_value) {
+		this.arear_hra_value = arear_hra_value;
+	}
+	public double getArear_incentive_value() {
+		return arear_incentive_value;
+	}
+	public void setArear_incentive_value(double arear_incentive_value) {
+		this.arear_incentive_value = arear_incentive_value;
+	}
+	public double getArear_medical_value() {
+		return arear_medical_value;
+	}
+	public void setArear_medical_value(double arear_medical_value) {
+		this.arear_medical_value = arear_medical_value;
+	}
+	public double getArear1_pf_value() {
+		return arear1_pf_value;
+	}
+	public void setArear1_pf_value(double arear1_pf_value) {
+		this.arear1_pf_value = arear1_pf_value;
+	}
+	public double getArear2_pf_value() {
+		return arear2_pf_value;
+	}
+	public void setArear2_pf_value(double arear2_pf_value) {
+		this.arear2_pf_value = arear2_pf_value;
+	}
+	public double getArear1_esic_value() {
+		return arear1_esic_value;
+	}
+	public void setArear1_esic_value(double arear1_esic_value) {
+		this.arear1_esic_value = arear1_esic_value;
+	}
+	public double getArear2_esic_value() {
+		return arear2_esic_value;
+	}
+	public void setArear2_esic_value(double arear2_esic_value) {
+		this.arear2_esic_value = arear2_esic_value;
+	}
+	public double getArear2_basic_value() {
+		return arear2_basic_value;
+	}
+	public void setArear2_basic_value(double arear2_basic_value) {
+		this.arear2_basic_value = arear2_basic_value;
+	}
+	public double getArear2_da_value() {
+		return arear2_da_value;
+	}
+	public void setArear2_da_value(double arear2_da_value) {
+		this.arear2_da_value = arear2_da_value;
+	}
+	public double getArear2_hra_value() {
+		return arear2_hra_value;
+	}
+	public void setArear2_hra_value(double arear2_hra_value) {
+		this.arear2_hra_value = arear2_hra_value;
+	}
+	public double getArear2_incentive_value() {
+		return arear2_incentive_value;
+	}
+	public void setArear2_incentive_value(double arear2_incentive_value) {
+		this.arear2_incentive_value = arear2_incentive_value;
+	}
+	public double getArear2_prof_value() {
+		return arear2_prof_value;
+	}
+	public void setArear2_prof_value(double arear2_prof_value) {
+		this.arear2_prof_value = arear2_prof_value;
+	}
+	public int getDash() {
+		return dash;
+	}
+	public void setDash(int dash) {
+		this.dash = dash;
+	}
+	public double getPf_gross_wages() {
+		return pf_gross_wages;
+	}
+	public void setPf_gross_wages(double pf_gross_wages) {
+		this.pf_gross_wages = pf_gross_wages;
+	}
+	public double getEpf_wages() {
+		return epf_wages;
+	}
+	public void setEpf_wages(double epf_wages) {
+		this.epf_wages = epf_wages;
+	}
+	public double getEps_wages() {
+		return eps_wages;
+	}
+	public void setEps_wages(double eps_wages) {
+		this.eps_wages = eps_wages;
+	}
+	public double getEdl_wages() {
+		return edl_wages;
+	}
+	public void setEdl_wages(double edl_wages) {
+		this.edl_wages = edl_wages;
+	}
+	public double getEpf_share() {
+		return epf_share;
+	}
+	public void setEpf_share(double epf_share) {
+		this.epf_share = epf_share;
+	}
+	public double getEps_share() {
+		return eps_share;
+	}
+	public void setEps_share(double eps_share) {
+		this.eps_share = eps_share;
+	}
+	public double getEpf_er_share() {
+		return epf_er_share;
+	}
+	public void setEpf_er_share(double epf_er_share) {
+		this.epf_er_share = epf_er_share;
+	}
+	public double getArrear_gross_wages() {
+		return arrear_gross_wages;
+	}
+	public void setArrear_gross_wages(double arrear_gross_wages) {
+		this.arrear_gross_wages = arrear_gross_wages;
+	}
+	public double getArrear_epf_wages() {
+		return arrear_epf_wages;
+	}
+	public void setArrear_epf_wages(double arrear_epf_wages) {
+		this.arrear_epf_wages = arrear_epf_wages;
+	}
+	public double getArrear_eps_wages() {
+		return arrear_eps_wages;
+	}
+	public void setArrear_eps_wages(double arrear_eps_wages) {
+		this.arrear_eps_wages = arrear_eps_wages;
+	}
+	public double getArrear_edl_wages() {
+		return arrear_edl_wages;
+	}
+	public void setArrear_edl_wages(double arrear_edl_wages) {
+		this.arrear_edl_wages = arrear_edl_wages;
+	}
+	public double getArrear_epf_share() {
+		return arrear_epf_share;
+	}
+	public void setArrear_epf_share(double arrear_epf_share) {
+		this.arrear_epf_share = arrear_epf_share;
+	}
+	public double getArrear_eps_share() {
+		return arrear_eps_share;
+	}
+	public void setArrear_eps_share(double arrear_eps_share) {
+		this.arrear_eps_share = arrear_eps_share;
+	}
+	public double getArrear_epf_er_share() {
+		return arrear_epf_er_share;
+	}
+	public void setArrear_epf_er_share(double arrear_epf_er_share) {
+		this.arrear_epf_er_share = arrear_epf_er_share;
+	}
+	public double getBasic_total() {
+		return basic_total;
+	}
+	public void setBasic_total(double basic_total) {
+		this.basic_total = basic_total;
+	}
+	public double getBasic_earning() {
+		return basic_earning;
+	}
+	public void setBasic_earning(double basic_earning) {
+		this.basic_earning = basic_earning;
+	}
+	public double getArrear1_earning() {
+		return arrear1_earning;
+	}
+	public void setArrear1_earning(double arrear1_earning) {
+		this.arrear1_earning = arrear1_earning;
+	}
+	public double getArrear2_earning() {
+		return arrear2_earning;
+	}
+	public void setArrear2_earning(double arrear2_earning) {
+		this.arrear2_earning = arrear2_earning;
+	}
+	public double getArrear1_esis_value() {
+		return arrear1_esis_value;
+	}
+	public void setArrear1_esis_value(double arrear1_esis_value) {
+		this.arrear1_esis_value = arrear1_esis_value;
+	}
+	public double getArrear2_esis_value() {
+		return arrear2_esis_value;
+	}
+	public void setArrear2_esis_value(double arrear2_esis_value) {
+		this.arrear2_esis_value = arrear2_esis_value;
+	}
+	public double getArrear1_employer_esis_value() {
+		return arrear1_employer_esis_value;
+	}
+	public void setArrear1_employer_esis_value(double arrear1_employer_esis_value) {
+		this.arrear1_employer_esis_value = arrear1_employer_esis_value;
+	}
+	public double getArrear2_employer_esis_value() {
+		return arrear2_employer_esis_value;
+	}
+	public void setArrear2_employer_esis_value(double arrear2_employer_esis_value) {
+		this.arrear2_employer_esis_value = arrear2_employer_esis_value;
+	}
+	public double getBasic_esis_value() {
+		return basic_esis_value;
+	}
+	public void setBasic_esis_value(double basic_esis_value) {
+		this.basic_esis_value = basic_esis_value;
+	}
+	public double getPrevious_arrear_basic() {
+		return previous_arrear_basic;
+	}
+	public void setPrevious_arrear_basic(double previous_arrear_basic) {
+		this.previous_arrear_basic = previous_arrear_basic;
 	}
 	
 
